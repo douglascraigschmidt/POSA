@@ -13,8 +13,8 @@ import vandy.mooc.gcd.R;
 import vandy.mooc.gcd.utils.UiUtils;
 
 /**
- * Main activity for an app that shows various Thread methods and
- * alternative ways of giving code to a Java thread.
+ * Main activity for an app that showcases various Java Thread methods
+ * and alternative ways of giving code to a Java thread.
  */
 public class MainActivity 
        extends LifecycleLoggingActivity {
@@ -43,10 +43,6 @@ public class MainActivity
             (TextView) findViewById(R.id.text_output);
         mScrollView =
             (ScrollView) findViewById(R.id.scrollview_text_output);
-        /*
-        mScrollView.fullScroll(ScrollView.FOCUS_UP);
-        mTextViewLog.setText(R.string.empty_string);
-        */
     }
 
     /**
@@ -108,7 +104,7 @@ public class MainActivity
                     });
 
                 // Print a diagnostic message.
-                println("All threads are joined in thread "
+                println("All threads are joined by thread "
                         + Thread.currentThread());
         }).start();
     }

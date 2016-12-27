@@ -3,7 +3,10 @@ package vandy.mooc.gcd.activities;
 import java.util.Random;
 
 /**
- * Computes the greatest common divisor (GCD) of two numbers.
+ * Computes the greatest common divisor (GCD) of two numbers, which is
+ * the largest positive integer that divides two integers without a
+ * remainder.  This implementation extends Thread and overrides its
+ * run() hook method.
  */
 public class GCDThread
        extends Thread {
@@ -65,27 +68,27 @@ public class GCDThread
         mActivity.println("Entering run()"
                           + threadString);
 
-        try {
-            for(int i = 0; i < MAX_ITERATIONS; ++i) {
-                // Generate two random numbers.
-                int number1 = mRandom.nextInt(); 
-                int number2 = mRandom.nextInt();
+        // Generate random numbers and compute their GCDs.
+
+        for (int i = 0; i < MAX_ITERATIONS; ++i) {
+            // Generate two random numbers.
+            int number1 = mRandom.nextInt(); 
+            int number2 = mRandom.nextInt();
                 
-                // Print results every 10 million iterations.
-                if ((i % MAX_PRINT_ITERATIONS) == 0)
-                    mActivity.println("In run()"
-                                      + threadString 
-                                      + " the GCD of " 
-                                      + number1
-                                      + " and "
-                                      + number2
-                                      + " is "
-                                      + computeGCD(number1,
-                                                   number2));
-            }
-        } finally {
-            mActivity.println("Leaving run() "
-                              + threadString);
+            // Print results every 10 million iterations.
+            if ((i % MAX_PRINT_ITERATIONS) == 0)
+                mActivity.println("In run()"
+                                  + threadString 
+                                  + " the GCD of " 
+                                  + number1
+                                  + " and "
+                                  + number2
+                                  + " is "
+                                  + computeGCD(number1,
+                                               number2));
         }
+
+        mActivity.println("Leaving run() "
+                          + threadString);
     }
 }
