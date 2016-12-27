@@ -13,12 +13,12 @@ public class GCDThread
     /**
      * A reference to the MainActivity. 
      */
-    MainActivity mActivity;
+    private MainActivity mActivity;
 
     /**
      * Generate random numbers.
      */
-    Random mRandom;
+    private Random mRandom;
 
     /** 
      * Number of times to iterate, which is 100 million to ensure the
@@ -33,13 +33,23 @@ public class GCDThread
     private final int MAX_PRINT_ITERATIONS = 10000000;
 
     /**
-     * Constructor initializes the fields.
+     * Set the random value and return "this" (i.e., a "Fluent
+     * interface").
      */
-    public GCDThread(MainActivity activity) {
-        mActivity = activity;
-        mRandom = new Random();
+    public GCDThread setRandom(Random random) {
+        mRandom = random;
+        return this;
     }
-    
+
+    /**
+     * Set the activity value and return "this" (i.e., a "Fluent
+     * interface").
+     */
+    public GCDThread setActivity(MainActivity activity) {
+        mActivity = activity;
+        return this;
+    }
+
     /**
      * Provides a recursive implementation of Euclid's algorithm to
      * compute the "greatest common divisor" (GCD), which is the

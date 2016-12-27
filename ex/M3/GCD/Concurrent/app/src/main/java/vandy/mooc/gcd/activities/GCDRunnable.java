@@ -14,7 +14,7 @@ public class GCDRunnable
     /**
      * A reference to the MainActivity. 
      */
-    MainActivity mActivity;
+    private final MainActivity mActivity;
 
     /** 
      * Number of times to iterate, which is 100 million to ensure the

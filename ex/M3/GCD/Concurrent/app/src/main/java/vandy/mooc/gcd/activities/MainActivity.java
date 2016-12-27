@@ -8,6 +8,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import vandy.mooc.gcd.R;
 import vandy.mooc.gcd.utils.UiUtils;
@@ -66,7 +67,8 @@ public class MainActivity
      */
     public void runThread(View v) {
         // Create the GCDThread.
-        Thread thread = new GCDThread(this);
+        Thread thread =
+            new GCDThread().setActivity(this).setRandom(new Random());
 
         // Start the thread.
         thread.start();
@@ -81,7 +83,7 @@ public class MainActivity
         List<Thread> threadList = new ArrayList<>();
 
         // Create and add the GCDThread;
-        threadList.add(new GCDThread(this));
+        threadList.add(new GCDThread().setActivity(this).setRandom(new Random()));
 
         // Create and add a new thread that's will run the
         // GCDRunnable.
