@@ -217,6 +217,9 @@ public class MainActivity
 
         // Start the thread.
         mThread.start();
+
+        // Update the start/stop FAB to display a stop icon.
+        mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);
     }
 
     /**
@@ -236,7 +239,7 @@ public class MainActivity
     /**
      * Finish up.
      */
-    public voi done() {
+    public void done() {
         // Allow user input again.
         mProcessButtonClick = true;
 
