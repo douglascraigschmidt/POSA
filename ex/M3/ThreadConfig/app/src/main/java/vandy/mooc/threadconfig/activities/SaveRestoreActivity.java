@@ -48,34 +48,6 @@ public class SaveRestoreActivity
     }
 
     /**
-     * Called to retrieve per-instance state from an activity before
-     * being killed so that the state can be restored in
-     * onRestoreInstanceState().
-     */
-    protected void onSaveInstanceState (Bundle outState) {
-        // Call the super class.
-        super.onSaveInstanceState(outState);
-
-        // Store the current count so that it will be available when
-        // the runtime configuration change is done.
-        outState.putInt(COUNT,
-                        mThread.getCount());
-    }
-
-    /**
-     * This method is called after onStart() when the activity is
-     * being re-initialized from a previously saved state, given here
-     * in savedInstanceState.
-     */
-    protected void onRestoreInstanceState (Bundle savedInstanceState) {
-        // Call the super class.
-        super.onRestoreInstanceState(savedInstanceState);
-
-        // Set the count of the thread to the save value.
-        mThread.setCount(savedInstanceState.getInt(COUNT));
-    }
-
-    /**
      * Lifecycle hook method that's called when an activity is about
      * to gain focus.
      */
@@ -114,11 +86,11 @@ public class SaveRestoreActivity
 
     /**
      * This lifecycle hook method is called when the activity is about
-     * to be destroyed.
+     * to lose focus.
      */
-    protected void onDestroy() {
+    protected void onPause() {
         // Call the super class.
-        super.onDestroy();
+        super.onPause();
 
         // Interrupt the thread.
         mThread.interrupt();
@@ -129,5 +101,33 @@ public class SaveRestoreActivity
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Called to retrieve per-instance state from an activity before
+     * being killed so that the state can be restored in
+     * onRestoreInstanceState().
+     */
+    protected void onSaveInstanceState(Bundle outState) {
+        // Call the super class.
+        super.onSaveInstanceState(outState);
+
+        // Store the current count so that it will be available when
+        // the runtime configuration change is done.
+        outState.putInt(COUNT,
+                        mThread.getCount());
+    }
+
+    /**
+     * This method is called after onStart() when the activity is
+     * being re-initialized from a previously saved state, given here
+     * in savedInstanceState.
+     */
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        // Call the super class.
+        super.onRestoreInstanceState(savedInstanceState);
+
+        // Set the count of the thread to the save value.
+        mThread.setCount(savedInstanceState.getInt(COUNT));
     }
 }

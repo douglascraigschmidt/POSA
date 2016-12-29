@@ -287,11 +287,12 @@ public class MainActivity
     }
 
     /**
-     * Hook method called when the activity is destroyed.
+     * Lifecycle hook method called when the activity is about to lose
+     * focus.
      */
-    protected void onDestroy() {
+    protected void onPause() {
         // Call superclass method.
-        super.onDestroy();
+        super.onPause();
 
         if (mThread != null) {
             // Interrupt the thread since the activity is being
@@ -302,5 +303,38 @@ public class MainActivity
                   "interrupting thread "
                   + mThread);
         }
+    }
+
+    /**
+     * Called to retrieve per-instance state from an activity before
+     * being killed so that the state can be restored in
+     * onRestoreInstanceState().
+     */
+    protected void onSaveInstanceState(Bundle outState) {
+        // Call the super class.
+        super.onSaveInstanceState(outState);
+
+        outState.putIntArray("SCROLL_POSITION",
+                new int[]{ mScrollView.getScrollX(),
+                           mScrollView.getScrollY()});
+    }
+
+    /**
+     * This method is called after onStart() when the activity is
+     * being re-initialized from a previously saved state, given here
+     * in savedInstanceState.
+     */
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        // Call the super class.
+        super.onRestoreInstanceState(savedInstanceState);
+
+        final int[] position =
+                savedInstanceState.getIntArray("SCROLL_POSITION");
+
+        if (position != null)
+            mScrollView.post(() -> {
+                mScrollView.scrollTo(position[0],
+                                     position[1]);
+            });
     }
 }
