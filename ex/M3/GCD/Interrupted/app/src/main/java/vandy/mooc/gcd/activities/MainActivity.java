@@ -290,7 +290,9 @@ public class MainActivity
      * Hook method called when the activity is destroyed.
      */
     protected void onDestroy() {
+        // Call superclass method.
         super.onDestroy();
+
         if (mThread != null) {
             // Interrupt the thread since the activity is being
             // destroyed.
