@@ -16,8 +16,10 @@ import vandy.mooc.gcd.R;
 import vandy.mooc.gcd.utils.UiUtils;
 
 /**
- * Main activity for an app that showcases various Java Thread methods
- * and alternative ways of giving code to a Java thread.
+ * Main activity for an app that shows how to start and interrupt a
+ * Java thread that computes the greatest common divisor (GCD) of two
+ * numbers, which is the largest positive integer that divides two
+ * integers without a remainder.
  */
 public class MainActivity 
        extends LifecycleLoggingActivity {
@@ -232,7 +234,7 @@ public class MainActivity
 
         UiUtils.showToast(this,
                           "Interrupting thread "
-                          + mThread.getName());
+                          + mThread);
 
         // Finish up and reset the UI.
         done();
@@ -288,11 +290,15 @@ public class MainActivity
      * Hook method called when the activity is destroyed.
      */
     protected void onDestroy() {
+        super.onDestroy();
         if (mThread != null) {
+            // Interrupt the thread since the activity is being
+            // destroyed.
             mThread.interrupt();
+
             Log.d(TAG,
-                  "interrupteding thread "
-                  + mThread.getName());
+                  "interrupting thread "
+                  + mThread);
         }
     }
 }

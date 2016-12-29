@@ -8,7 +8,8 @@ import java.util.Random;
  * Computes the greatest common divisor (GCD) of two numbers, which is
  * the largest positive integer that divides two integers without a
  * remainder.  This implementation extends Random and implements the
- * Runnable interface's run() hook method.
+ * Runnable interface's run() hook method.  It also checks to see if
+ * the thread has been interrupted and exits gracefully if so.
  */
 public class GCDRunnable
        extends Random // Inherits random number generation capabilities.
@@ -74,10 +75,12 @@ public class GCDRunnable
             int number1 = nextInt(); 
             int number2 = nextInt();
                 
+            // Check to see if this thread has been interrupted and
+            // exit gracefully if so.
             if (Thread.interrupted()) {
                 Log.d(TAG,
                       "thread "
-                      + Thread.currentThread().getName()
+                      + Thread.currentThread()
                       + " interrupted");
                 break;
             }
