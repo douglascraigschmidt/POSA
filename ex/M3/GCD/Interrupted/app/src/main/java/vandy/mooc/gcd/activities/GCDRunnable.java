@@ -98,7 +98,7 @@ public class GCDRunnable
         mActivity.println("Leaving run() "
                           + threadString);
 
-        // 
+        // Tell the activity we're done.
         mActivity.done();
     }
 }

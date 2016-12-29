@@ -3,6 +3,7 @@ package vandy.mooc.gcd.activities;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.animation.AnimationUtils;
@@ -233,21 +234,33 @@ public class MainActivity
                           "Interrupting thread "
                           + mThread.getName());
 
+        // Finish up and reset the UI.
         done();
     }
 
     /**
-     * Finish up.
+     * Finish up and reset the UI.
      */
     public void done() {
-        // Allow user input again.
-        mProcessButtonClick = true;
+        // Create a command to reset the UI.
+        Runnable command = () -> {
+            // Allow user input again.
+            mProcessButtonClick = true;
 
-        // Null out the thread to avoid later problems.
-        mThread = null;
+            // Null out the thread to avoid later problems.
+            mThread = null;
 
-        // Reset the start/stop FAB to the play icon.
-        mStartOrStopFab.setImageResource(android.R.drawable.ic_media_play);
+            // Reset the start/stop FAB to the play icon.
+            mStartOrStopFab.setImageResource(android.R.drawable.ic_media_play);
+        };
+
+        // Optimize for the case where println() is called from the UI
+        // thread.
+        if (UiUtils.runningOnUiThread())
+            command.run();
+        else 
+            // Run the command on the UI thread.
+            runOnUiThread(command);
     }
 
     /**
@@ -269,5 +282,17 @@ public class MainActivity
         else 
             // Run the command on the UI thread.
             runOnUiThread(command);
+    }
+
+    /**
+     * Hook method called when the activity is destroyed.
+     */
+    protected void onDestroy() {
+        if (mThread != null) {
+            mThread.interrupt();
+            Log.d(TAG,
+                  "interrupteding thread "
+                  + mThread.getName());
+        }
     }
 }
