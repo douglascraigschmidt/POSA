@@ -1,35 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    android:id="@+id/layout1"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_width="match_parent">
-
-    <TextView android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="20dp"
-        android:text="@string/hintprompt"
-        android:gravity="center"
-        android:layout_marginTop="7dp"/>
+    android:orientation="vertical">
 
     <LinearLayout
-        android:orientation="vertical"
+        android:id="@+id/layout3"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="bottom">
+        android:gravity="bottom"
+        android:orientation="vertical">
 
-      <ScrollView
-         android:id="@+id/scrollview_text_output"
-         android:layout_width="fill_parent"
-         android:layout_height="0dp"
-         android:layout_weight="1" >
-        <TextView
-           android:id="@+id/text_output"
-           android:layout_width="match_parent"
-           android:layout_height="wrap_content"
-           android:textSize="15sp" />
-      </ScrollView>
+        <ScrollView
+            android:id="@+id/scrollview_text_output"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
 
-        <EditText android:id="@+id/count"
+            <!--
+            The Android framework will handle the saving and restoring of
+            the contents of an EditText view but not a TextView which it
+            does not consider worth saving/restoring since, theoretically,
+            it is not generally used for user input.
+            -->
+            <EditText
+                android:id="@+id/text_output"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="10000"
+                android:focusable="false"
+                android:background="@android:color/transparent"
+                android:textSize="15sp"/>
+        </ScrollView>
+
+        <EditText
+            android:id="@+id/count"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:hint="@string/enter_count"
@@ -43,24 +49,24 @@
                 android:id="@+id/play_fab"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/fab_margin"
-                android:src="@android:drawable/ic_media_play"
-                android:tint="@android:color/white"
                 android:layout_alignParentLeft="true"
-                android:onClick="startOrStopComputations"/>
+                android:layout_margin="@dimen/fab_margin"
+                android:onClick="startOrStopComputations"
+                android:src="@android:drawable/ic_media_play"
+                android:tint="@android:color/white"/>
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/set_fab"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@android:drawable/ic_input_add"
-                android:tint="@android:color/white"
+                android:layout_alignParentEnd="true"
+                android:layout_alignTop="@+id/play_fab"
+                android:layout_marginBottom="20dp"
                 android:layout_marginLeft="@dimen/fab_margin"
                 android:layout_marginRight="@dimen/fab_margin"
-                android:layout_marginBottom="20dp"
-                android:layout_alignTop="@+id/play_fab"
-                android:layout_alignParentEnd="true"
-                android:onClick="setCount"/>
+                android:onClick="setCount"
+                android:src="@android:drawable/ic_input_add"
+                android:tint="@android:color/white"/>
         </RelativeLayout>
 
     </LinearLayout>
