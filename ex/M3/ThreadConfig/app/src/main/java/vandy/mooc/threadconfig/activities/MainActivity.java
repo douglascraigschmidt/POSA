@@ -6,9 +6,9 @@ import android.view.View;
 import vandy.mooc.threadconfig.R;
 
 /**
- * Main activity for an app that shows various ways to handle the
- * state associated with a thread when an activity does a runtime
- * configuration change.
+ * This activity is a "facade" whose methods launch other activities
+ * to that show various ways to handle the state associated with a
+ * thread when an activity does a runtime configuration change.
  */
 public class MainActivity 
        extends LifecycleLoggingActivity {

@@ -10,7 +10,7 @@ import vandy.mooc.threadconfig.R;
 import vandy.mooc.threadconfig.utils.UiUtils;
 
 /**
- * This activity handles runtime configuration changes by using
+ * An activity that handles runtime configuration changes by using
  * onRetainNonConfigurationInstance() and
  * getLastNonConfigurationInstance().
  */

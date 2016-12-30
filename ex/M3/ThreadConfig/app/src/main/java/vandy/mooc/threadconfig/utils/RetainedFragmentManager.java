@@ -10,9 +10,9 @@ import android.os.Bundle;
 import android.util.Log;
 
 /**
- * Retains and manages state information between runtime configuration
- * changes to an Activity.  Plays the role of the "Originator" in the
- * Memento pattern.
+ * Uses retained fragments to manage state information across runtime
+ * configuration changes to an activity.  Plays the role of the
+ * "Originator" in the Memento pattern.
  */
 public class RetainedFragmentManager {
     /**

@@ -9,8 +9,8 @@ import vandy.mooc.threadconfig.R;
 import vandy.mooc.threadconfig.utils.UiUtils;
 
 /**
- * This activity doesn't handle the runtime configuration change
- * properly.
+ * An activity that intentionally doesn't handle runtime configuration
+ * changes properly.
  */
 public class BuggyActivity
        extends LifecycleLoggingActivity {

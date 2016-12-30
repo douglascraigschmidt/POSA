@@ -24,7 +24,7 @@ import vandy.mooc.gcd.utils.UiUtils;
 public class MainActivity 
        extends LifecycleLoggingActivity {
     /** 
-     * A TextView used to display the output.
+     * A TextView field used to display the output.
      */
     private TextView mTextViewLog;
 

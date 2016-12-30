@@ -41,11 +41,14 @@
      android:layout_width="fill_parent"
      android:layout_height="0dp"
      android:layout_weight="1" >
-    <TextView
+    <EditText
        android:id="@+id/text_output"
        android:layout_width="match_parent"
        android:layout_height="wrap_content"
-       android:textSize="15sp" />
+       android:maxLines="10000"
+       android:focusable="false"
+       android:background="@android:color/transparent"
+       android:textSize="15sp"/>
   </ScrollView>
 
 </LinearLayout>

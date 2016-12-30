@@ -10,9 +10,8 @@ import vandy.mooc.threadconfig.R;
 import vandy.mooc.threadconfig.utils.UiUtils;
 
 /**
- * This activity demonstrates how to handle runtime configuration
- * changes by using onSaveInstanceState() and
- * onRestoreInstanceState().
+ * An activity that shows how to handle runtime configuration changes
+ * by using onSaveInstanceState() and onRestoreInstanceState().
  */
 public class SaveRestoreActivity
        extends LifecycleLoggingActivity {
@@ -85,14 +84,16 @@ public class SaveRestoreActivity
     }
 
     /**
-     * This lifecycle hook method is called when the activity is about
-     * to lose focus.
+     * Called to retrieve per-instance state from an activity before
+     * being killed so that the state can be restored in
+     * onRestoreInstanceState().
      */
-    protected void onPause() {
+    protected void onSaveInstanceState(Bundle outState) {
         // Call the super class.
-        super.onPause();
+        super.onSaveInstanceState(outState);
 
-        // Interrupt the thread.
+        // Interrupt the thread so it doesn't change its current count
+        // after we store it below.
         mThread.interrupt();
 
         try {
@@ -101,16 +102,6 @@ public class SaveRestoreActivity
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Called to retrieve per-instance state from an activity before
-     * being killed so that the state can be restored in
-     * onRestoreInstanceState().
-     */
-    protected void onSaveInstanceState(Bundle outState) {
-        // Call the super class.
-        super.onSaveInstanceState(outState);
 
         // Store the current count so that it will be available when
         // the runtime configuration change is done.

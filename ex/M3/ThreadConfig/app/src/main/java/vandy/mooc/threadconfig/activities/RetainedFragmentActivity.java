@@ -11,7 +11,7 @@ import vandy.mooc.threadconfig.utils.RetainedFragmentManager;
 import vandy.mooc.threadconfig.utils.UiUtils;
 
 /**
- * This activity handles runtime configuration changes by the
+ * An activity that handles runtime configuration changes by using the
  * RetainedFragmentManager framework.
  */
 public class RetainedFragmentActivity
