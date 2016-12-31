@@ -58,13 +58,6 @@ public class GCDRunnable
      * randomly generated numbers.
      */
     public void run() {
-        final String threadString = 
-            " with thread id " 
-            + Thread.currentThread();
-
-        mActivity.println("Entering run()"
-                          + threadString);
-
         // Number of times to print the results.
         int maxPrintIterations = mMaxIterations / 10;
 
@@ -87,8 +80,8 @@ public class GCDRunnable
 
             // Print results.
             else if ((i % maxPrintIterations) == 0)
-                mActivity.println("In run()"
-                                  + threadString 
+                mActivity.println("In run() with thread id "
+                                  + Thread.currentThread()
                                   + " the GCD of " 
                                   + number1
                                   + " and "
@@ -97,9 +90,6 @@ public class GCDRunnable
                                   + computeGCD(number1,
                                                number2));
         }
-
-        mActivity.println("Leaving run() "
-                          + threadString);
 
         // Tell the activity we're done.
         mActivity.done();

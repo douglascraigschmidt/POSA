@@ -84,6 +84,29 @@ public class MainActivity
 
         // Initialize the views.
         initializeViews();
+
+        // Check to see if we're restarting the activity.
+        if (savedInstanceState != null) {
+            // Show the "startOrStop" FAB.
+            UiUtils.showFab(mStartOrStopFab);
+
+            if (TextUtils.isEmpty
+                (mCountEditText.getText().toString().trim())) {
+                mCountEditText.setText(String.valueOf(sDEFAULT_COUNT));
+                // @@ Monte, why is the value of mCountEditText not
+                // preserved across configuration changes?!
+                UiUtils.showToast(this,
+                                  "resetting count to default");
+            } else {
+                UiUtils.showToast(this,
+                                  "count = "
+                                  + mCountEditText.getText().toString());
+            }
+
+            // Start running the computations.
+            startComputations(Integer.valueOf(mCountEditText.getText().toString()),
+                              true);
+        }
     }
 
     /**
@@ -127,6 +150,7 @@ public class MainActivity
                             (mCountEditText.getText().toString().trim())) 
                             mCountEditText.setText(String.valueOf(sDEFAULT_COUNT));
 
+                        // Show the "startOrStop" FAB.
                         UiUtils.showFab(mStartOrStopFab);
                         return true;
                     } else {
@@ -160,8 +184,8 @@ public class MainActivity
             // Hides the count FAB.
             UiUtils.hideFab(mStartOrStopFab);
         } else {
-            // Hide the EditText using circular reveal animation
-            // and set boolean to true.
+            // Reveal the EditText using circular reveal animation and
+            // set boolean to true.
             UiUtils.revealEditText(mCountEditText);
             mIsEditTextVisible = true;
             mCountEditText.requestFocus();
@@ -187,42 +211,46 @@ public class MainActivity
             // The thread only exists while GCD computations are in
             // progress.
             interruptComputations();
-        else {
-            // Get the count from the edit view.
-            int count = Integer.valueOf(mCountEditText.getText().toString());
-
-            // Make sure there's a non-0 count.
-            if (count <= 0) 
-                // Inform the user there's a problem with the input.
-                UiUtils.showToast(this,
-                                  "Please specify a count value that's > 0");
-            else if (!mProcessButtonClick)
-                // Inform the user they can't play yet.
-                UiUtils.showToast(this,
-                                  "GCD computations are in progress");
-            else
-                startComputations(count);
-        }
+        else 
+            // Start running the computations.
+            startComputations(Integer.valueOf(mCountEditText.getText().toString()),
+                              false);
     }
 
     /**
      * Start the GCD computations.
      */
-    public void startComputations(int count) {
-        // Create the GCD Runnable.
-        GCDRunnable runnableCommand =
-            new GCDRunnable(this,
-                            count);
+    public void startComputations(int count,
+                                  boolean restart) {
+        // Make sure there's a non-0 count.
+        if (count <= 0) 
+            // Inform the user there's a problem with the input.
+            UiUtils.showToast(this,
+                              "Please specify a count value that's > 0");
+        else if (!mProcessButtonClick)
+            // Inform the user they can't play yet.
+            UiUtils.showToast(this,
+                              "GCD computations are in progress");
+        else {
+            // Create the GCD Runnable.
+            GCDRunnable runnableCommand =
+                new GCDRunnable(this,
+                                count);
 
-        // Create a new Thread that's will execute the runnableCommand
-        // concurrently.
-        mThread = new Thread(runnableCommand);
+            // Create a new Thread that's will execute the runnableCommand
+            // concurrently.
+            mThread = new Thread(runnableCommand);
 
-        // Start the thread.
-        mThread.start();
+            // Start the thread.
+            mThread.start();
 
-        // Update the start/stop FAB to display a stop icon.
-        mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);
+            if (!restart)
+                println("Starting thread with name "
+                        + mThread);
+
+            // Update the start/stop FAB to display a stop icon.
+            mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);
+        }
     }
 
     /**
@@ -235,15 +263,15 @@ public class MainActivity
         UiUtils.showToast(this,
                           "Interrupting thread "
                           + mThread);
-
-        // Finish up and reset the UI.
-        done();
     }
 
     /**
      * Finish up and reset the UI.
      */
     public void done() {
+        println("Finishing thread with name "
+                + mThread);
+
         // Create a command to reset the UI.
         Runnable command = () -> {
             // Allow user input again.
@@ -287,54 +315,21 @@ public class MainActivity
     }
 
     /**
-     * Lifecycle hook method called when the activity is about to lose
-     * focus.
+     * Lifecycle hook method called when this activity is being
+     * destroyed.
      */
-    protected void onPause() {
-        // Call superclass method.
-        super.onPause();
+    protected void onDestroy() {
+        // Call the super class.
+        super.onDestroy();
 
         if (mThread != null) {
-            // Interrupt the thread since the activity is being
-            // destroyed.
-            mThread.interrupt();
-
             Log.d(TAG,
                   "interrupting thread "
                   + mThread);
+
+            // Interrupt the thread since the activity is being
+            // destroyed.
+            mThread.interrupt();
         }
-    }
-
-    /**
-     * Called to retrieve per-instance state from an activity before
-     * being killed so that the state can be restored in
-     * onRestoreInstanceState().
-     */
-    protected void onSaveInstanceState(Bundle outState) {
-        // Call the super class.
-        super.onSaveInstanceState(outState);
-
-        outState.putIntArray("SCROLL_POSITION",
-                new int[]{ mScrollView.getScrollX(),
-                           mScrollView.getScrollY()});
-    }
-
-    /**
-     * This method is called after onStart() when the activity is
-     * being re-initialized from a previously saved state, given here
-     * in savedInstanceState.
-     */
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        // Call the super class.
-        super.onRestoreInstanceState(savedInstanceState);
-
-        final int[] position =
-                savedInstanceState.getIntArray("SCROLL_POSITION");
-
-        if (position != null)
-            mScrollView.post(() -> {
-                mScrollView.scrollTo(position[0],
-                                     position[1]);
-            });
     }
 }

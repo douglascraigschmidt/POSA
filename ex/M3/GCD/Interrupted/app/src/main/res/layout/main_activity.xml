@@ -18,12 +18,6 @@
             android:layout_height="wrap_content"
             android:layout_weight="1">
 
-            <!--
-            The Android framework will handle the saving and restoring of
-            the contents of an EditText view but not a TextView which it
-            does not consider worth saving/restoring since, theoretically,
-            it is not generally used for user input.
-            -->
             <EditText
                 android:id="@+id/text_output"
                 android:layout_width="match_parent"
