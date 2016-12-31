@@ -7,13 +7,11 @@ import java.util.Random;
 /**
  * Computes the greatest common divisor (GCD) of two numbers, which is
  * the largest positive integer that divides two integers without a
- * remainder.  This implementation extends Random and implements the
- * Runnable interface's run() hook method.  It also checks to see if
+ * remainder.  This subclass extends Thread.  It also checks to see if
  * the thread has been interrupted and exits gracefully if so.
  */
-public class GCDRunnable
-       extends Random // Inherits random number generation capabilities.
-       implements Runnable {
+public class GCDThread
+       extends Thread {
     /**
      * Debugging tag used by the Android logger.
      */
@@ -23,35 +21,33 @@ public class GCDRunnable
     /**
      * A reference to the MainActivity. 
      */
-    private final MainActivity mActivity;
+    private volatile MainActivity mActivity;
 
     /** 
      * Number of times to iterate.
      */
-    private int mIterationsRemaining;
+    private int mMaxIterations;
 
     /**
-     * Keeps track of whether we've been restarted due to an
-     * orientation change.
+     * Random number generator.
      */
-    private boolean mRestarted = false;
+    private Random mRandom;
 
     /**
      * Constructor initializes the fields.
      */
-    public GCDRunnable(MainActivity activity,
-                       int iterations,
-                       boolean restarted) {
+    public GCDThread(MainActivity activity,
+                     int maxIterations) {
         mActivity = activity;
-        mIterationsRemaining = iterations;
-        mRestarted = restarted;
+        mMaxIterations = maxIterations;
+        mRandom = new Random();
     }
-    
+
     /**
-     * Get the number of remaining iterations.
+     * Sets the activity (used after a runtime configuration change).
      */
-    public int getIterationsRemaining() {
-        return mIterationsRemaining;
+    public void setActivity(MainActivity activity) {
+        mActivity = activity;
     }
 
     /**
@@ -73,23 +69,15 @@ public class GCDRunnable
      * randomly generated numbers.
      */
     public void run() {
-        final String threadString = 
-            " with thread id " 
-            + Thread.currentThread();
-
-        if (!mRestarted)
-            mActivity.println("Entering run()"
-                              + threadString);
-
         // Number of times to print the results.
-        int maxPrintIterations = mIterationsRemaining / 10;
+        int maxPrintIterations = mMaxIterations / 10;
 
         // Generate random numbers and compute their GCDs.
 
-        while (mIterationsRemaining-- > 0) {
+        for (int i = mMaxIterations; i > 0; --i) {
             // Generate two random numbers.
-            int number1 = nextInt(); 
-            int number2 = nextInt();
+            int number1 = mRandom.nextInt();
+            int number2 = mRandom.nextInt();
                 
             // Check to see if this thread has been interrupted and
             // exit gracefully if so.
@@ -102,10 +90,10 @@ public class GCDRunnable
             }
 
             // Print results.
-            else if ((mIterationsRemaining % maxPrintIterations) == 0)
-                mActivity.println("In run()"
-                                  + threadString 
-                                  + " the GCD of " 
+            else if ((i % maxPrintIterations) == 0)
+                mActivity.println("In run() with thread id "
+                                  + Thread.currentThread()
+                                  + " the GCD of "
                                   + number1
                                   + " and "
                                   + number2
@@ -114,9 +102,6 @@ public class GCDRunnable
                                                number2));
         }
 
-        mActivity.println("Leaving run() "
-                          + threadString);
-        
         // Tell the activity we're done.
         mActivity.done();
     }

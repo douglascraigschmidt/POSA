@@ -70,7 +70,7 @@ public class MainActivity
     /**
      * Reference to the thread that runs the GCD computations.
      */
-    private Thread mThread;
+    private GCDThread mThread;
 
     /**
      * Hook method called when the activity is first launched.
@@ -84,6 +84,18 @@ public class MainActivity
 
         // Initialize the views.
         initializeViews();
+
+        // Set mThread to the object that was stored by
+        // onRetainNonConfigurationInstance().
+        mThread = (GCDThread) getLastNonConfigurationInstance();
+
+        if (savedInstanceState != null) {
+            // Show the "startOrStop" FAB.
+            UiUtils.showFab(mStartOrStopFab);
+
+            // Set the activity.
+            mThread.setActivity(this);
+        }
     }
 
     /**
@@ -206,27 +218,19 @@ public class MainActivity
             // Inform the user they can't play yet.
             UiUtils.showToast(this,
                               "GCD computations are in progress");
-        else 
-            runComputation(count, false);
-    }
+        else {
+            // Create a new Thread that's will perform the GCD
+            // computations concurrently.
+            mThread = new GCDThread(this, count);
 
-    private void runComputation(int count,
-                                boolean restarted) {
-        // Create the GCD Runnable.
-        GCDRunnable runnableCommand =
-            new GCDRunnable(this,
-                            count,
-                            restarted);
+            // Start the thread.
+            mThread.start();
 
-        // Create a new Thread that's will execute the runnableCommand
-        // concurrently.
-        mThread = new Thread(runnableCommand);
+            println("starting thread with id " + mThread);
 
-        // Start the thread.
-        mThread.start();
-
-        // Update the start/stop FAB to display a stop icon.
-        mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);
+            // Update the start/stop FAB to display a stop icon.
+            mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);
+        }
     }
 
     /**
@@ -248,6 +252,8 @@ public class MainActivity
      * Finish up and reset the UI.
      */
     public void done() {
+        println("finishing thread " + mThread);
+
         // Create a command to reset the UI.
         Runnable command = () -> {
             // Allow user input again.
@@ -291,66 +297,15 @@ public class MainActivity
     }
 
     /**
-     * Called to retrieve per-instance state from an activity before
-     * being killed so that the state can be restored in
-     * onRestoreInstanceState().
+     * Returns mThread so that it will be saved across runtime
+     * configuration changes.  This hook method is called by Android
+     * as part of destroying an activity due to a configuration
+     * change, when it is known that a new instance will immediately
+     * be created for the new configuration.
      */
-    protected void onSaveInstanceState(Bundle outState) {
-        // Call the super class.
-        super.onSaveInstanceState(outState);
-
-        if (mThread != null) {
-            Log.d(TAG,
-                  "interrupting thread "
-                  + mThread);
-
-            // Interrupt the thread since the activity is being
-            // destroyed.
-            mThread.interrupt();
-
-            try {
-                // Wait for the thread to exit to ensure the iteration
-                // count is consistent.
-                mThread.join();
-            } catch (InterruptedException e) {
-            Log.d(TAG,
-                  "join() was interrupted on thread "
-                  + mThread);
-            }
-
-            outState.putInt("REMAINING_ITERATIONS",
-                            mThread.getIterationsRemaining());
-                        
-            outState.putIntArray("SCROLL_POSITION",
-                                 new int[]{ mScrollView.getScrollX(),
-                                            mScrollView.getScrollY()});
-        }
-    }
-
-    /**
-     * This method is called after onStart() when the activity is
-     * being re-initialized from a previously saved state, given here
-     * in savedInstanceState.
-     */
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        // Call the super class.
-        super.onRestoreInstanceState(savedInstanceState);
-
-        final int[] position =
-                savedInstanceState.getIntArray("SCROLL_POSITION");
-
-        if (position != null)
-            mScrollView.post(() -> {
-                mScrollView.scrollTo(position[0],
-                                     position[1]);
-            });
-
-        // Show the "StartOrStop" FAB.
-        UiUtils.showFab(mStartOrStopFab);
-
-        // Restart the computations.
-        runComputations(savedInstanceState.getInt("REMAINING_ITERATIONS"),
-                        true);
+    public Object onRetainNonConfigurationInstance() {
+        Log.d(TAG, "onRetainNonConfigurationInstance()");
+        return mThread;
     }
 
     /**
