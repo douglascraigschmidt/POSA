@@ -83,9 +83,31 @@ public class MainActivity
         setContentView(R.layout.main_activity);
 
         // Initialize the views.
-        initializeViews();
+        initializeViews(savedInstanceState);
+    }
 
-        // Check to see if we're restarting the activity.
+    /**
+     * Initialize the views.
+     */
+    private void initializeViews(Bundle savedInstanceState) {
+        // Set the EditText that holds the count entered by the user
+        // (if any).
+        mCountEditText = (EditText) findViewById(R.id.count);
+
+        // Store floating action button that sets the count.
+        mSetFab = (FloatingActionButton) findViewById(R.id.set_fab);
+
+        // Store floating action button that starts playing ping/pong.
+        mStartOrStopFab = (FloatingActionButton) findViewById(R.id.play_fab);
+
+        // Make the count button invisible for animation purposes.
+        mStartOrStopFab.setVisibility(View.INVISIBLE);
+
+        if (TextUtils.isEmpty(mCountEditText.getText().toString().trim()))
+            // Make the EditText invisible for animation purposes.
+            mCountEditText.setVisibility(View.INVISIBLE);
+
+        // The activity is being restarted.
         if (savedInstanceState != null) {
             // Show the "startOrStop" FAB.
             UiUtils.showFab(mStartOrStopFab);
@@ -107,27 +129,6 @@ public class MainActivity
             startComputations(Integer.valueOf(mCountEditText.getText().toString()),
                               true);
         }
-    }
-
-    /**
-     * Initialize the views.
-     */
-    private void initializeViews() {
-        // Set the EditText that holds the count entered by the user
-        // (if any).
-        mCountEditText = (EditText) findViewById(R.id.count);
-
-        // Cache floating action button that sets the count.
-        mSetFab = (FloatingActionButton) findViewById(R.id.set_fab);
-
-        // Cache floating action button that starts playing ping/pong.
-        mStartOrStopFab = (FloatingActionButton) findViewById(R.id.play_fab);
-
-        // Make the EditText invisible for animation purposes.
-        mCountEditText.setVisibility(View.INVISIBLE);
-
-        // Make the count button invisible for animation purposes.
-        mStartOrStopFab.setVisibility(View.INVISIBLE);
 
         // Store and initialize the TextView and ScrollView.
         mTextViewLog =
