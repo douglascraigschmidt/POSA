@@ -73,6 +73,11 @@ public class MainActivity
     private Thread mThread;
 
     /**
+     * Keeps track of whether we've been reconfigured.
+     */
+    private boolean mReconfigured = false;
+
+    /**
      * Hook method called when the activity is first launched.
      */
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,28 +113,8 @@ public class MainActivity
             mCountEditText.setVisibility(View.INVISIBLE);
 
         // The activity is being restarted.
-        if (savedInstanceState != null) {
-            // Show the "startOrStop" FAB.
-            UiUtils.showFab(mStartOrStopFab);
-
-            if (TextUtils.isEmpty
-                (mCountEditText.getText().toString().trim())) {
-                mCountEditText.setText(String.valueOf(sDEFAULT_COUNT));
-                // @@ Monte, why is the value of mCountEditText not
-                // preserved across configuration changes?!
-                UiUtils.showToast(this,
-                                  "resetting count to default");
-            } else {
-                UiUtils.showToast(this,
-                                  "count = "
-                                  + mCountEditText.getText().toString());
-            }
-
-            // Start running the computations.
-            startComputations(Integer.valueOf(mCountEditText.getText().toString()),
-                              true);
-        }
-
+        if (savedInstanceState != null) 
+            mReconfigured = true;
         // Store and initialize the TextView and ScrollView.
         mTextViewLog =
             (TextView) findViewById(R.id.text_output);
@@ -313,6 +298,34 @@ public class MainActivity
         else 
             // Run the command on the UI thread.
             runOnUiThread(command);
+    }
+
+    /**
+     *
+     */
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (mReconfigured) {
+            // Show the "startOrStop" FAB.
+            UiUtils.showFab(mStartOrStopFab);
+
+            if (TextUtils.isEmpty
+                (mCountEditText.getText().toString().trim())) {
+                mCountEditText.setText(String.valueOf(sDEFAULT_COUNT));
+                UiUtils.showToast(this,
+                                  "resetting count to default");
+            } else {
+                UiUtils.showToast(this,
+                                  "count = "
+                                  + mCountEditText.getText().toString());
+            }
+
+            // Start running the computations.
+            startComputations(Integer.valueOf(mCountEditText.getText().toString()),
+                              true);
+        }
     }
 
     /**
