@@ -21,7 +21,9 @@ import vandy.mooc.gcd.utils.UiUtils;
  * numbers, which is the largest positive integer that divides two
  * integers without a remainder.  The user can interrupt the thread
  * performing this computation at any point and the thread will also
- * be interrupted when the activity is destroyed.
+ * be interrupted when the activity is destroyed.  In addition,
+ * runtime configuration changes are handled relatively gracefully,
+ * though the computations are restarted from the beginning.
  */
 public class MainActivity 
        extends LifecycleLoggingActivity {

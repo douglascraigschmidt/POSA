@@ -19,7 +19,11 @@ import vandy.mooc.gcd.utils.UiUtils;
  * Main activity for an app that shows how to start and interrupt a
  * Java thread that computes the greatest common divisor (GCD) of two
  * numbers, which is the largest positive integer that divides two
- * integers without a remainder.
+ * integers without a remainder.  The user can interrupt the thread
+ * performing this computation at any point and the thread will also
+ * be interrupted when the activity is destroyed.  In addition,
+ * runtime configuration changes are handled gracefully, i.e., without
+ * having to restart the computations from the beginning.
  */
 public class MainActivity 
        extends LifecycleLoggingActivity {
