@@ -19,7 +19,9 @@ import vandy.mooc.gcd.utils.UiUtils;
  * Main activity for an app that shows how to start and interrupt a
  * Java thread that computes the greatest common divisor (GCD) of two
  * numbers, which is the largest positive integer that divides two
- * integers without a remainder.
+ * integers without a remainder.  The user can interrupt the thread
+ * performing this computation at any point and the thread will also
+ * be interrupted when the activity is destroyed.
  */
 public class MainActivity 
        extends LifecycleLoggingActivity {
@@ -50,13 +52,6 @@ public class MainActivity
      */
     private FloatingActionButton mStartOrStopFab;
 
-    /**
-     * Keeps track of whether a button click from the user is
-     * processed or not.  Only one click is processed until the GCD
-     * computations are finished.
-     */
-    public static boolean mProcessButtonClick = true;
-
     /** 
      * A TextView used to display the output.
      */
@@ -73,9 +68,10 @@ public class MainActivity
     private Thread mThread;
 
     /**
-     * Keeps track of whether we've been reconfigured.
+     * Keeps track of whether the orientation of the phone has been
+     * changed.
      */
-    private boolean mReconfigured = false;
+    private boolean mOrientationChange = false;
 
     /**
      * Hook method called when the activity is first launched.
@@ -112,9 +108,11 @@ public class MainActivity
             // Make the EditText invisible for animation purposes.
             mCountEditText.setVisibility(View.INVISIBLE);
 
-        // The activity is being restarted.
+        // The activity is being restarted after an orientation
+        // change.
         if (savedInstanceState != null) 
-            mReconfigured = true;
+            mOrientationChange = true;
+
         // Store and initialize the TextView and ScrollView.
         mTextViewLog =
             (TextView) findViewById(R.id.text_output);
@@ -199,24 +197,18 @@ public class MainActivity
             interruptComputations();
         else 
             // Start running the computations.
-            startComputations(Integer.valueOf(mCountEditText.getText().toString()),
-                              false);
+            startComputations(Integer.valueOf(mCountEditText.getText().toString()));
     }
 
     /**
      * Start the GCD computations.
      */
-    public void startComputations(int count,
-                                  boolean restart) {
+    public void startComputations(int count) {
         // Make sure there's a non-0 count.
         if (count <= 0) 
             // Inform the user there's a problem with the input.
             UiUtils.showToast(this,
                               "Please specify a count value that's > 0");
-        else if (!mProcessButtonClick)
-            // Inform the user they can't play yet.
-            UiUtils.showToast(this,
-                              "GCD computations are in progress");
         else {
             // Create the GCD Runnable.
             GCDRunnable runnableCommand =
@@ -230,7 +222,9 @@ public class MainActivity
             // Start the thread.
             mThread.start();
 
-            if (!restart)
+            // Only print this message the first time the activity
+            // runs.
+            if (!mConfigurationChange)
                 println("Starting thread with name "
                         + mThread);
 
@@ -260,9 +254,6 @@ public class MainActivity
 
         // Create a command to reset the UI.
         Runnable command = () -> {
-            // Allow user input again.
-            mProcessButtonClick = true;
-
             // Null out the thread to avoid later problems.
             mThread = null;
 
@@ -301,30 +292,24 @@ public class MainActivity
     }
 
     /**
-     *
+     * Lifecycle hook method called when the activity is about gain
+     * focus.
      */
     @Override
     protected void onResume() {
+        // Call to the super class.
         super.onResume();
 
-        if (mReconfigured) {
+        // Check to see if an orientation change occurred.  This
+        // implementation is simple and doesn't take into account how
+        // much progress was made before the orientation occurred.
+        if (mOrientationChange) {
             // Show the "startOrStop" FAB.
             UiUtils.showFab(mStartOrStopFab);
 
-            if (TextUtils.isEmpty
-                (mCountEditText.getText().toString().trim())) {
-                mCountEditText.setText(String.valueOf(sDEFAULT_COUNT));
-                UiUtils.showToast(this,
-                                  "resetting count to default");
-            } else {
-                UiUtils.showToast(this,
-                                  "count = "
-                                  + mCountEditText.getText().toString());
-            }
-
-            // Start running the computations.
-            startComputations(Integer.valueOf(mCountEditText.getText().toString()),
-                              true);
+            // Start running the computations using the value
+            // originally entered by the user.
+            startComputations(Integer.valueOf(mCountEditText.getText().toString()));
         }
     }
 

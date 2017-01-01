@@ -172,8 +172,8 @@ public class MainActivity
             // Hides the count FAB.
             UiUtils.hideFab(mStartOrStopFab);
         } else {
-            // Hide the EditText using circular reveal animation
-            // and set boolean to true.
+            // Reveal the EditText using circular reveal animation and
+            // set boolean to true.
             UiUtils.revealEditText(mCountEditText);
             mIsEditTextVisible = true;
             mCountEditText.requestFocus();
