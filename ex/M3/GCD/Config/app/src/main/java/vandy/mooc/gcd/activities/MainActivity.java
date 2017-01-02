@@ -93,12 +93,18 @@ public class MainActivity
         // onRetainNonConfigurationInstance().
         mThread = (GCDThread) getLastNonConfigurationInstance();
 
-        if (savedInstanceState != null) {
-            // Show the "startOrStop" FAB.
-            UiUtils.showFab(mStartOrStopFab);
-
+        if (mThread != null) {
             // Set the activity.
             mThread.setActivity(this);
+
+            // Update the start/stop FAB to display a stop icon.
+            mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);
+
+            // Show the "startOrStop" FAB.
+            UiUtils.showFab(mStartOrStopFab);
+        } else {
+                UiUtils.showToast(this,
+                                  "the thread is null");
         }
     }
 
@@ -230,7 +236,12 @@ public class MainActivity
             // Start the thread.
             mThread.start();
 
+            // Inform the user that we're starting the GCD
+            // computations.
             println("starting thread with id " + mThread);
+
+            mTextViewLog.setText(R.string.empty_string);
+            mScrollView.fullScroll(ScrollView.FOCUS_UP);
 
             // Update the start/stop FAB to display a stop icon.
             mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);
@@ -307,6 +318,7 @@ public class MainActivity
      * change, when it is known that a new instance will immediately
      * be created for the new configuration.
      */
+    @Override
     public Object onRetainNonConfigurationInstance() {
         Log.d(TAG, "onRetainNonConfigurationInstance()");
         return mThread;
@@ -315,6 +327,7 @@ public class MainActivity
     /**
      * Lifecycle hook method called when this activity is destroyed.
      */
+    @Override
     protected void onDestroy() {
         super.onDestroy();
 
