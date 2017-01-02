@@ -102,10 +102,6 @@ public class MainActivity
 
             // Show the "startOrStop" FAB.
             UiUtils.showFab(mStartOrStopFab);
-        } else {
-                UiUtils.showToast(this,
-                                  "the thread is null");
-        }
     }
 
     /**
