@@ -1,4 +1,4 @@
-package vandy.mooc.gcd.activities;
+package vandy.mooc.pingpong.view;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -133,18 +133,6 @@ public abstract class LifecycleLoggingActivity
         // hook method is being called.
         super.onDestroy();
         Log.d(TAG, "onDestroy() - the activity is about to be destroyed");
-    }
-
-    /**
-     * This hook method is called by Android as part of destroying an
-     * activity due to a configuration change, when it is known that a
-     * new instance will immediately be created for the new
-     * configuration.
-     */
-    @Override
-    public Object onRetainNonConfigurationInstance() {
-        Log.d(TAG, "onRetainNonConfigurationInstance()");
-        return super.onRetainNonConfigurationInstance();
     }
 
     /**

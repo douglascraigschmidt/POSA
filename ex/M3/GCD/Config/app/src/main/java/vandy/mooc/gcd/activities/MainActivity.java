@@ -27,16 +27,16 @@ import vandy.mooc.gcd.utils.UiUtils;
  */
 public class MainActivity 
        extends LifecycleLoggingActivity {
-   /**
-     * An EditText field uesd to enter the desired number of iterations.
-     */
-    private EditText mCountEditText;
-
     /**
      * Number of times to iterate if the user doesn't specify
      * otherwise.
      */
     private final static int sDEFAULT_COUNT = 100000000;
+
+   /**
+     * An EditText field uesd to enter the desired number of iterations.
+     */
+    private EditText mCountEditText;
 
     /**
      * Keeps track of whether the edit text is visible for the user to
@@ -175,7 +175,7 @@ public class MainActivity
             mSetFab.startAnimation
                 (AnimationUtils.loadAnimation(this,
                                               animRedId));
-            // Hides the count FAB.
+            // Hides the FAB.
             UiUtils.hideFab(mStartOrStopFab);
         } else {
             // Reveal the EditText using circular reveal animation and
@@ -308,15 +308,18 @@ public class MainActivity
     }
 
     /**
-     * Returns mThread so that it will be saved across runtime
-     * configuration changes.  This hook method is called by Android
-     * as part of destroying an activity due to a configuration
-     * change, when it is known that a new instance will immediately
-     * be created for the new configuration.
+     * This hook method is called by Android as part of destroying an
+     * activity due to a configuration change, when it is known that a
+     * new instance will immediately be created for the new
+     * configuration.
      */
     @Override
     public Object onRetainNonConfigurationInstance() {
-        Log.d(TAG, "onRetainNonConfigurationInstance()");
+        // Call the super class.
+        super.onRetainNonConfigurationInstance();
+
+        // Returns mThread so that it will be saved across runtime
+        // configuration changes.
         return mThread;
     }
 
