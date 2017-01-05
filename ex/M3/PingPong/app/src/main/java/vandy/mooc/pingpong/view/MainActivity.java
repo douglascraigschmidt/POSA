@@ -123,7 +123,6 @@ public class MainActivity
                         : R.drawable.ic_media_stop);
         // Make the count button visible for animation purposes.
         mPlayOrResetFab.setVisibility(View.VISIBLE);
-
     }
 
     /**
