@@ -47,10 +47,6 @@ public class PingPongModel {
         List<Thread> threadList =
             Arrays.asList(new Thread[sMAX_PING_PONG_THREADS]);
 
-        Log.d(TAG,
-              "creating pingpong threads with sync mechanism " 
-              + syncMechanism);
-
         // Create the appropriate subclass of PingPongThread based on
         // the syncMechanism string.
         switch (syncMechanism) {
