@@ -1,5 +1,7 @@
 package vandy.mooc.pingpong.model;
 
+import android.util.Log;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Semaphore;
@@ -44,6 +46,10 @@ public class PingPongModel {
         // Create a list of Threads.
         List<Thread> threadList =
             Arrays.asList(new Thread[sMAX_PING_PONG_THREADS]);
+
+        Log.d(TAG,
+              "creating pingpong threads with sync mechanism " 
+              + syncMechanism);
 
         // Create the appropriate subclass of PingPongThread based on
         // the syncMechanism string.

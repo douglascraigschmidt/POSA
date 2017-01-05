@@ -206,10 +206,17 @@ public class MainActivity
             mPingPongScrollView.fullScroll(ScrollView.FOCUS_UP);
             mPingPongTextViewLog.setText(R.string.empty_string);
 
+            // See if user provided the synchronization mechanism name
+            // after the number of iterations.
+            String[] splitInput =
+                mCountEditText.getText().toString().split(":");
+            
             // Start playing the ping/pong game.
             getPresenter().play
-                (Integer.valueOf(mCountEditText.getText().toString()),
-                 Options.instance().syncMechanism());
+                (Integer.valueOf(splitInput[0]),
+                 splitInput.length > 1 
+                 ? splitInput[1] 
+                 : Options.instance().syncMechanism());
 
             // Change the FAB and the next gamestate to RESET.
             mPlayOrResetFab.setImageResource(R.drawable.ic_media_stop);
