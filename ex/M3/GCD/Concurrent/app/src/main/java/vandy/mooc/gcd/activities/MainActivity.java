@@ -70,7 +70,7 @@ public class MainActivity
      * Method called back when the "run thread" button is pressed.
      */
     public void runThread(View v) {
-        // Create the GCDThread.
+        // Create the GCDThread.  Note the "fluent" interface style.
         Thread thread =
             new GCDThread().setActivity(this).setRandom(new Random());
 
@@ -84,13 +84,12 @@ public class MainActivity
      */
     public void runThreadAndRunnable(View v) {
         // Create a list of thread.
-        List<Thread> threadList = new ArrayList<>();
+        final List<Thread> threadList = new ArrayList<>();
 
-        // Create and add the GCDThread;
+        // Create and add the GCDThread using the "fluent" interface style.
         threadList.add(new GCDThread().setActivity(this).setRandom(new Random()));
 
-        // Create and add a new thread that's will run the
-        // GCDRunnable.
+        // Create and add a new thread that's will run the GCDRunnable.
         threadList.add(new Thread(new GCDRunnable(this)));
 
         // Use Java 8 forEach() to start each thread.
@@ -127,13 +126,9 @@ public class MainActivity
             mScrollView.fullScroll(ScrollView.FOCUS_DOWN);
         };
 
-        // Optimize for the case where println() is called from the UI
-        // thread.
-        if (UiUtils.runningOnUiThread())
-            command.run();
-        else 
-            // Run the command on the UI thread.
-            runOnUiThread(command);
+        // Run the command on the UI thread, which internally optimizes
+        // for the case where println() is called from the UI thread.
+        runOnUiThread(command);
     }
 
     /**
