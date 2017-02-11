@@ -162,28 +162,21 @@ public class UiUtils {
      * @return the image bitmap or null if there was an error
      */
     public static Bitmap downloadAndDecodeImage(String url) {
-        try {
-            // Check to see if this thread has been interrupted.
-            if (Thread.interrupted())
-                return null;
-
-            // Connect to a remote server, download the contents of
-            // the image, and provide access to it via an Input
-            // Stream.
-            InputStream is =
-                (InputStream) new URL(url).getContent();
-
-            // Check to see if this thread has been interrupted.
-            if (Thread.interrupted())
-                return null;
-            else
-                // Decode an InputStream into a Bitmap.
-                return BitmapFactory.decodeStream(is);
-        } catch (Exception e) {
-            Log.e(TAG,
-                  "Error downloading image");
-            e.printStackTrace();
+        // Check to see if this thread has been interrupted.
+        if (Thread.interrupted())
             return null;
-        }
+
+        // Connect to a remote server, download the contents of
+        // the image, and provide access to it via an Input
+        // Stream.
+        InputStream is =
+            (InputStream) new URL(url).getContent();
+
+        // Check to see if this thread has been interrupted.
+        if (Thread.interrupted())
+            return null;
+        else
+            // Decode an InputStream into a Bitmap.
+            return BitmapFactory.decodeStream(is);
     }
 }

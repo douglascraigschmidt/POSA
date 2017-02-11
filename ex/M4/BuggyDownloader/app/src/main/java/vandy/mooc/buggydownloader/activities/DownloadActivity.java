@@ -1,10 +1,5 @@
-package vandy.mooc.simpledownloader.activities;
+package vandy.mooc.buggydownloader.activities;
 
-import vandy.mooc.simpledownloader.R;
-import vandy.mooc.simpledownloader.downloaders.DownloadWithAsyncTask;
-import vandy.mooc.simpledownloader.downloaders.DownloadWithMessages;
-import vandy.mooc.simpledownloader.downloaders.DownloadWithRunnables;
-import vandy.mooc.simpledownloader.utils.UiUtils;
 import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -12,22 +7,21 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 
+import java.io.IOException;
+
+import vandy.mooc.buggydownloader.R;
+import vandy.mooc.buggydownloader.utils.UiUtils;
+
 /**
- * This activity allows a user to download a bitmap image from a
- * remote server using the following concurrency strategies from the
- * Android HaMeR and AsyncTask frameworks:
- *
- * . Download with Runnables (HaMeR framework)
- * . Download with Messages (HaMeR framework)
- * . Download with AsyncTask (AsyncTask framework)
- *        
- * After the image is downloaded and converted into a Bitmap it is
- * displayed on the user's screen.
+ * This activity allows a user to attempt to download a bitmap image
+ * from a remote server using Java threads.  After the image is
+ * downloaded and converted into a bitmap it is displayed on the
+ * user's screen.
  * 
- * This implementation intentionally doesn't handle runtime
- * configuration changes robustly.  See the ImageDownloads example for
- * a framework that handles these changes via the Model-View-Presenter
- * (MVP) pattern.
+ * However, this implementation is intentionally buggy!  Moreover, it
+ * intentionally doesn't handle runtime configuration changes
+ * robustly.  See the ImageDownloads example for a framework that
+ * handles these changes via the Model-View-Presenter (MVP) pattern.
  */
 public class DownloadActivity
        extends LifecycleLoggingActivity {
@@ -79,68 +73,77 @@ public class DownloadActivity
     }
 
     /**
-     * Called when a user clicks a button to download/display an image
-     * with using a runnable.
+     * Called when a user clicks the "buggy1" button to
+     * download/display an image.
      * 
-     * @param view
-     *            The "Run Runnable" button
+     * @param view The "buggy1" button
      */
-    public void runRunnable(View view) {
+    public void buggy1(View view) {
         // Obtain the requested URL from the user input.
         final String url = getUrlString();
+ 
+        UiUtils.hideKeyboard(this,
+                             mUrlEditText.getWindowToken());
+
+        // Inform the user that the download is starting.
+        showDialog(" via buggy1() method");
+
+        try {
+            // Try to download the image.  This call will fail since a
+            // network-related call is being made in the UI thread.
+            Bitmap image = downloadBitmap(url);
+
+            // Display the downloaded image to the user.
+            displayBitmap(image);
+        } catch (Exception e) {
+            UiUtils.showToast(this,
+                              "Exception "
+                              + e
+                              + " caught in buggy1()");
+        } finally {
+            // Dismiss the progress dialog.
+            dismissDialog();
+        }
+    }
+
+    /**
+     * Called when a user clicks the "buggy2" button to download an
+     * image.
+     * 
+     * @param view
+     *            The "buggy2" button
+     */
+    public void buggy2(View view) {
+        // Obtain the requested URL from the user input.
+        String url = getUrlString();
 
         UiUtils.hideKeyboard(this,
                              mUrlEditText.getWindowToken());
 
         // Inform the user that the download is starting.
-        showDialog("downloading via Handlers and Runnables");
-        
-        // Create and start a new thread to download an image in the
-        // background via a runnable.  The downloaded image is then
-        // diplayed in the UI thread by posting another runnable via
-        // the activity's runOnUiThread() method, which uses an
-        // internal handler.
-        new Thread(new DownloadWithRunnables(this,
-                                             url)).start();
-    }
-
-    /**
-     * Called when a user clicks a button to download an image with a
-     * runnable and messages.
-     * 
-     * @param view
-     *            The "Run Messages" button
-     */
-    public void runMessages(View view) {
-        // Obtain the requested URL from the user input.
-        final String url = getUrlString();
-
-        UiUtils.hideKeyboard(this,
-                             mUrlEditText.getWindowToken());
+        showDialog(" via buggy2() method");
 
         // Create and start a new thread to download an image in the
-        // background and then use messages and messagehandler to
+        // background and then use messages and mMessageHandler to
         // cause it to be displayed in the UI thread.
-        new Thread(new DownloadWithMessages(this,
-                                            url)).start();
-    }
+        new Thread(() -> {
+                try {
+                    // Download the image in a background thread.
+                    Bitmap image = downloadBitmap(url);
 
-    /**
-     * Called when a user clicks a button to download an image via an
-     * an asynctask.
-     * 
-     * @param view
-     *            The "Run Async" button
-     */
-    public void runAsyncTask(View view) {
-        // The the URL for the image to download.
-        final String url = getUrlString();
-
-        UiUtils.hideKeyboard(this,
-                             mUrlEditText.getWindowToken());
-
-        // Execute the download using an asynctask.
-        new DownloadWithAsyncTask(this).execute(url);
+                    // Try to display the downloaded image to the user, which
+                    // should fail since it's called in a background thread.
+                    displayBitmap(image);
+                } catch (final Exception e) {
+                    runOnUiThread(() -> UiUtils.showToast(DownloadActivity.this,
+                                                          "Exception "
+                                                          + e
+                                                          + " caught in buggy2()"));
+                } finally {
+                    // Dismiss the progress dialog.
+                    dismissDialog();
+                }
+        }).start();
     }
 
     /**
@@ -154,22 +157,28 @@ public class DownloadActivity
         // Use the default URL if the user doesn't supply one.
         String finalUrl = url.equals("") ? mDefaultUrl : url;
 
-        Bitmap bitmap =
-            UiUtils.downloadAndDecodeImage(finalUrl);
+        try {
+            Bitmap bitmap =
+                UiUtils.downloadAndDecodeImage(finalUrl);
 
-        if (bitmap == null)
-            // Post error reports to the UI Thread.
-            runOnUiThread(() -> {
-                    // Use a Toast to inform user that something
-                    // has gone wrong.
-                    UiUtils.showToast(DownloadActivity.this,
-                                      "Error downloading image,"
-                                      + " please recheck URL "
-                                      + finalUrl);
-                });
-        
-        return bitmap;
+            if (bitmap == null)
+                // Post error reports to the UI Thread.
+                runOnUiThread(() -> {
+                        // Use a Toast to inform user that something
+                        // has gone wrong.
+                        UiUtils.showToast(DownloadActivity.this,
+                                          "Error downloading image,"
+                                          + " please recheck URL "
+                                          + finalUrl);
+                    });
+            return bitmap;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
+
+    /**
 
     /**
      * Display a downloaded bitmap image if it's non-null; otherwise,

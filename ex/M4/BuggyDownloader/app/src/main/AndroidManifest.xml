@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="vandy.mooc.simpledownloader"
+    package="vandy.mooc.buggydownloader"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -26,18 +26,6 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".service.DownloadService"
-                 android:exported="false"/>
-
-        <provider
-            android:name="android.support.v4.content.FileProvider"
-            android:authorities="vandy.mooc.downloader.fileprovider"
-            android:exported="false"
-            android:grantUriPermissions="true" >
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
-        </provider>
     </application>
 
 </manifest>

@@ -1,4 +1,4 @@
-package vandy.mooc.simpledownloader.utils;
+package vandy.mooc.buggydownloader.utils;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -20,7 +20,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
 
@@ -161,29 +163,23 @@ public class UiUtils {
      *
      * @return the image bitmap or null if there was an error
      */
-    public static Bitmap downloadAndDecodeImage(String url) {
-        try {
-            // Check to see if this thread has been interrupted.
-            if (Thread.interrupted())
-                return null;
-
-            // Connect to a remote server, download the contents of
-            // the image, and provide access to it via an Input
-            // Stream.
-            InputStream is =
-                (InputStream) new URL(url).getContent();
-
-            // Check to see if this thread has been interrupted.
-            if (Thread.interrupted())
-                return null;
-            else
-                // Decode an InputStream into a Bitmap.
-                return BitmapFactory.decodeStream(is);
-        } catch (Exception e) {
-            Log.e(TAG,
-                  "Error downloading image");
-            e.printStackTrace();
+    public static Bitmap downloadAndDecodeImage(String url) 
+        throws IOException {
+        // Check to see if this thread has been interrupted.
+        if (Thread.interrupted())
             return null;
-        }
+
+        // Connect to a remote server, download the contents of
+        // the image, and provide access to it via an Input
+        // Stream.
+        InputStream is =
+            (InputStream) new URL(url).getContent();
+
+        // Check to see if this thread has been interrupted.
+        if (Thread.interrupted())
+            return null;
+        else
+            // Decode an InputStream into a Bitmap.
+            return BitmapFactory.decodeStream(is);
     }
 }

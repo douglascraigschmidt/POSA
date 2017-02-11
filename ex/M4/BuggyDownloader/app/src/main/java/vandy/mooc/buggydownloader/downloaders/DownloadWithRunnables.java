@@ -1,10 +1,10 @@
-package vandy.mooc.simpledownloader.downloaders;
+package vandy.mooc.buggydownloader.downloaders;
 
 import java.lang.ref.WeakReference;
 
 import android.graphics.Bitmap;
 
-import vandy.mooc.simpledownloader.activities.DownloadActivity;
+import vandy.mooc.buggydownloader.activities.DownloadActivity;
 
 /**
  * This class downloads/displays a bitmap image using runnables.

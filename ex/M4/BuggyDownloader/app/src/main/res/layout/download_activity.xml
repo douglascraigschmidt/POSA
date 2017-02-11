@@ -33,30 +33,21 @@
 
     <Button
        style="@style/Widget.AppCompat.Button.Borderless"
-       android:id="@+id/runnable_button"
+       android:id="@+id/buggy1_button"
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
        android:textSize="14dp"
-       android:onClick="runRunnable"
-       android:text="@string/runRunnable" />
+       android:onClick="buggy1"
+       android:text="@string/buggy1" />
 
     <Button
        style="@style/Widget.AppCompat.Button.Borderless"
-       android:id="@+id/messages_button"
+       android:id="@+id/buggy2_button"
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
        android:textSize="14dp"
-       android:onClick="runMessages"
-       android:text="@string/runMessages" />
-
-    <Button
-       style="@style/Widget.AppCompat.Button.Borderless"
-       android:id="@+id/async_task_button"
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:textSize="14dp"
-       android:onClick="runAsyncTask"
-       android:text="@string/runAsyncTask" />
+       android:onClick="buggy2"
+       android:text="@string/buggy2" />
 
     <Button
        style="@style/Widget.AppCompat.Button.Borderless"
