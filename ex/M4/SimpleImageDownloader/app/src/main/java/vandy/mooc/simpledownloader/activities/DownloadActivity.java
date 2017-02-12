@@ -12,6 +12,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 
+import java.io.IOException;
+
 /**
  * This activity allows a user to download a bitmap image from a
  * remote server using the following concurrency strategies from the
