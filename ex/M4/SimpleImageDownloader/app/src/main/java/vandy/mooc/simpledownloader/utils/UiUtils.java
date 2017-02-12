@@ -161,7 +161,8 @@ public class UiUtils {
      *
      * @return the image bitmap or null if there was an error
      */
-    public static Bitmap downloadAndDecodeImage(String url) {
+    public static Bitmap downloadAndDecodeImage(String url) 
+        throws IOException {
         // Check to see if this thread has been interrupted.
         if (Thread.interrupted())
             return null;

@@ -163,14 +163,13 @@ public class DownloadActivity
 
             if (bitmap == null)
                 // Post error reports to the UI Thread.
-                runOnUiThread(() -> {
+                runOnUiThread(() -> 
                         // Use a Toast to inform user that something
                         // has gone wrong.
                         UiUtils.showToast(DownloadActivity.this,
                                           "Error downloading image,"
                                           + " please recheck URL "
-                                          + finalUrl);
-                    });
+                                          + finalUrl));
             return bitmap;
         } catch (IOException e) {
             e.printStackTrace();

@@ -154,21 +154,25 @@ public class DownloadActivity
         // Use the default URL if the user doesn't supply one.
         String finalUrl = url.equals("") ? mDefaultUrl : url;
 
-        Bitmap bitmap =
-            UiUtils.downloadAndDecodeImage(finalUrl);
+        try {
+            Bitmap bitmap =
+                UiUtils.downloadAndDecodeImage(finalUrl);
 
-        if (bitmap == null)
-            // Post error reports to the UI Thread.
-            runOnUiThread(() -> {
-                    // Use a Toast to inform user that something
-                    // has gone wrong.
-                    UiUtils.showToast(DownloadActivity.this,
-                                      "Error downloading image,"
-                                      + " please recheck URL "
-                                      + finalUrl);
-                });
+            if (bitmap == null)
+                // Post error reports to the UI Thread.
+                runOnUiThread(() -> 
+                              // Use a Toast to inform user that
+                              // something has gone wrong.
+                              UiUtils.showToast(DownloadActivity.this,
+                                                "Error downloading image,"
+                                                + " please recheck URL "
+                                                + finalUrl));
         
-        return bitmap;
+                    return bitmap;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
