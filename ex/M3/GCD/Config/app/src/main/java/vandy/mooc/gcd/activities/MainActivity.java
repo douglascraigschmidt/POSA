@@ -102,6 +102,7 @@ public class MainActivity
 
             // Show the "startOrStop" FAB.
             UiUtils.showFab(mStartOrStopFab);
+        }
     }
 
     /**
