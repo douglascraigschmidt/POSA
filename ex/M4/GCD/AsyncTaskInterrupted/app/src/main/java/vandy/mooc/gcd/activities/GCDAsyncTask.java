@@ -13,7 +13,7 @@ import java.util.Random;
  * been cancelled and exits gracefully if so.
  */
 public class GCDAsyncTask
-       extends AsyncTask<Integer, Void, Void> {
+       extends AsyncTask<Integer, String, Boolean> {
     /**
      * Debugging tag used by the Android logger.
      */
@@ -72,6 +72,7 @@ public class GCDAsyncTask
      */
     @Override
     protected void onPreExecute() {
+        // Print the message in the UI thread.
         mActivity.println("Starting new AsyncTask #"
                           + mAsyncTaskNumber);
     }
@@ -81,7 +82,7 @@ public class GCDAsyncTask
      * computing the GCD of randomly generated numbers.
      */
     @Override
-    public Void doInBackground(Integer... maxIterations) {
+    public Boolean doInBackground(Integer... maxIterations) {
         // Number of times to print the results.
         int maxPrintIterations = maxIterations[0] / 10;
 
@@ -91,7 +92,7 @@ public class GCDAsyncTask
             // Generate two random numbers.
             int number1 = mRandom.nextInt();
             int number2 = mRandom.nextInt();
-                
+
             // Check to see if this thread has been interrupted and
             // exit gracefully if so.
             if (isCancelled()) {
@@ -104,18 +105,32 @@ public class GCDAsyncTask
 
             // Print results.
             else if ((i % maxPrintIterations) == 0)
-                mActivity.println("In run() with thread id "
-                                  + Thread.currentThread()
-                                  + " the GCD of " 
-                                  + number1
-                                  + " and "
-                                  + number2
-                                  + " is "
-                                  + computeGCD(number1,
-                                               number2));
+                publishProgress("In run() with thread id "
+                                + Thread.currentThread()
+                                + " the GCD of "
+                                + number1
+                                + " and "
+                                + number2
+                                + " is "
+                                + computeGCD(number1,
+                                             number2));
         }
 
-        return null;
+        // Returns true if this is the last task.
+        return mActivity
+            .mAsyncTaskRelatedState
+            .mTaskCount
+            .decrementAndGet() <= 0;
+    }
+
+    /**
+     * Called in the UI thread based on strings published by
+     * doInBackground().
+     */
+    @Override
+    protected void onProgressUpdate(String... message) {
+        // Print the message in the UI thread.
+        mActivity.println(message[0]);
     }
 
     /**
@@ -123,13 +138,14 @@ public class GCDAsyncTask
      * successfully.
      */
     @Override
-    protected void onPostExecute(Void v) {
+    protected void onPostExecute(Boolean lastTask) {
+        // Print the message in the UI thread.
         mActivity.println("Finishing AsyncTask #"
                           + mAsyncTaskNumber
                           + " successfully");
 
         // Tell the activity we're done if we're the last task.
-        if (mActivity.mAsyncTaskRelatedState.mTaskCount.decrementAndGet() <= 0)
+        if (lastTask)
             mActivity.done();
     }
 
@@ -138,13 +154,14 @@ public class GCDAsyncTask
      * being cancelled.
      */
     @Override
-    protected void onCancelled(Void v) {
+    protected void onCancelled(Boolean lastTask) {
+        // Print the message in the UI thread.
         mActivity.println("Finishing AsyncTask #"
                           + mAsyncTaskNumber
                           + " after being cancelled");
 
         // Tell the activity we're done if we're the last task.
-        if (mActivity.mAsyncTaskRelatedState.mTaskCount.decrementAndGet() <= 0)
+        if (lastTask)
             mActivity.done();
     }
 }

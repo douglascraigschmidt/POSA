@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -102,13 +103,13 @@ public class MainActivity
                                          "AsyncTask #"
                                          + mTaskCount.incrementAndGet());
 
-            // Create a new ThreadPoolExecutor that's will execute the
-            // asyncTask concurrently.
-            mExecutor = new ThreadPoolExecutor(sMAX_TASK_COUNT,
-                                               sMAX_TASK_COUNT,
-                                               0, 
+            // Create a new "cached" ThreadPoolExecutor that's will
+            // execute the asyncTask concurrently.
+            mExecutor = new ThreadPoolExecutor(0, 
+                                               Integer.MAX_VALUE,
+                                               60L,
                                                TimeUnit.SECONDS,
-                                               new LinkedBlockingQueue<>(),
+                                               new SynchronousQueue<Runnable>(),
                                                mThreadFactory);
         }
 
@@ -284,13 +285,26 @@ public class MainActivity
             interruptComputations();
         else 
             // Start running the computations.
-            startComputations(Integer.valueOf(mCountEditText.getText().toString()));
+            startComputations(mCountEditText.getText().toString());
     }
 
     /**
      * Start the GCD computations.
      */
-    public void startComputations(int count) {
+    public void startComputations(String userInput) {
+        // See if user specified the number of AsyncTasks after the
+        // number of iterations.
+        String[] splitInput =
+            userInput.split(":");
+
+        // Set the max iteration count.
+        int count = Integer.valueOf(splitInput[0]);
+
+        // Set the max AsyncTask count.
+        int asyncTaskCount = splitInput.length > 1 
+            ? Integer.valueOf(splitInput[1])
+            : sMAX_TASK_COUNT;
+
         // Make sure there's a non-0 count.
         if (count <= 0) 
             // Inform the user there's a problem with the input.
@@ -298,10 +312,10 @@ public class MainActivity
                               "Please specify a count value that's > 0");
         else {
             // Create all the GCDAsyncTasks.
-            for (int i = 1; i <= sMAX_TASK_COUNT; ++i)
+            for (int id = 1; id <= asyncTaskCount; ++id)
                 mAsyncTaskRelatedState.mTaskList.add
                     (new GCDAsyncTask(this,
-                                      i,
+                                      id,
                                       new Random()));
 
             // Iterate through the list of GCDAsyncTasks.
@@ -336,17 +350,15 @@ public class MainActivity
     public void done() {
         // Create a command to reset the UI.
         Runnable command = () -> {
-            // Null out the task list to avoid later problems.
-            mAsyncTaskRelatedState.mTaskList = null;
+            // Clear the task list.
+            mAsyncTaskRelatedState.mTaskList.clear();
 
             // Reset the start/stop FAB to the play icon.
             mStartOrStopFab.setImageResource(android.R.drawable.ic_media_play);
         };
 
-        // Run the command on the UI thread.  Internally this is
-        // optimized for the case where println() is called from the
-        // UI thread.
-        runOnUiThread(command);
+        // Run the command in the UI thread.
+        command.run();
     }
 
     /**
@@ -361,10 +373,8 @@ public class MainActivity
             mScrollView.fullScroll(ScrollView.FOCUS_DOWN);
         };
 
-        // Run the command on the UI thread, which internally
-        // optimizes for the case where println() is called from the
-        // UI thread.
-        runOnUiThread(command);
+        // Run the command in the UI thread.
+        command.run();
     }
 
     /**
@@ -391,6 +401,8 @@ public class MainActivity
         // Call the super class.
         super.onDestroy();
 
+        // If the activity is really going away then (i.e., not simply
+        // changing the runtime configuration) then cancel everything.
         if (mAsyncTaskRelatedState.mTaskList.size() > 0
             && !isChangingConfigurations()) {
             Log.d(TAG,
