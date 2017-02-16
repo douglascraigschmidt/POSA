@@ -9,11 +9,13 @@ import java.util.Random;
  * Computes the greatest common divisor (GCD) of two numbers, which is
  * the largest positive integer that divides two integers without a
  * remainder.  This implementation extends AsyncTask and implements
- * its various hook methods.  It also checks to see if the task has
- * been cancelled and exits gracefully if so.
+ * its hook methods, as per a white-box framework.  It also checks to
+ * see if the task has been cancelled and exits gracefully if so.
  */
 public class GCDAsyncTask
-       extends AsyncTask<Integer, String, Boolean> {
+       extends AsyncTask<Integer, // Passed to doInBackground()
+                         String,  // Passed to onProgressUpdate()
+                         Boolean> { // Returned from doInBackground() and passed to onPostExecute()
     /**
      * Debugging tag used by the Android logger.
      */
@@ -68,7 +70,8 @@ public class GCDAsyncTask
     }
 
     /**
-     * Called in the UI thread before doInBackground() starts.
+     * Hook method called in the UI thread before doInBackground()
+     * starts.
      */
     @Override
     protected void onPreExecute() {
@@ -102,9 +105,9 @@ public class GCDAsyncTask
                       + " interrupted");
                 break;
             }
-
-            // Print results.
+            // Print results periodically.
             else if ((i % maxPrintIterations) == 0)
+                // Publish this string in the UI thread.
                 publishProgress("In run() with thread id "
                                 + Thread.currentThread()
                                 + " the GCD of "
@@ -124,8 +127,8 @@ public class GCDAsyncTask
     }
 
     /**
-     * Called in the UI thread based on strings published by
-     * doInBackground().
+     * Hook method called in the UI thread based on strings published
+     * by doInBackground().
      */
     @Override
     protected void onProgressUpdate(String... message) {
@@ -134,8 +137,8 @@ public class GCDAsyncTask
     }
 
     /**
-     * Called in the UI thread after doInBackground() returns
-     * successfully.
+     * Hook method called in the UI thread after doInBackground()
+     * returns successfully.
      */
     @Override
     protected void onPostExecute(Boolean lastTask) {
@@ -144,7 +147,7 @@ public class GCDAsyncTask
                           + mAsyncTaskNumber
                           + " successfully");
 
-        // Tell the activity we're done if we're the last task.
+        // Tell the activity to finish up if we're the last task.
         if (lastTask)
             mActivity.done();
     }
@@ -160,7 +163,7 @@ public class GCDAsyncTask
                           + mAsyncTaskNumber
                           + " after being cancelled");
 
-        // Tell the activity we're done if we're the last task.
+        // Tell the activity to finish up if we're the last task.
         if (lastTask)
             mActivity.done();
     }

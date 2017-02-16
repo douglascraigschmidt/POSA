@@ -50,7 +50,7 @@ public class MainActivity
     private final static int sDEFAULT_COUNT = 100000000;
 
     /**
-     * Number of threads to put in the ThreadPoolExecutor..
+     * Number of threads to put in the ThreadPoolExecutor.
      */
     private final static int sMAX_TASK_COUNT = 2;
 
@@ -85,33 +85,6 @@ public class MainActivity
      * across runtime configuration changes.
      */
     class AsyncTaskRelatedState {
-        /**
-         * Constructor initializes the fields.
-         */
-        AsyncTaskRelatedState() {
-            // Create the GCDAsyncTask.
-            mTaskList = new ArrayList<>();
-
-            // Initialize the task count.
-            mTaskCount = new AtomicInteger(0);
-
-            // Initialize the ThreadFactory with a lambda expression.
-            mThreadFactory =
-                // Factory method that returns a new thread.
-                (runnable) -> new Thread(runnable,
-                                         // Uniquely name each AsyncTask.
-                                         "AsyncTask #"
-                                         + mTaskCount.incrementAndGet());
-
-            // Create a new "cached" ThreadPoolExecutor that's will
-            // execute the asyncTask concurrently.
-            mExecutor = new ThreadPoolExecutor(0, 
-                                               Integer.MAX_VALUE,
-                                               60L,
-                                               TimeUnit.SECONDS,
-                                               new SynchronousQueue<Runnable>(),
-                                               mThreadFactory);
-        }
 
         /**
          * Reference to the ExecutorService that runs the GCD
@@ -133,7 +106,43 @@ public class MainActivity
         /**
          * The list of GCDAsyncTasks to execute.
          */
-         List<GCDAsyncTask> mTaskList;
+        List<GCDAsyncTask> mTaskList;
+
+        /**
+         * Constructor initializes the fields.
+         */
+        AsyncTaskRelatedState() {
+            // Create the GCDAsyncTask.
+            mTaskList = new ArrayList<>();
+
+            // Initialize the task count.
+            mTaskCount = new AtomicInteger(0);
+
+            // Initialize the ThreadFactory with a lambda expression.
+            mThreadFactory =
+                // Factory method that returns a new thread.
+                (runnable) -> new Thread(runnable,
+                                         // Uniquely name each AsyncTask.
+                                         "AsyncTask #"
+                                         + mTaskCount.incrementAndGet());
+            /* Could also use this more verbose method:
+            mThreadFactory = new ThreadFactory() {
+                public Thread newThread(Runnable runnable) {
+                    return new Thread(runnable, "AsyncTask #" + mTaskCount.incrementAndGet());
+                }
+            }
+            */
+
+            // Create a new "cached" ThreadPoolExecutor that's will
+            // execute the AsyncTasks concurrently.
+            mExecutor =
+                new ThreadPoolExecutor(0,
+                                       Integer.MAX_VALUE,
+                                       60L,
+                                       TimeUnit.SECONDS,
+                                       new SynchronousQueue<Runnable>(),
+                                       mThreadFactory);
+        }
     }
 
     /**
@@ -165,7 +174,9 @@ public class MainActivity
             // Allocate the state once the first time in.
             mAsyncTaskRelatedState = 
                 new AsyncTaskRelatedState();
-        // See if there are any allocated GDCAsyncTasks yet.
+
+        // If this isn't the first time in then see if there are any
+        // allocated GDCAsyncTasks that are running.
         else if (mAsyncTaskRelatedState.mTaskList.size() > 0) {
             // Set all the activities for all the GCDAsyncTasks.
             mAsyncTaskRelatedState.mTaskList.forEach
@@ -178,6 +189,22 @@ public class MainActivity
             // Show the "startOrStop" FAB.
             UiUtils.showFab(mStartOrStopFab);
         }
+    }
+
+    /**
+     * This hook method is called by Android as part of destroying an
+     * activity due to a configuration change, when it is known that a
+     * new instance will immediately be created for the new
+     * configuration.
+     */
+    @Override
+    public Object onRetainNonConfigurationInstance() {
+        // Call the super class.
+        super.onRetainNonConfigurationInstance();
+
+        // Returns the AsyncTask-related state that must be saved
+        // across runtime configuration changes.
+        return mAsyncTaskRelatedState;
     }
 
     /**
@@ -279,17 +306,18 @@ public class MainActivity
      *            The view.
      */
     public void startOrStopComputations(View view) {
+        // See if there are AsyncTasks present (they only exist while
+        // GCD computations are in progress).
         if (mAsyncTaskRelatedState.mTaskList.size() > 0)
-            // The thread only exists while GCD computations are in
-            // progress.
-            interruptComputations();
+            // Cancel the computations.
+            cancelComputations();
         else 
-            // Start running the computations.
+            // Start running the computations specified by the user.
             startComputations(mCountEditText.getText().toString());
     }
 
     /**
-     * Start the GCD computations.
+     * Start the GCD computations based on the @a userInput.
      */
     public void startComputations(String userInput) {
         // See if user specified the number of AsyncTasks after the
@@ -305,7 +333,7 @@ public class MainActivity
             ? Integer.valueOf(splitInput[1])
             : sMAX_TASK_COUNT;
 
-        // Make sure there's a non-0 count.
+        // Make sure there's a positive count.
         if (count <= 0) 
             // Inform the user there's a problem with the input.
             UiUtils.showToast(this,
@@ -318,12 +346,15 @@ public class MainActivity
                                       id,
                                       new Random()));
 
-            // Iterate through the list of GCDAsyncTasks.
+            // Iterate through the list of GCDAsyncTasks and
+            // start executing them.
             mAsyncTaskRelatedState.mTaskList.forEach
                 (asyncTask -> 
-                 // Execute the asyncTask on the ThreadPoolExecutor.
-                 asyncTask.executeOnExecutor(mAsyncTaskRelatedState.mExecutor,
-                                             count));
+                 // Execute the asyncTask on the ThreadPoolExecutor
+                 // (note use of a black-box framework "strategy".
+                 asyncTask.executeOnExecutor
+                     (mAsyncTaskRelatedState.mExecutor,
+                      count));
 
             // Update the start/stop FAB to display a stop icon.
             mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);
@@ -331,15 +362,15 @@ public class MainActivity
     }
 
     /**
-     * Stop the GCD computations.
+     * Cancel all the AsyncTasks running GCD computations.
      */
-    private void interruptComputations() {
-        // Cancel all the GCDAsyncTasks;
-        mAsyncTaskRelatedState.mTaskList.forEach(asyncTask
-                                                 -> asyncTask.cancel(true));
+    private void cancelComputations() {
+        // Cancel all the GCDAsyncTasks immediately.
+        mAsyncTaskRelatedState.mTaskList.forEach(asyncTask-> 
+                                                 asyncTask.cancel(true));
 
         UiUtils.showToast(this,
-                          "Interrupting all "
+                          "Cancelling all "
                           + mAsyncTaskRelatedState.mTaskList.size()
                           + " async tasks ");
     }
@@ -378,22 +409,6 @@ public class MainActivity
     }
 
     /**
-     * This hook method is called by Android as part of destroying an
-     * activity due to a configuration change, when it is known that a
-     * new instance will immediately be created for the new
-     * configuration.
-     */
-    @Override
-    public Object onRetainNonConfigurationInstance() {
-        // Call the super class.
-        super.onRetainNonConfigurationInstance();
-
-        // Returns the AsyncTask-related state that must be saved
-        // across runtime configuration changes.
-        return mAsyncTaskRelatedState;
-    }
-
-    /**
      * Lifecycle hook method called when this activity is being
      * destroyed.
      */
@@ -401,14 +416,14 @@ public class MainActivity
         // Call the super class.
         super.onDestroy();
 
-        // If the activity is really going away then (i.e., not simply
-        // changing the runtime configuration) then cancel everything.
+        // If the activity is going away then (i.e., not simply changing
+        // the runtime configuration) then cancel all AsyncTasks.
         if (mAsyncTaskRelatedState.mTaskList.size() > 0
             && !isChangingConfigurations()) {
             Log.d(TAG,
                   "canceling all the async tasks ");
 
-            // Cancel all the GCDAsyncTasks;
+            // Cancel all the GCDAsyncTasks.
             mAsyncTaskRelatedState.mTaskList.forEach(asyncTask 
                                                      -> asyncTask.cancel(true));
 
