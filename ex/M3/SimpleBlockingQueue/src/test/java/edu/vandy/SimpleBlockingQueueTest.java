@@ -92,7 +92,7 @@ public class SimpleBlockingQueueTest {
             Object s = null;
             int nullCount = 0;
             try {
-                for (int i = 0; i < mMaxIterations; i++) {
+                for (int i = 0; i < mMaxIterations; ) {
                     // Calls the take() method.
                     s = mQueue.take();
 
@@ -100,6 +100,7 @@ public class SimpleBlockingQueueTest {
                     // value from take().
                     if (s != null) {
                         mCount.decrementAndGet();
+                        i++;
                     } else
                         nullCount++;
 

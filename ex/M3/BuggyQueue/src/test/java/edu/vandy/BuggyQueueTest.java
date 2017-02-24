@@ -86,7 +86,7 @@ public class BuggyQueueTest {
             Object s = null;
             int nullCount = 0;
             try {
-                for (int i = 0; i < mMaxIterations; i++) {
+                for (int i = 0; i < mMaxIterations; ) {
                     // Calls the take() method.
                     s = mQueue.take();
                     
@@ -94,6 +94,7 @@ public class BuggyQueueTest {
                     // value from take().
                     if (s != null) {
                         mCount.decrementAndGet();
+                        i++;
                     } else
                         nullCount++;
 
@@ -123,7 +124,7 @@ public class BuggyQueueTest {
     /**
      * Main entry point that tests the SimpleQueue class.
      */
-    @Test
+    @Test(timeout=10000)
     public void testBuggyQueue() {
         final BuggyQueue<String> buggyQueue =
             new BuggyQueue<>();
