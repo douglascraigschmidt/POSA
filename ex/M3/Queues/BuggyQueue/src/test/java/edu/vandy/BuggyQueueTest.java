@@ -21,7 +21,7 @@ public class BuggyQueueTest {
     /**
      * Maximum size of the queue.
      */
-    private final static int sQUEUE_SIZE = 1000;
+    private final static int sQUEUE_SIZE = 10;
 
     /**
      * Count the number of iterations.
@@ -33,7 +33,7 @@ public class BuggyQueueTest {
      * This producer runs in a separate Java thread and passes strings
      * to a consumer thread via a shared BlockingQueue.
      */
-    private static class Producer<BQ extends BlockingQueue<String>>
+    private static class Producer<BQ extends BlockingQueue<Integer>>
                    implements Runnable {
         /**
          * This queue is shared with the consumer.
@@ -57,7 +57,7 @@ public class BuggyQueueTest {
                     mCount.incrementAndGet();
 
                     // Calls the put() method.
-                    mQueue.put(Integer.toString(i));
+                    mQueue.put(Integer.valueOf(i));
                 }
             } catch (InterruptedException e) {
                 System.out.println("InterruptedException caught");
@@ -69,7 +69,7 @@ public class BuggyQueueTest {
      * This consumer runs in a separate Java thread and receives
      * strings from a producer thread via a shared BlockingQueue.
      */
-    private static class Consumer<BQ extends BlockingQueue<String>>
+    private static class Consumer<BQ extends BlockingQueue<Integer>>
                    implements Runnable {
         /**
          * This queue is shared with the producer.
@@ -87,43 +87,55 @@ public class BuggyQueueTest {
          * This method runs in a separate Java thread and receives
          * strings from a producer thread via a shared BlockingQueue.
          */
-        public void run(){ 
-            Object s = null;
+        public void run(){
+            Integer integer = null;
             int nullCount = 0;
+
             try {
-                for (int i = 0; i < mMaxIterations; ) {
+                // Get the first item from the queue.
+                Integer previous = null;
+
+                // Get the first non-null value.
+                while ((previous = mQueue.take()) == null)
+                   continue;
+
+                mCount.decrementAndGet();
+
+                for (int i = 1; i < mMaxIterations; ) {
                     // Calls the take() method.
-                    s = mQueue.take();
-                    
+                    integer = mQueue.take();
+                        
                     // Only update the state if we get a non-null
                     // value from take().
-                    if (s != null) {
+                    if (integer != null) {
                         mCount.decrementAndGet();
                         i++;
+
+                        // Make sure the entries are ordered.
+                        assertEquals(previous + 1, integer.intValue());
+                        previous = integer;
                     } else
                         nullCount++;
 
-                    /*
                     if ((i % (mMaxIterations / 10)) == 0)
-                        System.out.println(s == null ? "<null>" : s);
-                    */
+                        System.out.println(integer);
                 }
-            } catch (InterruptedException e) {
-                System.out.println("InterruptedException caught");
-            }
-            // assertEquals(mCount.get(), 0);
+                } catch (InterruptedException e) {
+                    System.out.println("InterruptedException caught");
+                }
+                assertEquals(mCount.get(), 0);
 
-            System.out.println("Final size of the queue is " 
-                               + mQueue.size()
-                               + "\nmCount is "
-                               + mCount.get()
-                               + "\nFinal value is "
-                               + s
-                               + "\nnumber of null returns from take() is "
-                               + nullCount
-                               + "\nmCount + nullCount is "
-                               + (mCount.get() + nullCount));
-        }
+                System.out.println("Final size of the queue is " 
+                                   + mQueue.size()
+                                   + "\nmCount is "
+                                   + mCount.get()
+                                   + "\nFinal value is "
+                                   + integer
+                                   + "\nnumber of null returns from take() is "
+                                   + nullCount
+                                   + "\nmCount + nullCount is "
+                                   + (mCount.get() + nullCount));
+            }
     }
 
     /**
@@ -131,7 +143,7 @@ public class BuggyQueueTest {
      */
     @Test(timeout=10000)
     public void testBuggyQueue() {
-        final BuggyQueue<String> buggyQueue =
+        final BuggyQueue<Integer> buggyQueue =
             new BuggyQueue<>(sQUEUE_SIZE);
 
         try {

@@ -88,19 +88,22 @@ public class SimpleBlockingQueueTest {
          * This method runs in a separate Java thread and receives
          * integers from a producer thread[q via a shared BlockingQueue.
          */
-        public void run(){ 
+        public void run(){
+            Integer integer = null;
+            int nullCount = 0;
+
             try {
                 // Get the first item from the queue.
                 Integer previous = mQueue.take();
-                Integer integer = null;
-                int nullCount = 0;
+                mCount.decrementAndGet();
 
-                for (int i = 0; i < mMaxIterations - 1; ) {
+                for (int i = 1; i < mMaxIterations; ) {
                     // Calls the take() method.
                     integer = mQueue.take();
 
                     // Make sure the entries are ordered.
-                    assertEquals(integer, previous + 1);
+                    assertEquals(previous + 1, integer.intValue());
+                    previous = integer;
                         
                     // Only update the state if we get a non-null
                     // value from take().
@@ -111,7 +114,7 @@ public class SimpleBlockingQueueTest {
                         nullCount++;
 
                     if((i % (mMaxIterations / 10)) == 0)
-                        System.out.println(s);
+                        System.out.println(integer);
                 }
                 } catch (InterruptedException e) {
                     System.out.println("InterruptedException caught");
