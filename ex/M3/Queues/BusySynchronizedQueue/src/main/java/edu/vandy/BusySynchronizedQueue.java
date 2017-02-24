@@ -4,16 +4,15 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /*
- * Defines an implementation of the BlockingQueue interface that works
- * properly when accessed via multiple threads since it's synchronized
- * properly, but is inefficient since due to its "busy waiting".
+ * Implements the BoundedQueue interface that works properly when
+ * accessed via multiple threads since it's synchronized properly, but
+ * is inefficient since due to its "busy waiting".
  */
 class BusySynchronizedQueue<E> 
-      implements BlockingQueue<E> {
+      implements BoundedQueue<E> {
     /**
      * The queue consists of a LinkedList of E's.
      */
@@ -43,117 +42,75 @@ class BusySynchronizedQueue<E>
     }
 
     /**
-     * True if the queue is empty.
+     * Returns <tt>true</tt> if this queue contains no elements, else false.
+     *
+     * @return <tt>true</tt> if this queue contains no elements, else false.
      */
-    public synchronized boolean isEmpty() {
-        return mList.size() == 0;
+    @Override
+    public boolean isEmpty() {
+        synchronized(this) {
+            return mList.size() == 0;
+        }
     }
 
     /**
-     * Returns true if the queue is full, else false.
+     * Returns <tt>true</tt> if this queue is full, else false.
+     *
+     * @return <tt>true</tt> if this queue is full, else false.
      */
-    private synchronized boolean isFull() {
-        return mList.size() == mCapacity;
+    @Override
+    public boolean isFull() {
+        synchronized(this) {
+            return mList.size() == mCapacity;
+        }
     }
-
-    /**
-     * Add a new E to the end of the queue.
-     */
-    public synchronized void put(E msg)
-                                 throws InterruptedException {
-        if (!isFull())
-            mList.add(msg);
-    } 
-
-    /**
-     * Remove the E at the front of the queue.
-     */
-    public synchronized E take() 
-                              throws InterruptedException {
-        if (!isEmpty())
-            return mList.remove(0);
-        else
-            return null;
-    } 
 
     /**
      * Returns the number of elements in this queue.
+     *
+     * @return the number of elements in this collection
      */
-    public synchronized int size() {
-        return mList.size();
+    @Override
+    public int size() {
+        synchronized(this) {
+            return mList.size();
+        }
     }
 
     /**
-     * All these methods are inherited from the BlockingQueue
-     * interface.  All are defined as no-ops for simplicity.
+     * Retrieves and removes the head of this queue, or returns {@code
+     * null} if this queue is empty.
+     *
+     * @return the head of this queue, or {@code null} if this queue is empty
      */
-    public int drainTo(Collection<? super E> c) {
-        return 0;
-    }
-    public int drainTo(Collection<? super E> c, int maxElements) {
-        return 0;
-    }
-    public boolean contains(Object o) {
-        return false;
-    }
-    public boolean remove(Object o) {
-        return false;
-    }
-    public int remainingCapacity() {
-        return 0;
-    }
+    @Override
     public E poll() {
-        return null;
+        synchronized(this) {
+            if (!isEmpty())
+                return mList.remove(0);
+            else
+                return null;
+        }
     }
-    public E poll(long timeout, TimeUnit unit) throws InterruptedException {
-        return take();
-    }
-    public E peek() {
-        return null;
-    }
+
+    /**
+     * Inserts the specified element into this queue if it is possible to do
+     * so immediately without violating capacity restrictions, returning
+     * {@code true} upon success and {@code false} if no space is currently
+     * available.
+     *
+     * @return {@code true} if the element was added to this queue, else
+     *         {@code false}
+     */
+    @Override
     public boolean offer(E e) {
-        return false;
-    }
-    public boolean offer(E e, long timeout, TimeUnit unit) {
-        try {
-            put(e);
+        synchronized (this) {
+            if (!isFull()) {
+                mList.add(e);
+                return true;
+            } else
+                return false;
         }
-        catch (InterruptedException ex) {
-            // Just swallow this exception for this simple (buggy) test.
-        }
-        return true;
-    }
-    public boolean add(E e) {
-        return false;
-    }
-    public E element() {
-        return null;
-    }
-    public E remove() {
-        return null;
-    }
-    public void clear() {
-    }
-    public boolean retainAll(Collection<?> collection) {
-        return false;
-    }
-    public boolean removeAll(Collection<?> collection) {
-        return false;
-    }
-    public boolean addAll(Collection<? extends E> collection) {
-        return false;
-    }
-    public boolean containsAll(Collection<?> collection) {
-        return false;
-    }
-    public Object[] toArray() {
-        return null;
-    }
-    public <T> T[] toArray(T[] array) {
-        return null;
-    }
-    public Iterator<E> iterator() {
-        return null;
     }
 }
 

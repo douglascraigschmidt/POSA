@@ -8,11 +8,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Test;
 
 /**
- * Test program for the SimpleBlockingQueue that fixes race conditions
+ * Test program for the SimpleBlockingBoundedQueue that fixes race conditions
  * by having proper synchronization (i.e., mutual exclusion and
  * coordination).
  */
-public class SimpleBlockingQueueTest { 
+public class SimpleBlockingBoundedQueueTest {
     /**
      * Maximum number of iterations.
      */
@@ -31,9 +31,9 @@ public class SimpleBlockingQueueTest {
 
     /**
      * This producer runs in a separate Java thread and passes integers
-     * to a consumer thread via a shared BlockingQueue.
+     * to a consumer thread via a shared BoundedQueue.
      */
-    private static class Producer<BQ extends BlockingQueue<Integer>>
+    private static class Producer<BQ extends BoundedQueue<Integer>>
            implements Runnable {
         /**
          * This queue is shared with the consumer.
@@ -41,7 +41,7 @@ public class SimpleBlockingQueueTest {
         private final BQ mQueue;
         
         /**
-         * Constructor initializes the BlockingQueue data
+         * Constructor initializes the BoundedQueue data
          * member.
          */
         Producer(BQ blockingQueue) {
@@ -50,7 +50,7 @@ public class SimpleBlockingQueueTest {
 
         /**
          * This method runs in a separate Java thread and passes
-         * integers to a consumer thread via a shared BlockingQueue.
+         * integers to a consumer thread via a shared BoundedQueue.
          */
         public void run(){ 
             try {
@@ -68,9 +68,9 @@ public class SimpleBlockingQueueTest {
 
     /**
      * This consumer runs in a separate Java thread and receives
-     * integers from a producer thread via a shared BlockingQueue.
+     * integers from a producer thread via a shared BoundedQueue.
      */
-    private static class Consumer<BQ extends BlockingQueue<Integer>>
+    private static class Consumer<BQ extends BoundedQueue<Integer>>
            implements Runnable {
         /**
          * This queue is shared with the producer.
@@ -78,7 +78,7 @@ public class SimpleBlockingQueueTest {
         private final BQ mQueue;
         
         /**
-         * Constructor initializes the BlockingQueue data member.
+         * Constructor initializes the BoundedQueue data member.
          */
         Consumer(BQ blockingQueue) {
             mQueue = blockingQueue;
@@ -86,9 +86,9 @@ public class SimpleBlockingQueueTest {
 
         /**
          * This method runs in a separate Java thread and receives
-         * integers from a producer thread[q via a shared BlockingQueue.
+         * integers from a producer thread[q via a shared BoundedQueue.
          */
-        public void run(){
+        public void run() {
             Integer integer = null;
             int nullCount = 0;
 
@@ -101,46 +101,46 @@ public class SimpleBlockingQueueTest {
                     // Calls the take() method.
                     integer = mQueue.take();
 
-                    // Make sure the entries are ordered.
-                    assertEquals(previous + 1, integer.intValue());
-                    previous = integer;
-                        
                     // Only update the state if we get a non-null
                     // value from take().
                     if (integer != null) {
+                        // Make sure the entries are ordered.
+                        assertEquals(previous + 1, integer.intValue());
+                        previous = integer;
+                        
+                        if((i % (mMaxIterations / 10)) == 0)
+                            System.out.println(integer);
+
                         mCount.decrementAndGet();
                         i++;
                     } else
                         nullCount++;
-
-                    if((i % (mMaxIterations / 10)) == 0)
-                        System.out.println(integer);
                 }
-                } catch (InterruptedException e) {
-                    System.out.println("InterruptedException caught");
-                }
-                assertEquals(mCount.get(), 0);
-
-                System.out.println("Final size of the queue is " 
-                                   + mQueue.size()
-                                   + "\nmCount is "
-                                   + mCount.get()
-                                   + "\nFinal value is "
-                                   + integer
-                                   + "\nnumber of null returns from take() is "
-                                   + nullCount
-                                   + "\nmCount + nullCount is "
-                                   + (mCount.get() + nullCount));
+            } catch (InterruptedException e) {
+                System.out.println("InterruptedException caught");
             }
+            assertEquals(0, mCount.get());
+
+            System.out.println("Final size of the queue is " 
+                               + mQueue.size()
+                               + "\nmCount is "
+                               + mCount.get()
+                               + "\nFinal value is "
+                               + integer
+                               + "\nnumber of null returns from take() is "
+                               + nullCount
+                               + "\nmCount + nullCount is "
+                               + (mCount.get() + nullCount));
+        }
     }
 
     /**
-     * Main entry point that tests the SimpleBlockingQueue class.
+     * Main entry point that tests the SimpleBoundedQueue class.
      */
     @Test
-    public void testSimpleBlockingQueue() {
-        final SimpleBlockingQueue<Integer> simpleQueue =
-            new SimpleBlockingQueue<>(sQUEUE_SIZE);
+    public void testSimpleBlockingBoundedQueue() {
+        final SimpleBlockingBoundedQueue<Integer> simpleQueue =
+            new SimpleBlockingBoundedQueue<>(sQUEUE_SIZE);
 
         try {
             // Create producer and consumer threads.
@@ -149,6 +149,9 @@ public class SimpleBlockingQueueTest {
                 new Thread(new Consumer<>(simpleQueue))
             };
 
+            // Record the start time.
+            long startTime = System.nanoTime();
+
             // Start both threads.
             for (Thread thread : threads)
                 thread.start();
@@ -156,6 +159,10 @@ public class SimpleBlockingQueueTest {
             // Wait for both threads to stop.
             for (Thread thread : threads)
                 thread.join();
+
+            System.out.println("test ran in "
+                               + (System.nanoTime() - startTime) / 1_000_000
+                               + " msecs");
         } catch (Exception e) {
             System.out.println("caught exception");
         }

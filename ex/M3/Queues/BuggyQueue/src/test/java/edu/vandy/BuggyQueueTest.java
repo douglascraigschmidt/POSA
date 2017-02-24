@@ -2,9 +2,7 @@ package edu.vandy;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 
 import org.junit.Test;
 
@@ -31,9 +29,9 @@ public class BuggyQueueTest {
 
     /**
      * This producer runs in a separate Java thread and passes strings
-     * to a consumer thread via a shared BlockingQueue.
+     * to a consumer thread via a shared BoundedQueue.
      */
-    private static class Producer<BQ extends BlockingQueue<Integer>>
+    private static class Producer<BQ extends BoundedQueue<Integer>>
                    implements Runnable {
         /**
          * This queue is shared with the consumer.
@@ -41,7 +39,7 @@ public class BuggyQueueTest {
         private final BQ mQueue;
         
         /**
-         * Constructor initializes the BlockingQueue data member.
+         * Constructor initializes the BoundedQueue data member.
          */
         Producer(BQ blockingQueue) {
             mQueue = blockingQueue;
@@ -49,27 +47,25 @@ public class BuggyQueueTest {
 
         /**
          * This method runs in a separate Java thread and passes
-         * strings to a consumer thread via a shared BlockingQueue.
+         * strings to a consumer thread via a shared BoundedQueue.
          */
-        public void run(){ 
-            try {
-                for(int i = 0; i < mMaxIterations; i++) {
+        public void run() {
+            for (int i = 0; i < mMaxIterations; ) {
+                // Calls the offer() method.
+                if (mQueue.offer(i)) {
+                    i++;
                     mCount.incrementAndGet();
-
-                    // Calls the put() method.
-                    mQueue.put(Integer.valueOf(i));
-                }
-            } catch (InterruptedException e) {
-                System.out.println("InterruptedException caught");
+                } else
+                    Thread.yield();
             }
         }
     }
 
     /**
      * This consumer runs in a separate Java thread and receives
-     * strings from a producer thread via a shared BlockingQueue.
+     * strings from a producer thread via a shared BoundedQueue.
      */
-    private static class Consumer<BQ extends BlockingQueue<Integer>>
+    private static class Consumer<BQ extends BoundedQueue<Integer>>
                    implements Runnable {
         /**
          * This queue is shared with the producer.
@@ -77,7 +73,7 @@ public class BuggyQueueTest {
         private final BQ mQueue;
         
         /**
-         * Constructor initializes the BlockingQueue data member.
+         * Constructor initializes the BoundedQueue data member.
          */
         Consumer(BQ blockingQueue) {
             mQueue = blockingQueue;
@@ -85,57 +81,56 @@ public class BuggyQueueTest {
 
         /**
          * This method runs in a separate Java thread and receives
-         * strings from a producer thread via a shared BlockingQueue.
+         * strings from a producer thread via a shared BoundedQueue.
          */
-        public void run(){
+        public void run() {
             Integer integer = null;
             int nullCount = 0;
 
-            try {
-                // Get the first item from the queue.
-                Integer previous = null;
+            // Get the first item from the queue.
+            Integer previous = null;
 
-                // Get the first non-null value.
-                while ((previous = mQueue.take()) == null)
-                   continue;
+            // Get the first non-null value.
+            while ((previous = mQueue.poll()) == null)
+                continue;
 
-                mCount.decrementAndGet();
+            mCount.decrementAndGet();
 
-                for (int i = 1; i < mMaxIterations; ) {
-                    // Calls the take() method.
-                    integer = mQueue.take();
+            for (int i = 1; i < mMaxIterations; ) {
+                // Try to get the next integer.
+                integer = mQueue.poll();
                         
-                    // Only update the state if we get a non-null
-                    // value from take().
-                    if (integer != null) {
-                        mCount.decrementAndGet();
-                        i++;
-
-                        // Make sure the entries are ordered.
-                        assertEquals(previous + 1, integer.intValue());
-                        previous = integer;
-                    } else
-                        nullCount++;
+                // Only update the state if we get a non-null
+                // value from take().
+                if (integer != null) {
+                    // Make sure the entries are ordered.
+                    assertEquals(previous + 1, integer.intValue());
+                    previous = integer;
 
                     if ((i % (mMaxIterations / 10)) == 0)
                         System.out.println(integer);
-                }
-                } catch (InterruptedException e) {
-                    System.out.println("InterruptedException caught");
-                }
-                assertEquals(mCount.get(), 0);
+                    mCount.decrementAndGet();
+                    i++;
 
-                System.out.println("Final size of the queue is " 
-                                   + mQueue.size()
-                                   + "\nmCount is "
-                                   + mCount.get()
-                                   + "\nFinal value is "
-                                   + integer
-                                   + "\nnumber of null returns from take() is "
-                                   + nullCount
-                                   + "\nmCount + nullCount is "
-                                   + (mCount.get() + nullCount));
+                } else {
+                    nullCount++;
+                    Thread.yield();
+                }
             }
+
+            assertEquals(0, mCount.get());
+
+            System.out.println("Final size of the queue is " 
+                               + mQueue.size()
+                               + "\nmCount is "
+                               + mCount.get()
+                               + "\nFinal value is "
+                               + integer
+                               + "\nnumber of null returns from take() is "
+                               + nullCount
+                               + "\nmCount + nullCount is "
+                               + (mCount.get() + nullCount));
+        }
     }
 
     /**
@@ -153,6 +148,9 @@ public class BuggyQueueTest {
                 new Thread(new Consumer<>(buggyQueue))
             };
 
+            // Record the start time.
+            long startTime = System.nanoTime();
+
             // Start all the threads.
             for (Thread thread : threads)
                 thread.start();
@@ -160,6 +158,10 @@ public class BuggyQueueTest {
             // Wait for all threads to stop.
             for (Thread thread : threads)
                 thread.join();
+
+            System.out.println("test ran in "
+                               + (System.nanoTime() - startTime) / 1_000_000
+                               + " msecs");
         } catch (Exception e) {
             System.out.println("caught exception");
         }
