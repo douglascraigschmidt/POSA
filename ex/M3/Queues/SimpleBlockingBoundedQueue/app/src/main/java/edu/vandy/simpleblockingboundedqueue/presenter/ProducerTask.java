@@ -47,6 +47,10 @@ public class ProducerTask
     protected Void doInBackground(Void... v) {
         try {
             for (int i = 1; i <= mMaxIterations; ++i) {
+                // Break out of the loop if we're cancelled.
+                if (isCancelled())
+                    break;
+
                 // Call the put() method.
                 mQueue.put(i);
 
@@ -54,7 +58,7 @@ public class ProducerTask
                 if ((i % (mMaxIterations / 10)) == 0) {
                     /*
                     Log.d("Producer",
-                          "doInBackground() on iteration "
+      s                    "doInBackground() on iteration "
                           + i);
                     */
 

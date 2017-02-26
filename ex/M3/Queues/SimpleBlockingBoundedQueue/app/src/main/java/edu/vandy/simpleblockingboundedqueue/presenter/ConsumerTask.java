@@ -47,6 +47,10 @@ public class ConsumerTask
     protected Void doInBackground(Void... v) {
         try {
             for (int i = 1; i <= mMaxIterations; ++i) {
+                // Break out of the loop if we're cancelled.
+                if (isCancelled())
+                    break;
+
                 // Calls the take() method to get the next integer.
                 Integer integer = mQueue.take();
                         

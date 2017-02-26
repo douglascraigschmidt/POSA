@@ -134,7 +134,7 @@ public class MainActivity
             mTasks.forEach(task 
                            -> task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR));
 
-            // Initialize and startx the Chronometer.
+            // Initialize and start the Chronometer.
             mChronometer.setBase(SystemClock.elapsedRealtime());
             mChronometer.setVisibility(TextView.VISIBLE);
             mChronometer.start();

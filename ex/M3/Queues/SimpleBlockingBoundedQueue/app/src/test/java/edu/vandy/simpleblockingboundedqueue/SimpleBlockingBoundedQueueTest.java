@@ -6,8 +6,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 
-import edu.vandy.simpleblockingboundedqueue.utils.BoundedQueue;
-import edu.vandy.simpleblockingboundedqueue.utils.SimpleBlockingBoundedQueue;
+import edu.vandy.simpleblockingboundedqueue.model.BoundedQueue;
+import edu.vandy.simpleblockingboundedqueue.model.SimpleBlockingBoundedQueue;
 
 /**
  * Test program for the SimpleBlockingBoundedQueue that fixes race conditions

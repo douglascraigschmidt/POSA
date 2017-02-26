@@ -86,6 +86,7 @@ public abstract class ProducerConsumerTaskBase
      */
     @Override
     public void onPreExecute() {
+        mProgressBar.setProgress(0);
         mProgressBar.setVisibility(ProgressBar.VISIBLE);
         mProgressCount.setText(mMessage + mPercentage);
     }
