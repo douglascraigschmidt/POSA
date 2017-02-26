@@ -263,13 +263,9 @@ public class MainActivity
             mStartOrStopFab.setImageResource(android.R.drawable.ic_media_play);
         };
 
-        // Optimize for the case where println() is called from the UI
-        // thread.
-        if (UiUtils.runningOnUiThread())
-            command.run();
-        else 
-            // Run the command on the UI thread.
-            runOnUiThread(command);
+        // Run the command on the UI thread.  This all is optimized
+        // for the case where println() is called from the UI thread.
+        runOnUiThread(command);
     }
 
     /**
