@@ -1,6 +1,5 @@
 package edu.vandy.simpleblockingboundedqueue.model;
 
-import java.util.List;
 import java.util.LinkedList;
 
 /*
@@ -13,7 +12,7 @@ public class SimpleBlockingBoundedQueue<E>
     /**
      * The queue consists of a LinkedList of E's.
      */
-    final private List<E> mList;
+    final private LinkedList<E> mList;
 
     /**
      * The maximum capacity of the queue or Integer.MAX_VALUE if none.
