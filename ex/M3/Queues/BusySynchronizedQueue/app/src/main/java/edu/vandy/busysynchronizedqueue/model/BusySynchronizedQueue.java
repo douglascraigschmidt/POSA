@@ -47,10 +47,8 @@ public class BusySynchronizedQueue<E>
      * @return <tt>true</tt> if this queue contains no elements, else false.
      */
     @Override
-    public boolean isEmpty() {
-        synchronized(this) {
-            return mList.size() == 0;
-        }
+    public synchronized boolean isEmpty() {
+        return mList.size() == 0;
     }
 
     /**
@@ -59,10 +57,8 @@ public class BusySynchronizedQueue<E>
      * @return <tt>true</tt> if this queue is full, else false.
      */
     @Override
-    public boolean isFull() {
-        synchronized(this) {
-            return mList.size() == mCapacity;
-        }
+    public synchronized boolean isFull() {
+        return mList.size() == mCapacity;
     }
 
     /**
@@ -71,10 +67,8 @@ public class BusySynchronizedQueue<E>
      * @return the number of elements in this collection
      */
     @Override
-    public int size() {
-        synchronized(this) {
-            return mList.size();
-        }
+    public synchronized int size() {
+        return mList.size();
     }
 
     /**
@@ -84,10 +78,8 @@ public class BusySynchronizedQueue<E>
      * @return the head of this queue, or {@code null} if this queue is empty
      */
     @Override
-    public E poll() {
-        synchronized(this) {
-            return mList.poll();
-        }
+    public synchronized E poll() {
+        return mList.poll();
     }
 
     /**
@@ -100,14 +92,12 @@ public class BusySynchronizedQueue<E>
      *         {@code false}
      */
     @Override
-    public boolean offer(E e) {
-        synchronized (this) {
-            if (!isFull()) {
-                mList.add(e);
-                return true;
-            } else
-                return false;
-        }
+    public synchronized boolean offer(E e) {
+        if (!isFull()) {
+            mList.add(e);
+            return true;
+        } else
+            return false;
     }
 }
 
