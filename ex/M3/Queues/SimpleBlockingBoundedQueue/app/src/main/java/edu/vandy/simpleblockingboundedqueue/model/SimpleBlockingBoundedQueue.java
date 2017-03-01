@@ -78,12 +78,12 @@ public class SimpleBlockingBoundedQueue<E>
             while (mList.isEmpty()) 
                 wait();
 
-            final E e = mList.poll();
-        
             // Notify that the queue may have changed state, e.g., "no
             // longer full".
             notifyAll();
-            return e;
+
+            // Remove/return the first item on the queue.
+            return mList.poll();;
         }
     } 
 
