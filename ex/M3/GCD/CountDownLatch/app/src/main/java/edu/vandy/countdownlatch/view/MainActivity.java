@@ -1,6 +1,5 @@
 package edu.vandy.countdownlatch.view;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -52,11 +51,6 @@ public class MainActivity
             // Reset widgets and the activity for each async task.
             mTasks.forEach(task 
                            -> task.onConfigurationChange(this));
-
-            // Initialize and start the Chronometer.
-            mChronometer.setBase(SystemClock.elapsedRealtime());
-            mChronometer.setVisibility(TextView.VISIBLE);
-            mChronometer.start();
 
             // Update the start/stop FAB to display a stop icon.
             mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);
@@ -110,7 +104,7 @@ public class MainActivity
                               "Please specify a count value that's > 0");
         else {
             // Create the GCDTesterTask.
-            GCDTesterTask gcdTask = new GCDTesterTask(this);
+            GCDTesterTask gcdTask = new GCDTesterTask(this, mChronometer);
 
             // Add the new task to the list.
             mTasks.add(gcdTask);
@@ -120,11 +114,6 @@ public class MainActivity
                 (task
                  -> task.executeOnExecutor(gcdTask.getExecutor(),
                                            count));
-
-            // Initialize and start the Chronometer.
-            mChronometer.setBase(SystemClock.elapsedRealtime());
-            mChronometer.setVisibility(TextView.VISIBLE);
-            mChronometer.start();
 
             // Update the start/stop FAB to display a stop icon.
             mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);

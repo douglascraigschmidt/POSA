@@ -1,6 +1,7 @@
 package edu.vandy.countdownlatch.presenter;
 
 import android.os.AsyncTask;
+import android.os.SystemClock;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -11,6 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import edu.vandy.countdownlatch.R;
+import edu.vandy.countdownlatch.utils.Chronometer;
 import edu.vandy.countdownlatch.utils.GCDs;
 import edu.vandy.countdownlatch.view.MainActivity;
 
@@ -28,11 +30,18 @@ public class GCDTesterTask
     ExecutorService mExecutor;
 
     /**
+     * 
+     */
+    Chronometer mChronometer;
+
+    /**
      * Constructor initializes the fields.
      */
-    public GCDTesterTask(MainActivity activity) {
+    public GCDTesterTask(MainActivity activity,
+                         Chronometer chronometer) {
         mActivity = activity;
         mExecutor = Executors.newCachedThreadPool();
+        mChronometer = chronometer;
     }
 
     /**
@@ -120,6 +129,14 @@ public class GCDTesterTask
                                    gcdTuple,
                                    this));
             }
+
+            publishProgress(new Runnable() {
+                    public void run() {
+                    // Initialize and start the Chronometer.
+                    mChronometer.setBase(SystemClock.elapsedRealtime());
+                    mChronometer.setVisibility(TextView.VISIBLE);
+                    mChronometer.start();
+                    }});
 
             System.out.println("Starting GCD tests");
 
