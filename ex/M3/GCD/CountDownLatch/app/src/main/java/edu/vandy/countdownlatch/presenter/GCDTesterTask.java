@@ -110,8 +110,8 @@ public class GCDTesterTask
                     + gcdTuple.mTestName;
 
                 mExecutor.execute(new AndroidGCDCountDownLatchTester
-                                  // All threads share all the entry and exit
-                                  // barriers.
+                                  // All threads share all the entry
+                                  // and exit barriers.
                                   (message,
                                    (ProgressBar) mActivity.findViewById(gcdTuple.mProgressBarResId),
                                    (TextView) mActivity.findViewById(gcdTuple.mProgressCountResId),

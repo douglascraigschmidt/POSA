@@ -5,6 +5,9 @@ import android.widget.TextView;
 
 import java.util.concurrent.CountDownLatch;
 
+/**
+ *
+ */
 public class AndroidGCDCountDownLatchTester
        extends GCDCountDownLatchTester {
     /**
@@ -29,6 +32,9 @@ public class AndroidGCDCountDownLatchTester
      */
     TextView mProgressCount;
 
+    /**
+     *
+     */
     public AndroidGCDCountDownLatchTester(String message,
                                           ProgressBar progressBar,
                                           TextView progressCount,
@@ -44,6 +50,9 @@ public class AndroidGCDCountDownLatchTester
         mMessage = message; 
         mProgressBar = progressBar;
         mProgressCount = progressCount;
+        mProgressBar.setProgress(0);
+        mProgressBar.setVisibility(ProgressBar.VISIBLE);
+        mProgressCount.setText(mMessage + mPercentage);
     }
 
     /**
