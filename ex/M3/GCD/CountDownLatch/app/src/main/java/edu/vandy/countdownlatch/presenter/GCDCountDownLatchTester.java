@@ -3,8 +3,6 @@ package edu.vandy.countdownlatch.presenter;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
-import edu.vandy.countdownlatch.utils.Pair;
-
 /**
  * The class tests various GCD implementations using CountDownLatches.
  */
@@ -35,6 +33,33 @@ public class GCDCountDownLatchTester
         }
     }
 
+    /**
+     *
+     */
+    public static class Tuple {
+        GCDCountDownLatchTester.GCD mGcdFunction;
+        String mTestName;
+        int mProgressBarResId;
+        int mProgressCountResId;
+
+        Tuple(GCDCountDownLatchTester.GCD gcdFunction,
+              String testName,
+              int progressBarResId,
+              int progressCountResId) {
+            mGcdFunction = gcdFunction;
+            mTestName = testName;
+            mProgressBarResId = progressBarResId;
+            mProgressCountResId = progressCountResId;
+        }
+
+        public Tuple(GCDCountDownLatchTester.GCD gcdFunction,
+                     String testName) {
+            mGcdFunction = gcdFunction;
+            mTestName = testName;
+            mProgressBarResId = 0;
+            mProgressCountResId = 0;
+        }
+    }
 
     /**
      * This entry barrier is used to synchronize the entry of all
@@ -80,12 +105,12 @@ public class GCDCountDownLatchTester
      */
     public GCDCountDownLatchTester(CountDownLatch entryBarrier,
                                    CountDownLatch exitBarrier,
-                                   Pair<GCD, String> gcdPair,
+                                   Tuple gcdTuple,
                                    ProgressReporter progressReporter) {
         mEntryBarrier = entryBarrier;
         mExitBarrier = exitBarrier;
-        mGcdFunction = gcdPair.first;
-        mTestName = gcdPair.second;
+        mGcdFunction = gcdTuple.mGcdFunction;
+        mTestName = gcdTuple.mTestName;
         mProgressReporter = progressReporter;
     }
 

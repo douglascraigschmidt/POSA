@@ -5,8 +5,6 @@ import android.widget.TextView;
 
 import java.util.concurrent.CountDownLatch;
 
-import edu.vandy.countdownlatch.utils.Pair;
-
 public class AndroidGCDCountDownLatchTester
        extends GCDCountDownLatchTester {
     /**
@@ -36,11 +34,11 @@ public class AndroidGCDCountDownLatchTester
                                           TextView progressCount,
                                           CountDownLatch entryBarrier,
                                           CountDownLatch exitBarrier,
-                                          Pair<GCD, String> gcdPair,
+                                          Tuple gcdTuple,
                                           ProgressReporter progressReporter) {
         super(entryBarrier, 
               exitBarrier,
-              gcdPair,
+              gcdTuple,
               progressReporter);
         mPercentage = 0;
         mMessage = message; 
@@ -61,7 +59,7 @@ public class AndroidGCDCountDownLatchTester
             mProgressBar.setProgress(percentageComplete);
             mPercentage = percentageComplete;
             mProgressCount.setText(mMessage + mPercentage);
-        }
+        };
     }
 
 

@@ -9,7 +9,6 @@ import org.junit.Test;
 
 import edu.vandy.countdownlatch.presenter.GCDCountDownLatchTester;
 import edu.vandy.countdownlatch.utils.GCDs;
-import edu.vandy.countdownlatch.utils.Pair;
 
 /**
  * This JUnit test evaluates the GCDCountDownLatchTest class.
@@ -23,20 +22,23 @@ public class GCDCountDownLatchTest
     private static final int sITERATIONS = 100000000;
 
     /**
-     * This factory method returns a list containing pairs, where each
-     * pair contains the GCD function to run and the name of the GCD
-     * function as a string.
+     * This factory method returns a list containing tuples, where
+     * each tuple contains the GCD function to run and the name of the
+     * GCD function as a string.
      */
-    private static List<Pair<GCDCountDownLatchTester.GCD, String>> makeGCDpairs() {
-        // Create a new list of GCD pairs.
-        List<Pair<GCDCountDownLatchTester.GCD, String>> list = new ArrayList<>();
+    private static List<GCDCountDownLatchTester.Tuple> makeGCDTuples() {
+        // Create a new list of GCD tuples.
+        List<GCDCountDownLatchTester.Tuple> list = new ArrayList<>();
 
         // Initialize using method references.
-        list.add(Pair.create(GCDs::computeGCDIterativeEuclid, "GCDIterativeEuclid"));
-        list.add(Pair.create(GCDs::computeGCDRecursiveEuclid, "GCDRecursiveEuclid"));
-        list.add(Pair.create(GCDs::computeGCDBigInteger, "GCDBigInteger"));
-        list.add(Pair.create(GCDs::computeGCDBinary, "GCDBinary"));
-
+        list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDIterativeEuclid, 
+                                                   "GCDIterativeEuclid"));
+        list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDRecursiveEuclid,
+                                                   "GCDRecursiveEuclid"));
+        list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDBigInteger,
+                                                   "GCDBigInteger"));
+        list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDBinary,
+                                                   "GCDBinary"));
         // Return the list.
         return list;
     }
@@ -50,8 +52,8 @@ public class GCDCountDownLatchTest
         GCDCountDownLatchTester.initializeInputs(sITERATIONS);
 
         // Make the list of GCD pairs.
-        List<Pair<GCDCountDownLatchTester.GCD, String>> gcdTests 
-            = makeGCDpairs();
+        List<GCDCountDownLatchTester.Tuple> gcdTests
+            = makeGCDTuples();
 
         // Create an entry barrier that ensures the threads don't
         // start until the initializer threads lets them begin.
@@ -65,13 +67,13 @@ public class GCDCountDownLatchTest
 
         // Iterate through all the GCD pairs and start a new thread to
         // run GCDCountDownLatchTest for each one.
-        for (Pair<GCDCountDownLatchTester.GCD, String> gcdpair : gcdTests)
+        for (GCDCountDownLatchTester.Tuple gcdTuple : gcdTests)
             new Thread(new GCDCountDownLatchTester
                        // All threads share all the entry and exit
                        // barriers.
                        (entryBarrier,
                         exitBarrier,
-                        gcdpair,
+                        gcdTuple,
                         this) {
 
                 }).start();

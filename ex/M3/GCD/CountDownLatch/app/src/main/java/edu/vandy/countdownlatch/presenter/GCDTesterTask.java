@@ -1,6 +1,8 @@
 package edu.vandy.countdownlatch.presenter;
 
 import android.os.AsyncTask;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,8 +10,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import edu.vandy.countdownlatch.R;
 import edu.vandy.countdownlatch.utils.GCDs;
-import edu.vandy.countdownlatch.utils.Pair;
 import edu.vandy.countdownlatch.view.MainActivity;
 
 public class GCDTesterTask
@@ -42,20 +44,29 @@ public class GCDTesterTask
     }
 
     /**
-     * This factory method returns a list containing pairs, where each
-     * pair contains the GCD function to run and the name of the GCD
-     * function as a string.
+     * This factory method returns a list containing Tuples.
      */
-    private List<Pair<GCDCountDownLatchTester.GCD, String>> makeGCDPairs() {
+    private List<GCDCountDownLatchTester.Tuple> makeGCDTuples() {
         // Create a new list of GCD pairs.
-        List<Pair<GCDCountDownLatchTester.GCD, String>> list = new ArrayList<>();
+        List<GCDCountDownLatchTester.Tuple> list = new ArrayList<>();
 
         // Initialize using method references.
-        list.add(Pair.create(GCDs::computeGCDIterativeEuclid, "GCDIterativeEuclid"));
-        list.add(Pair.create(GCDs::computeGCDRecursiveEuclid, "GCDRecursiveEuclid"));
-        list.add(Pair.create(GCDs::computeGCDBigInteger, "GCDBigInteger"));
-        list.add(Pair.create(GCDs::computeGCDBinary, "GCDBinary"));
-
+        list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDIterativeEuclid,
+                           "GCDIterativeEuclid",
+                           R.id.gcdProgressBar1,
+                           R.id.gcdProgressCount1));
+        list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDRecursiveEuclid,
+                           "GCDRecursiveEuclid",
+                           R.id.gcdProgressBar2,
+                           R.id.gcdProgressCount2));
+        list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDBigInteger,
+                           "GCDBigInteger",
+                           R.id.gcdProgressBar3,
+                           R.id.gcdProgressCount3));
+        list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDBinary,
+                           "GCDBinary",
+                           R.id.gcdProgressBar4,
+                           R.id.gcdProgressCount4));
         // Return the list.
         return list;
     }
@@ -81,8 +92,8 @@ public class GCDTesterTask
             GCDCountDownLatchTester.initializeInputs(iterations[0]);
 
             // Make the list of GCD pairs.
-            List<Pair<GCDCountDownLatchTester.GCD, String>> gcdTests 
-                = makeGCDPairs();
+            List<GCDCountDownLatchTester.Tuple> gcdTests
+                = makeGCDTuples();
 
             // Create an entry barrier that ensures the threads don't
             // start until this thread lets them begin.
@@ -92,21 +103,22 @@ public class GCDTesterTask
             // complete until all the test threads complete.
             CountDownLatch exitBarrier = new CountDownLatch(gcdTests.size());
 
-            // Iterate thru the GCD pairs and call AsyncTask.execute()
-            // to run GCDCountDownLatchTest for each one.
-            for (Pair<GCDCountDownLatchTester.GCD, String> gcdPair : gcdTests) {
-                String message = "percentage complete for " + gcdPair.second;
+            // Iterate thru the tuples and call AsyncTask.execute() to
+            // run GCDCountDownLatchTest for each one.
+            for (GCDCountDownLatchTester.Tuple gcdTuple : gcdTests) {
+                String message = "percentage complete for " 
+                    + gcdTuple.mTestName;
 
                 mExecutor.execute(new AndroidGCDCountDownLatchTester
-                        // All threads share all the entry and exit
-                        // barriers.
-                        (message,
-                                0,
-                                0,
-                                entryBarrier,
-                                exitBarrier,
-                                gcdPair,
-                                this));
+                                  // All threads share all the entry and exit
+                                  // barriers.
+                                  (message,
+                                   (ProgressBar) mActivity.findViewById(gcdTuple.mProgressBarResId),
+                                   (TextView) mActivity.findViewById(gcdTuple.mProgressCountResId),
+                                   entryBarrier,
+                                   exitBarrier,
+                                   gcdTuple,
+                                   this));
             }
 
             System.out.println("Starting GCD tests");
