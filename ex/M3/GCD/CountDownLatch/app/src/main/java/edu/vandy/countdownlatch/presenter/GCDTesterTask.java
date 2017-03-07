@@ -52,21 +52,21 @@ public class GCDTesterTask
 
         // Initialize using method references.
         list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDIterativeEuclid,
-                           "GCDIterativeEuclid",
-                           R.id.gcdProgressBar1,
-                           R.id.gcdProgressCount1));
+                                                   "GCDIterativeEuclid",
+                                                   R.id.gcdProgressBar1,
+                                                   R.id.gcdProgressCount1));
         list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDRecursiveEuclid,
-                           "GCDRecursiveEuclid",
-                           R.id.gcdProgressBar2,
-                           R.id.gcdProgressCount2));
+                                                   "GCDRecursiveEuclid",
+                                                   R.id.gcdProgressBar2,
+                                                   R.id.gcdProgressCount2));
         list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDBigInteger,
-                           "GCDBigInteger",
-                           R.id.gcdProgressBar3,
-                           R.id.gcdProgressCount3));
+                                                   "GCDBigInteger",
+                                                   R.id.gcdProgressBar3,
+                                                   R.id.gcdProgressCount3));
         list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDBinary,
-                           "GCDBinary",
-                           R.id.gcdProgressBar4,
-                           R.id.gcdProgressCount4));
+                                                   "GCDBinary",
+                                                   R.id.gcdProgressBar4,
+                                                   R.id.gcdProgressCount4));
         // Return the list.
         return list;
     }
@@ -130,8 +130,9 @@ public class GCDTesterTask
             // Wait until all threads are finished running.
             exitBarrier.await();
             System.out.println("All threads are done");
-        } catch (Exception e) {
-            System.out.println("cancelling doInBackground()");
+        } catch (Exception ex) {
+            System.out.println("cancelling doInBackground() due to exception"
+                               + ex);
 
             // Cancel ourself so that the onCancelled() hook method
             // gets called.

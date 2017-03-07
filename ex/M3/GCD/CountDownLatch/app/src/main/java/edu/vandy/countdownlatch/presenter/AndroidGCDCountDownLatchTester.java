@@ -50,9 +50,11 @@ public class AndroidGCDCountDownLatchTester
         mMessage = message; 
         mProgressBar = progressBar;
         mProgressCount = progressCount;
-        mProgressBar.setProgress(0);
-        mProgressBar.setVisibility(ProgressBar.VISIBLE);
-        mProgressCount.setText(mMessage + mPercentage);
+        mProgressReporter.updateProgress(() -> {
+                mProgressBar.setProgress(0);
+                mProgressBar.setVisibility(ProgressBar.VISIBLE);
+                mProgressCount.setText(mMessage + mPercentage);
+            });
     }
 
     /**

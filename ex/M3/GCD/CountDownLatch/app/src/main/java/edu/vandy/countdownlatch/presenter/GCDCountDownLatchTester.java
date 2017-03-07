@@ -125,7 +125,7 @@ public class GCDCountDownLatchTester
     /**
      * A reference to the ProgressReporter.
      */
-    private ProgressReporter mProgressReporter;
+    protected ProgressReporter mProgressReporter;
 
     /**
      * Constructor initializes the fields.
@@ -192,7 +192,7 @@ public class GCDCountDownLatchTester
             int result = mGcdFunction.compute(number1, number2);
 
             // Publish the progress every 10%.
-            if ((i % (iterations / 10)) == 0) {
+            if (((i + 1) % (iterations / 10)) == 0) {
                 /*
                 System.out.println("In runTest() on iteration "
                                    + i
@@ -205,7 +205,7 @@ public class GCDCountDownLatchTester
                 */
                 // Convert to a percentage of 100.
                 Double percentage =
-                    ((double) i / (double) iterations) * 100.00;
+                    ((double) (i + 1) / (double) iterations) * 100.00;
                 
                 // Publish progress as a percentage of total
                 // completion.
