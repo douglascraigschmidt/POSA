@@ -37,11 +37,33 @@ public class GCDCountDownLatchTester
      *
      */
     public static class Tuple {
+        /**
+         *
+         */
         GCDCountDownLatchTester.GCD mGcdFunction;
+
+        /**
+         *
+         */
         String mTestName;
+
+        /**
+         *
+         */
         int mProgressBarResId;
+
+        /**
+         *
+         */
         int mProgressCountResId;
 
+        /**
+         *
+         * @param gcdFunction
+         * @param testName
+         * @param progressBarResId
+         * @param progressCountResId
+         */
         Tuple(GCDCountDownLatchTester.GCD gcdFunction,
               String testName,
               int progressBarResId,
@@ -52,6 +74,11 @@ public class GCDCountDownLatchTester
             mProgressCountResId = progressCountResId;
         }
 
+        /**
+         * 
+         * @param gcdFunction
+         * @param testName
+         */
         public Tuple(GCDCountDownLatchTester.GCD gcdFunction,
                      String testName) {
             mGcdFunction = gcdFunction;
