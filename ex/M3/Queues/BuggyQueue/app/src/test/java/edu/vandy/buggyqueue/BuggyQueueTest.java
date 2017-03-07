@@ -1,4 +1,4 @@
-package edu.vandy;
+package edu.vandy.buggyqueue;
 
 import static org.junit.Assert.assertEquals;
 

@@ -91,6 +91,9 @@ public abstract class ProducerConsumerTaskBase
         mProgressCount.setText(mMessage + mPercentage);
     }
 
+    /**
+     * Runs in the UI thread in response to publishProgress().
+     */
     @Override
     public void onProgressUpdate(Integer... progressPercentage) {
         Log.d(TAG,
