@@ -1,4 +1,4 @@
-package edu.vandy.countdownlatch.view;
+package edu.vandy.cyclicbarrier.view;
 
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -9,9 +9,9 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.vandy.countdownlatch.R;
-import edu.vandy.countdownlatch.presenter.GCDTesterTask;
-import edu.vandy.countdownlatch.utils.UiUtils;
+import edu.vandy.cyclicbarrier.R;
+import edu.vandy.cyclicbarrier.presenter.GCDTesterTask;
+import edu.vandy.cyclicbarrier.utils.UiUtils;
 
 /**
  * Main activity that shows how the Countdownlatch can be

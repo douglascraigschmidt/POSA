@@ -1,16 +1,16 @@
-package edu.vandy.countdownlatch.presenter;
+package edu.vandy.cyclicbarrier.presenter;
 
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 
 /**
  * The class visualizes the tests of various GCD implementations using
- * CountDownLatches.
+ * CyclicBarriers.
  */
-class AndroidGCDCountDownLatchTester
-       extends GCDCountDownLatchTester {
+class AndroidGCDCyclicBarrierTester
+       extends GCDCyclicBarrierTester {
     /**
      * The progress bar that's used to show how the computations are
      * proceeding.
@@ -37,13 +37,13 @@ class AndroidGCDCountDownLatchTester
      * Constructor initializes the fields and displays the initial
      * progress bar for this GCD implementation.
      */
-     AndroidGCDCountDownLatchTester(String message,
-                                          ProgressBar progressBar,
-                                          TextView progressCount,
-                                          CountDownLatch entryBarrier,
-                                          CountDownLatch exitBarrier,
-                                          GCDTuple gcdTuple,
-                                          ProgressReporter progressReporter) {
+    AndroidGCDCyclicBarrierTester(String message,
+                                         ProgressBar progressBar,
+                                         TextView progressCount,
+                                         CyclicBarrier entryBarrier,
+                                         CyclicBarrier exitBarrier,
+                                         GCDTuple gcdTuple,
+                                         ProgressReporter progressReporter) {
         super(entryBarrier, 
               exitBarrier,
               gcdTuple,
@@ -53,8 +53,7 @@ class AndroidGCDCountDownLatchTester
         mProgressBar = progressBar;
         mProgressCount = progressCount;
 
-        // Display the initial progress bar and count for this GCD
-        // implementation.
+        // Display the initial progress bar for this GCD implementation.
         mProgressReporter.updateProgress(() -> {
                 mProgressBar.setProgress(0);
                 mProgressBar.setVisibility(ProgressBar.VISIBLE);
@@ -87,7 +86,7 @@ class AndroidGCDCountDownLatchTester
             System.out.println(""
                                + percentageComplete
                                + "% complete for "
-                               + mFuncName);
+                               + mTestName);
             mProgressBar.setProgress(percentageComplete);
             mPercentage = percentageComplete;
             mProgressCount.setText(mPercentage + mMessage);

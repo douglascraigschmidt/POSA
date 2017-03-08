@@ -6,7 +6,7 @@
     android:orientation="vertical">
 
   <TextView
-      android:id="@+id/progressProducerCount"
+      android:id="@+id/gcdProgressCount1"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:layout_gravity="center"
@@ -14,10 +14,9 @@
       />
 
   <ProgressBar
-      android:id="@+id/progressProducerBar"
+      android:id="@+id/gcdProgressBar1"
       android:layout_width="400dp"
       android:layout_height="wrap_content"
-      android:layout_below="@id/progressProducerCount"
       android:layout_gravity="center"
       android:visibility="invisible"
       android:indeterminate="false"
@@ -25,30 +24,63 @@
       android:max="100" />
 
   <TextView
-      android:id="@+id/progressConsumerCount"
+      android:id="@+id/gcdProgressCount2"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:layout_below="@id/progressProducerBar"
       android:layout_gravity="center"
       android:text=""
       />
 
   <ProgressBar
-      android:id="@+id/progressConsumerBar"
+      android:id="@+id/gcdProgressBar2"
       android:layout_width="400dp"
       android:layout_height="wrap_content"
-      android:layout_below="@id/progressConsumerCount"
       android:layout_gravity="center"
       android:visibility="invisible"
       android:indeterminate="false"
       style="@style/Widget.AppCompat.ProgressBar.Horizontal"
       android:max="100" />
 
-  <edu.vandy.simpleblockingboundedqueue.utils.Chronometer
+  <TextView
+      android:id="@+id/gcdProgressCount3"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center"
+      android:text=""
+      />
+
+  <ProgressBar
+      android:id="@+id/gcdProgressBar3"
+      android:layout_width="400dp"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center"
+      android:visibility="invisible"
+      android:indeterminate="false"
+      style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+      android:max="100" />
+
+  <TextView
+      android:id="@+id/gcdProgressCount4"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center"
+      android:text=""
+      />
+
+  <ProgressBar
+      android:id="@+id/gcdProgressBar4"
+      android:layout_width="400dp"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center"
+      android:visibility="invisible"
+      android:indeterminate="false"
+      style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+      android:max="100" />
+
+  <edu.vandy.cyclicbarrier.utils.Chronometer
      android:id="@+id/chronometer"
      android:layout_width="fill_parent"
      android:layout_height="wrap_content"
-     android:layout_below="@id/progressConsumerBar"
      android:visibility="invisible"
      android:textSize="16sp"
      android:gravity="center"/>

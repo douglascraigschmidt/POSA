@@ -34,55 +34,50 @@ public class GCDCountDownLatchTester
     }
 
     /**
-     *
+     * This data structure stores the state that's needed to visualize
+     * each GCD implementation.
      */
-    public static class Tuple {
+    public static class GCDTuple {
         /**
-         *
+         * Function that computes the GCD.
          */
         GCDCountDownLatchTester.GCD mGcdFunction;
 
         /**
-         *
+         * Name of the GCD function.
          */
-        String mTestName;
+        String mFuncName;
 
         /**
-         *
+         * Resource ID of this function's progress bar.
          */
         int mProgressBarResId;
 
         /**
-         *
+         * Resource ID of this function's progress count.
          */
         int mProgressCountResId;
 
         /**
-         *
-         * @param gcdFunction
-         * @param testName
-         * @param progressBarResId
-         * @param progressCountResId
+         * Constructor initializes all the fields.
          */
-        Tuple(GCDCountDownLatchTester.GCD gcdFunction,
-              String testName,
-              int progressBarResId,
-              int progressCountResId) {
+        GCDTuple(GCDCountDownLatchTester.GCD gcdFunction,
+                 String testName,
+                 int progressBarResId,
+                 int progressCountResId) {
             mGcdFunction = gcdFunction;
-            mTestName = testName;
+            mFuncName = testName;
             mProgressBarResId = progressBarResId;
             mProgressCountResId = progressCountResId;
         }
 
         /**
-         *
-         * @param gcdFunction
-         * @param testName
+         * Constructor initializes the non-GUI fields.
          */
-        public Tuple(GCDCountDownLatchTester.GCD gcdFunction,
-                     String testName) {
+        public GCDTuple(GCDCountDownLatchTester.GCD gcdFunction,
+                        String testName) {
             mGcdFunction = gcdFunction;
-            mTestName = testName;
+            mFuncName = testName;
             mProgressBarResId = 0;
             mProgressCountResId = 0;
         }
@@ -108,7 +103,7 @@ public class GCDCountDownLatchTester
     /**
      * Contains the name of the GCD function being tested.
      */
-    protected final String mTestName;
+    protected final String mFuncName;
 
     /**
      * An array of randomly generated input to use as the first
@@ -132,12 +127,12 @@ public class GCDCountDownLatchTester
      */
     public GCDCountDownLatchTester(CountDownLatch entryBarrier,
                                    CountDownLatch exitBarrier,
-                                   Tuple gcdTuple,
+                                   GCDTuple gcdTuple,
                                    ProgressReporter progressReporter) {
         mEntryBarrier = entryBarrier;
         mExitBarrier = exitBarrier;
         mGcdFunction = gcdTuple.mGcdFunction;
-        mTestName = gcdTuple.mTestName;
+        mFuncName = gcdTuple.mFuncName;
         mProgressReporter = progressReporter;
     }
 
@@ -163,7 +158,7 @@ public class GCDCountDownLatchTester
      */
     private void runTest() {
         System.out.println("Starting test of "
-                           + mTestName
+                           + mFuncName
                            + " in thread "
                            + Thread.currentThread());
 
@@ -178,7 +173,7 @@ public class GCDCountDownLatchTester
         for (int i = 0; i < iterations; ++i) {
             if (Thread.interrupted()) {
                 System.out.println("Interrupt request received in runTest() for "
-                                   + mTestName
+                                   + mFuncName
                                    + " in thread "
                                    + Thread.currentThread());
                 return;
@@ -220,7 +215,7 @@ public class GCDCountDownLatchTester
         System.out.println(""
                            + (double)(stopTime - startTime) / 1000000.0
                            + " millisecond run time for "
-                           + mTestName
+                           + mFuncName
                            + " in thread "
                            + Thread.currentThread());
     }
@@ -233,7 +228,7 @@ public class GCDCountDownLatchTester
         return () -> System.out.println(""
                 + percentageComplete
                 + "% complete for "
-                + mTestName);
+                + mFuncName);
     }
 
     /**

@@ -1,4 +1,4 @@
-package edu.vandy.simpleblockingboundedqueue.view;
+package edu.vandy.cyclicbarrier.view;
 
 import android.app.Activity;
 import android.os.Bundle;

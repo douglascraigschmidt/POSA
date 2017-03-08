@@ -1,5 +1,6 @@
-package edu.vandy.simpleblockingboundedqueue.utils;
+package edu.vandy.cyclicbarrier.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
@@ -12,6 +13,7 @@ import java.text.DecimalFormat;
  * The Android chronometer widget revised to support millisecond
  * resolution.
  */
+@SuppressLint("AppCompatCustomView")
 public class Chronometer
        extends TextView {
     private static final String TAG =

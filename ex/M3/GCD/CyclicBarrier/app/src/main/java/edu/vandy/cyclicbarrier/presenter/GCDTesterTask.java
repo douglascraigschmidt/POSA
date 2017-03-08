@@ -1,4 +1,4 @@
-package edu.vandy.countdownlatch.presenter;
+package edu.vandy.cyclicbarrier.presenter;
 
 import android.os.AsyncTask;
 import android.os.SystemClock;
@@ -7,22 +7,22 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import edu.vandy.countdownlatch.R;
-import edu.vandy.countdownlatch.utils.Chronometer;
-import edu.vandy.countdownlatch.utils.GCDs;
-import edu.vandy.countdownlatch.view.MainActivity;
+import edu.vandy.cyclicbarrier.R;
+import edu.vandy.cyclicbarrier.utils.Chronometer;
+import edu.vandy.cyclicbarrier.utils.GCDs;
+import edu.vandy.cyclicbarrier.view.MainActivity;
 
 /**
  * This class provides a driver that tests the various GCD implementations.
  */
 public class GCDTesterTask
        extends AsyncTask<Integer, Runnable, Void>
-       implements GCDCountDownLatchTester.ProgressReporter {
+       implements GCDCyclicBarrierTester.ProgressReporter {
     /**
      * Reference to the enclosing activity.
      */
@@ -43,13 +43,18 @@ public class GCDTesterTask
      * This list of GCDTuples keeps track of the data needed to run
      * each GCD implementation.
      */
-    private List<GCDCountDownLatchTester.GCDTuple> mGcdTuples;
+    private List<GCDCyclicBarrierTester.GCDTuple> mGcdTuples;
 
     /**
      * This list of AndroidGCDCountDownLatchTesters keeps track of the
      * objects to update after a runtime configuration change.
      */
-    private List<AndroidGCDCountDownLatchTester> mGcdTesters;
+    private List<AndroidGCDCyclicBarrierTester> mGcdTesters;
+
+    /**
+     * Number of cycles to run with the CyclicBarrier.
+     */
+    private static final int sCYCLES = 2;
 
     /**
      * Constructor initializes the fields.
@@ -79,25 +84,25 @@ public class GCDTesterTask
     /**
      * This factory method returns a list containing Tuples.
      */
-    private List<GCDCountDownLatchTester.GCDTuple> makeGCDTuples() {
+    private List<GCDCyclicBarrierTester.GCDTuple> makeGCDTuples() {
         // Create a new list of GCD pairs.
-        List<GCDCountDownLatchTester.GCDTuple> list = new ArrayList<>();
+        List<GCDCyclicBarrierTester.GCDTuple> list = new ArrayList<>();
 
         // Initialize the list using method references to various GCD
         // implementations.
-        list.add(new GCDCountDownLatchTester.GCDTuple(GCDs::computeGCDIterativeEuclid,
+        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDIterativeEuclid,
                                                    "GCDIterativeEuclid",
                                                    R.id.gcdProgressBar1,
                                                    R.id.gcdProgressCount1));
-        list.add(new GCDCountDownLatchTester.GCDTuple(GCDs::computeGCDRecursiveEuclid,
+        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDRecursiveEuclid,
                                                    "GCDRecursiveEuclid",
                                                    R.id.gcdProgressBar2,
                                                    R.id.gcdProgressCount2));
-        list.add(new GCDCountDownLatchTester.GCDTuple(GCDs::computeGCDBigInteger,
+        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDBigInteger,
                                                    "GCDBigInteger",
                                                    R.id.gcdProgressBar3,
                                                    R.id.gcdProgressCount3));
-        list.add(new GCDCountDownLatchTester.GCDTuple(GCDs::computeGCDBinary,
+        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDBinary,
                                                    "GCDBinary",
                                                    R.id.gcdProgressBar4,
                                                    R.id.gcdProgressCount4));
@@ -112,72 +117,82 @@ public class GCDTesterTask
     @Override
     protected Void doInBackground(Integer... iterations) {
         try {
-            // Initialize the input data to use for the GCD tests.
-            GCDCountDownLatchTester.initializeInputs(iterations[0]);
-
             // Make the list of GCD pairs.
             mGcdTuples = makeGCDTuples();
 
             // Create an empty list to hold the GCD testers.
             mGcdTesters = new ArrayList<>(mGcdTuples.size());
 
-            // Create an entry barrier that ensures the threads don't
-            // start until this thread lets them begin.
-            CountDownLatch entryBarrier = new CountDownLatch(1);
+            // Create an entry barrier that ensures all threads start
+            // at the same time.  We add a "+ 1" for the thread that
+            // initializes the tests.
+            CyclicBarrier entryBarrier =
+                new CyclicBarrier(mGcdTuples.size() + 1,
+                                  // Barrier action (re)initializes the test data.
+                                  () -> GCDCyclicBarrierTester.initializeInputs(iterations[0]));
 
-            // Create an exit barrier that ensures this thread doesn't
-            // complete until all the test threads complete.
-            CountDownLatch exitBarrier = new CountDownLatch(mGcdTuples.size());
+            // Create an exit barrier that ensures all threads end at
+            // the same time.  We add a "+ 1" for the thread that
+            // waits for the tests to complete.
+            CyclicBarrier exitBarrier =
+                new CyclicBarrier(mGcdTuples.size() + 1);
 
-            // Iterate thru the tuples and call AsyncTask.execute() to
-            // run GCDCountDownLatchTest for each one.
-            for (GCDCountDownLatchTester.GCDTuple gcdTuple : mGcdTuples) {
-                String message = "% complete for " + gcdTuple.mFuncName;
+            // Iterate for each cycle.
+            for (int cycle = 1; cycle <= sCYCLES; cycle++) {
 
-                // Create a runnable that will run a GCD implementation.
-                AndroidGCDCountDownLatchTester gcdTester = new AndroidGCDCountDownLatchTester
-                    // All threads share all the entry
-                    // and exit barriers.
-                    (message,
-                     (ProgressBar) mActivity.findViewById(gcdTuple.mProgressBarResId),
-                     (TextView) mActivity.findViewById(gcdTuple.mProgressCountResId),
-                     entryBarrier,
-                     exitBarrier,
-                     gcdTuple,
-                     this);
+                // Iterate thru the tuples and call AsyncTask.execute() to
+                // run GCDCycliceBarrierTest for each one.
+                for (GCDCyclicBarrierTester.GCDTuple gcdTuple : mGcdTuples) {
+                    String message = "% complete for " + gcdTuple.mFuncName;
 
-                // Add to the list of Gcd testers.
-                mGcdTesters.add(gcdTester);
+                    // Create a runnable that will run a GCD implementation.
+                    AndroidGCDCyclicBarrierTester gcdTester = new AndroidGCDCyclicBarrierTester
+                        // All threads share all the entry
+                        // and exit barriers.
+                        (message,
+                         (ProgressBar) mActivity.findViewById(gcdTuple.mProgressBarResId),
+                         (TextView) mActivity.findViewById(gcdTuple.mProgressCountResId),
+                         entryBarrier,
+                         exitBarrier,
+                         gcdTuple,
+                         this);
 
-                // Execute the runnable in the executor service thread pool.
-                mExecutor.execute(gcdTester);
-            }
+                    // Add to the list of Gcd testers.
+                    mGcdTesters.add(gcdTester);
 
-            // Create a runnable on the UI thread to initialize
-            // the chronometer.
-            publishProgress((Runnable) () -> {
+                    // Execute the runnable in the executor service thread pool.
+                    mExecutor.execute(gcdTester);
+                }
+
+                // Create a runnable on the UI thread to initialize
+                // the chronometer.
+                publishProgress((Runnable) () -> {
                     // Initialize and start the Chronometer.
                     mChronometer.setBase(SystemClock.elapsedRealtime());
                     mChronometer.setVisibility(TextView.VISIBLE);
                     mChronometer.start();
                 });
 
-            System.out.println("Starting GCD tests");
+                System.out.println("Starting GCD tests for cycle "
+                                   + cycle);
 
-            // Allow all the test threads to begin.
-            entryBarrier.countDown();
-            System.out.println("Waiting for results");
+                // Wait until all threads are ready to run.
+                entryBarrier.await();     
+                System.out.println("Waiting for results from cycle "
+                                   + cycle);
 
-            // Wait until all threads are finished running.
-            exitBarrier.await();
-            System.out.println("All threads are done");
+                // Wait until all threads are finished running.
+                exitBarrier.await();
+                System.out.println("All threads are done for cycle "
+                                   + cycle);
+            }
         } catch (Exception ex) {
-            System.out.println("cancelling doInBackground() due to exception"
-                               + ex);
+                System.out.println("cancelling doInBackground() due to exception"
+                                   + ex);
 
-            // Cancel ourself so that the onCancelled() hook method
-            // gets called.
-            cancel(true);
+                // Cancel ourself so that the onCancelled() hook method
+                // gets called.
+                cancel(true);
         }
         return null;
     }

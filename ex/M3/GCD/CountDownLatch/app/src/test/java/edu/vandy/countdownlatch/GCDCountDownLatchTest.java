@@ -26,18 +26,18 @@ public class GCDCountDownLatchTest
      * each tuple contains the GCD function to run and the name of the
      * GCD function as a string.
      */
-    private static List<GCDCountDownLatchTester.Tuple> makeGCDTuples() {
+    private static List<GCDCountDownLatchTester.GCDTuple> makeGCDTuples() {
         // Create a new list of GCD tuples.
-        List<GCDCountDownLatchTester.Tuple> list = new ArrayList<>();
+        List<GCDCountDownLatchTester.GCDTuple> list = new ArrayList<>();
 
         // Initialize using method references.
-        list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDIterativeEuclid, 
+        list.add(new GCDCountDownLatchTester.GCDTuple(GCDs::computeGCDIterativeEuclid,
                                                    "GCDIterativeEuclid"));
-        list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDRecursiveEuclid,
+        list.add(new GCDCountDownLatchTester.GCDTuple(GCDs::computeGCDRecursiveEuclid,
                                                    "GCDRecursiveEuclid"));
-        list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDBigInteger,
+        list.add(new GCDCountDownLatchTester.GCDTuple(GCDs::computeGCDBigInteger,
                                                    "GCDBigInteger"));
-        list.add(new GCDCountDownLatchTester.Tuple(GCDs::computeGCDBinary,
+        list.add(new GCDCountDownLatchTester.GCDTuple(GCDs::computeGCDBinary,
                                                    "GCDBinary"));
         // Return the list.
         return list;
@@ -47,12 +47,13 @@ public class GCDCountDownLatchTest
      * Main entry point that tests the GCDCountDownLatchTester class.
      */
     @Test
-    public void testGCDCountDownLatchQueue() throws BrokenBarrierException, InterruptedException {
+    public void testGCDCountDownLatchQueue()
+            throws BrokenBarrierException, InterruptedException {
         // Initialize the input data to use for the GCD tests.
         GCDCountDownLatchTester.initializeInputs(sITERATIONS);
 
         // Make the list of GCD pairs.
-        List<GCDCountDownLatchTester.Tuple> gcdTests
+        List<GCDCountDownLatchTester.GCDTuple> gcdTests
             = makeGCDTuples();
 
         // Create an entry barrier that ensures the threads don't
@@ -65,9 +66,9 @@ public class GCDCountDownLatchTest
         CountDownLatch exitBarrier =
             new CountDownLatch(gcdTests.size());
 
-        // Iterate through all the GCD pairs and start a new thread to
+        // Iterate through all the GCD tuples and start a new thread to
         // run GCDCountDownLatchTest for each one.
-        for (GCDCountDownLatchTester.Tuple gcdTuple : gcdTests)
+        for (GCDCountDownLatchTester.GCDTuple gcdTuple : gcdTests)
             new Thread(new GCDCountDownLatchTester
                        // All threads share all the entry and exit
                        // barriers.
