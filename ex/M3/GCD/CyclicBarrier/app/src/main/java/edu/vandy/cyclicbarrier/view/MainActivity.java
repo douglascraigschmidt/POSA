@@ -29,6 +29,11 @@ public class MainActivity
     private List<GCDTesterTask> mTasks;
 
     /**
+     * Number of cycles to run with the CyclicBarrier.
+     */
+    private static final int sCYCLES = 2;
+
+    /**
      * Hook method called when the activity is first launched.
      */
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,16 +109,17 @@ public class MainActivity
                               "Please specify a count value that's > 0");
         else {
             // Create the GCDTesterTask.
-            GCDTesterTask gcdTask = new GCDTesterTask(this, mChronometer);
+            GCDTesterTask gcdTask = new GCDTesterTask(this, 
+                                                      count,
+                                                      mChronometer);
 
             // Add the new task to the list.
             mTasks.add(gcdTask);
 
-            // Execute async task(s).
-            mTasks.forEach
-                (task
-                 -> task.executeOnExecutor(gcdTask.getExecutor(),
-                                           count));
+            // Execute the async tasks.
+            mTasks.forEach(task
+                           -> task.executeOnExecutor(gcdTask.getExecutor(),
+                                                     sCYCLES));
 
             // Update the start/stop FAB to display a stop icon.
             mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);

@@ -225,10 +225,13 @@ public class GCDCyclicBarrierTester
      * in the UI/main thread.
      */
     protected Runnable makeReport(Integer percentageComplete) {
-        return () -> System.out.println(""
-                + percentageComplete
-                + "% complete for "
-                + mTestName);
+        return new Runnable () {
+            public void run() {
+                System.out.println(""
+                                   + percentageComplete
+                                   + "% complete for "
+                                   + mTestName);
+            }};
     }
 
     /**

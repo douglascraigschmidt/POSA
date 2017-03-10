@@ -26,7 +26,7 @@ public class GCDCountDownLatchTest
      * each tuple contains the GCD function to run and the name of the
      * GCD function as a string.
      */
-    private static List<GCDCountDownLatchTester.GCDTuple> makeGCDTuples() {
+    private static List<GCDCountDownLatchTester.GCDTuple> makeTests() {
         // Create a new list of GCD tuples.
         List<GCDCountDownLatchTester.GCDTuple> list = new ArrayList<>();
 
@@ -54,7 +54,7 @@ public class GCDCountDownLatchTest
 
         // Make the list of GCD pairs.
         List<GCDCountDownLatchTester.GCDTuple> gcdTests
-            = makeGCDTuples();
+            = makeTests();
 
         // Create an entry barrier that ensures the threads don't
         // start until the initializer threads lets them begin.
