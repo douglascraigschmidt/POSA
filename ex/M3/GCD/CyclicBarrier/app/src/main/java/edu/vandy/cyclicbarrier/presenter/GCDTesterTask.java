@@ -102,16 +102,16 @@ public class GCDTesterTask
 
         // Initialize the list using method references to various GCD
         // implementations.
-        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDIterativeEuclid,
-                                                     "GCDIterativeEuclid",
-                                                     R.id.gcdProgressBar1,
-                                                     R.id.gcdProgressCount1));
-        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDRecursiveEuclid,
-                                                     "GCDRecursiveEuclid",
-                                                     R.id.gcdProgressBar2,
-                                                     R.id.gcdProgressCount2));
         list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDBigInteger,
                                                      "GCDBigInteger",
+                                                     R.id.gcdProgressBar1,
+                                                     R.id.gcdProgressCount1));
+        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDIterativeEuclid,
+                                                     "GCDIterativeEuclid",
+                                                     R.id.gcdProgressBar2,
+                                                     R.id.gcdProgressCount2));
+        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDRecursiveEuclid,
+                                                     "GCDRecursiveEuclid",
                                                      R.id.gcdProgressBar3,
                                                      R.id.gcdProgressCount3));
         list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDBinary,

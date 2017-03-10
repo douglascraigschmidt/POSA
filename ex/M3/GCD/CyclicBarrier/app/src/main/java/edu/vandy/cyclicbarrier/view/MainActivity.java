@@ -14,17 +14,20 @@ import edu.vandy.cyclicbarrier.presenter.GCDTesterTask;
 import edu.vandy.cyclicbarrier.utils.UiUtils;
 
 /**
- * Main activity that shows how the Countdownlatch can be
- * used to produce and consumer integers via AsyncTasks.  The user can
- * cancel the AsyncTasks performing these computations at any point
- * and the AsyncTasks will also be cancelled when the activity is
- * destroyed.  In addition, runtime configuration changes are handled
- * gracefully, without restarting the computations from the beginning.
+ * Main activity that shows how CyclicBarriers can be used to
+ * coordinate the concurrent benchmarking of different Greatest Common
+ * Divisor (GCD) implementations, which compute the largest positive
+ * integer that is a divisor of two numbers.  The user can cancel
+ * these computations at any point and the computations will also be
+ * cancelled when the activity is destroyed.  In addition, runtime
+ * configuration changes are handled gracefully, without restarting
+ * the computations from the beginning.
  */
 public class MainActivity 
        extends ActivityBase {
     /**
-     * A list of that will contain a ProducerTask and a ConsumerTask.
+     * A list containing an async task that initiates the processing
+     * of all the GCD implementations.
      */
     private List<GCDTesterTask> mTasks;
 
