@@ -103,7 +103,7 @@ public class GCDCyclicBarrierTester
     /**
      * Contains the name of the GCD function being tested.
      */
-    protected final String mTestName;
+    final String mTestName;
 
     /**
      * An array of randomly generated input to use as the first
@@ -120,15 +120,15 @@ public class GCDCyclicBarrierTester
     /**
      * A reference to the ProgressReporter.
      */
-    protected ProgressReporter mProgressReporter;
+    ProgressReporter mProgressReporter;
 
     /**
      * Constructor initializes the fields.
      */
-    public GCDCyclicBarrierTester(CyclicBarrier entryBarrier,
-                                  CyclicBarrier exitBarrier,
-                                  GCDTuple gcdTuple,
-                                  ProgressReporter progressReporter) {
+    protected GCDCyclicBarrierTester(CyclicBarrier entryBarrier,
+                                     CyclicBarrier exitBarrier,
+                                     GCDTuple gcdTuple,
+                                     ProgressReporter progressReporter) {
         mEntryBarrier = entryBarrier;
         mExitBarrier = exitBarrier;
         mGcdFunction = gcdTuple.mGcdFunction;
@@ -225,13 +225,10 @@ public class GCDCyclicBarrierTester
      * in the UI/main thread.
      */
     protected Runnable makeReport(Integer percentageComplete) {
-        return new Runnable () {
-            public void run() {
-                System.out.println(""
-                                   + percentageComplete
-                                   + "% complete for "
-                                   + mTestName);
-            }};
+        return () -> System.out.println(""
+                           + percentageComplete
+                           + "% complete for "
+                           + mTestName);
     }
 
     /**

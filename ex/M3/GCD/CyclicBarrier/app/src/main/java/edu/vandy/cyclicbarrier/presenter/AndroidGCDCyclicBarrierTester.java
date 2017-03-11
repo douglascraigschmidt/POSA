@@ -54,13 +54,11 @@ class AndroidGCDCyclicBarrierTester
         mProgressCount = progressCount;
 
         // Display the initial progress bar for this GCD implementation.
-        mProgressReporter.updateProgress(new Runnable() {
-                public void run() {
-                    mProgressBar.setProgress(0);
-                    mProgressBar.setVisibility(ProgressBar.VISIBLE);
-                    mProgressCount.setText(mPercentage + mMessage);
-                }
-            });
+        mProgressReporter.updateProgress(() -> {
+            mProgressBar.setProgress(0);
+            mProgressBar.setVisibility(ProgressBar.VISIBLE);
+            mProgressCount.setText(mPercentage + mMessage);
+        });
     }
 
     /**
@@ -84,16 +82,15 @@ class AndroidGCDCyclicBarrierTester
      * in the UI/main thread.
      */
     protected Runnable makeReport(Integer percentageComplete) {
-        return new Runnable () {
-            public void run() {
-                System.out.println(""
-                                   + percentageComplete
-                                   + "% complete for "
-                                   + mTestName);
-                mProgressBar.setProgress(percentageComplete);
-                mPercentage = percentageComplete;
-                mProgressCount.setText(mPercentage + mMessage);
-            }};
+        return () -> {
+            System.out.println(""
+                               + percentageComplete
+                               + "% complete for "
+                               + mTestName);
+            mProgressBar.setProgress(percentageComplete);
+            mPercentage = percentageComplete;
+            mProgressCount.setText(mPercentage + mMessage);
+        };
     }
 }
 

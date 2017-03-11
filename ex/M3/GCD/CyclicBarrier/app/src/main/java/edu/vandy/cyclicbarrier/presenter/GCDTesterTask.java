@@ -6,6 +6,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executor;
@@ -13,6 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import edu.vandy.cyclicbarrier.R;
+import edu.vandy.cyclicbarrier.presenter.GCDCyclicBarrierTester.GCDTuple;
 import edu.vandy.cyclicbarrier.utils.Chronometer;
 import edu.vandy.cyclicbarrier.utils.GCDs;
 import edu.vandy.cyclicbarrier.view.MainActivity;
@@ -43,7 +45,7 @@ public class GCDTesterTask
      * This list of GCDTuples keeps track of the data needed to run
      * each GCD implementation.
      */
-    private List<GCDCyclicBarrierTester.GCDTuple> mGcdTuples;
+    private List<GCDTuple> mGcdTuples;
 
     /**
      * This list of AndroidGCDCountDownLatchTesters keeps track of the
@@ -96,30 +98,29 @@ public class GCDTesterTask
     /**
      * This factory method returns a list containing Tuples.
      */
-    private List<GCDCyclicBarrierTester.GCDTuple> makeGCDTuples() {
-        // Create a new list of GCD pairs.
-        List<GCDCyclicBarrierTester.GCDTuple> list = new ArrayList<>();
-
-        // Initialize the list using method references to various GCD
-        // implementations.
-        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDBigInteger,
-                                                     "GCDBigInteger",
-                                                     R.id.gcdProgressBar1,
-                                                     R.id.gcdProgressCount1));
-        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDIterativeEuclid,
-                                                     "GCDIterativeEuclid",
-                                                     R.id.gcdProgressBar2,
-                                                     R.id.gcdProgressCount2));
-        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDRecursiveEuclid,
-                                                     "GCDRecursiveEuclid",
-                                                     R.id.gcdProgressBar3,
-                                                     R.id.gcdProgressCount3));
-        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDBinary,
-                                                     "GCDBinary",
-                                                     R.id.gcdProgressBar4,
-                                                     R.id.gcdProgressCount4));
-        // Return the list.
-        return list;
+    private List<GCDTuple> makeGCDTuples() {
+        // Return a new list of GCD tuples that are each initialized
+        // using method references.
+        return Arrays.asList(new GCDTuple
+                                 (GCDs::computeGCDIterativeEuclid,
+                                  "GCDIterativeEuclid",
+                                  R.id.gcdProgressBar1,
+                                  R.id.gcdProgressCount1),
+                             new GCDTuple
+                                 (GCDs::computeGCDRecursiveEuclid,
+                                  "GCDRecursiveEuclid",
+                                  R.id.gcdProgressBar2,
+                                  R.id.gcdProgressCount2),
+                             new GCDTuple
+                                 (GCDs::computeGCDBigInteger,
+                                  "GCDBigInteger",
+                                  R.id.gcdProgressBar3,
+                                  R.id.gcdProgressCount3),
+                             new GCDTuple
+                                 (GCDs::computeGCDBinary,
+                                  "GCDBinary",
+                                  R.id.gcdProgressBar4,
+                                  R.id.gcdProgressCount4));
     }
 
     /**
@@ -148,7 +149,7 @@ public class GCDTesterTask
 
         // Iterate thru the tuples and call AsyncTask.execute() to run
         // GCDCycliceBarrierTest for each one.
-        for (GCDCyclicBarrierTester.GCDTuple gcdTuple : mGcdTuples) {
+        for (GCDTuple gcdTuple : mGcdTuples) {
             String message = "% complete for " + gcdTuple.mFuncName;
 
             // Create a runnable that will run a GCD implementation.
@@ -186,14 +187,12 @@ public class GCDTesterTask
             try {
                 // Create a runnable on the UI thread to initialize
                 // the chronometer.
-                publishProgress(new Runnable() {
-                        public void run() {
-                            // Initialize and start the Chronometer.
-                            mChronometer.setBase(SystemClock.elapsedRealtime());
-                            mChronometer.setVisibility(TextView.VISIBLE);
-                            mChronometer.start();
-                        }
-                    });
+                publishProgress((Runnable) () -> {
+                    // Initialize and start the Chronometer.
+                    mChronometer.setBase(SystemClock.elapsedRealtime());
+                    mChronometer.setVisibility(TextView.VISIBLE);
+                    mChronometer.start();
+                });
 
                 System.out.println("Starting GCD tests for cycle "
                                    + cycle);

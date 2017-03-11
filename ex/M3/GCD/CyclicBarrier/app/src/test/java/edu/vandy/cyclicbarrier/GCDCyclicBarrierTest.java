@@ -1,6 +1,7 @@
 package edu.vandy.cyclicbarrier;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
@@ -10,11 +11,13 @@ import org.junit.Test;
 import edu.vandy.cyclicbarrier.presenter.GCDCyclicBarrierTester;
 import edu.vandy.cyclicbarrier.utils.GCDs;
 
+import static edu.vandy.cyclicbarrier.presenter.GCDCyclicBarrierTester.*;
+
 /**
  * This JUnit test evaluates the GCDCyclicBarrierTest class.
  */
 public class GCDCyclicBarrierTest 
-       implements GCDCyclicBarrierTester.ProgressReporter {
+       implements ProgressReporter {
     /**
      * Number of times to iterate, which is 100 million to ensure the
      * program runs for a while.
@@ -31,21 +34,21 @@ public class GCDCyclicBarrierTest
      * each tuple contains the GCD function to run and the name of the
      * GCD function as a string.
      */
-    private static List<GCDCyclicBarrierTester.GCDTuple> makeGCDTuples() {
-        // Create a new list of GCD tuples.
-        List<GCDCyclicBarrierTester.GCDTuple> list = new ArrayList<>();
-
-        // Initialize using method references.
-        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDIterativeEuclid,
-                                                   "GCDIterativeEuclid"));
-        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDRecursiveEuclid,
-                                                   "GCDRecursiveEuclid"));
-        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDBigInteger,
-                                                   "GCDBigInteger"));
-        list.add(new GCDCyclicBarrierTester.GCDTuple(GCDs::computeGCDBinary,
-                                                   "GCDBinary"));
-        // Return the list.
-        return list;
+    private static List<GCDTuple> makeGCDTuples() {
+        // Return a new list of GCD tuples that are each initialized
+        // using method references.
+        return Arrays.asList(new GCDTuple
+                                 (GCDs::computeGCDIterativeEuclid,
+                                  "GCDIterativeEuclid"),
+                             new GCDTuple
+                                 (GCDs::computeGCDRecursiveEuclid,
+                                  "GCDRecursiveEuclid"),
+                             new GCDTuple
+                                 (GCDs::computeGCDBigInteger,
+                                  "GCDBigInteger"),
+                             new GCDTuple
+                                 (GCDs::computeGCDBinary,
+                                  "GCDBinary"));
     }
 
     /**
@@ -55,7 +58,7 @@ public class GCDCyclicBarrierTest
     public void testGCDCountDownLatchQueue()
         throws BrokenBarrierException, InterruptedException {
         // Make the list of GCD pairs.
-        List<GCDCyclicBarrierTester.GCDTuple> gcdTests
+        List<GCDTuple> gcdTests
             = makeGCDTuples();
 
         // Create an entry barrier that ensures all threads start at
@@ -64,7 +67,7 @@ public class GCDCyclicBarrierTest
         CyclicBarrier entryBarrier =
             new CyclicBarrier(gcdTests.size() + 1,
                               // Barrier action (re)initializes the test data.
-                              () -> GCDCyclicBarrierTester.initializeInputs(sITERATIONS));
+                              () -> initializeInputs(sITERATIONS));
 
         // Create an exit barrier that ensures all threads end at the
         // same time.  We add a "+ 1" for the thread that waits for
@@ -74,9 +77,10 @@ public class GCDCyclicBarrierTest
 
         // Iterate for each cycle.
         for (int cycle = 1; cycle <= sCYCLES; cycle++) {
+
             // Iterate through all the GCD tuples and start a new thread
             // to run GCDCyclicBarrierTest for each one.
-            for (GCDCyclicBarrierTester.GCDTuple gcdTuple : gcdTests)
+            for (GCDTuple gcdTuple : gcdTests)
                 new Thread(new GCDCyclicBarrierTester
                            // All threads share all the entry and exit
                            // barriers.
