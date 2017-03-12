@@ -125,10 +125,10 @@ public class GCDCyclicBarrierTester
     /**
      * Constructor initializes the fields.
      */
-    protected GCDCyclicBarrierTester(CyclicBarrier entryBarrier,
-                                     CyclicBarrier exitBarrier,
-                                     GCDTuple gcdTuple,
-                                     ProgressReporter progressReporter) {
+    public GCDCyclicBarrierTester(CyclicBarrier entryBarrier,
+                                  CyclicBarrier exitBarrier,
+                                  GCDTuple gcdTuple,
+                                  ProgressReporter progressReporter) {
         mEntryBarrier = entryBarrier;
         mExitBarrier = exitBarrier;
         mGcdFunction = gcdTuple.mGcdFunction;

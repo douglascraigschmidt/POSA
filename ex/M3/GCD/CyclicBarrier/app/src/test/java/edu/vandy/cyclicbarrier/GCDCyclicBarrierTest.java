@@ -57,10 +57,6 @@ public class GCDCyclicBarrierTest
     @Test
     public void testGCDCountDownLatchQueue()
         throws BrokenBarrierException, InterruptedException {
-        // Make the list of GCD pairs.
-        List<GCDTuple> gcdTests
-            = makeGCDTuples();
-
         // Create an entry barrier that ensures all threads start at
         // the same time.  We add a "+ 1" for the thread that
         // initializes the tests.
@@ -75,21 +71,22 @@ public class GCDCyclicBarrierTest
         CyclicBarrier exitBarrier =
             new CyclicBarrier(gcdTests.size() + 1);
 
+        // Make the list of GCD tuples.
+        List<GCDTuple> gcdTests = makeGCDTuples();
+
         // Iterate for each cycle.
         for (int cycle = 1; cycle <= sCYCLES; cycle++) {
 
-            // Iterate through all the GCD tuples and start a new thread
-            // to run GCDCyclicBarrierTest for each one.
-            for (GCDTuple gcdTuple : gcdTests)
-                new Thread(new GCDCyclicBarrierTester
-                           // All threads share all the entry and exit
-                           // barriers.
-                           (entryBarrier,
-                            exitBarrier,
-                            gcdTuple,
-                            this) {
-
-                    }).start();
+            // Iterate through all the GCD tuples and start a new
+            // thread to run GCDCyclicBarrierTest for each one.
+            gcdTests.forEach(gcdTuple
+                             -> new Thread(new GCDCyclicBarrierTester
+                                           // All threads share the
+                                           // entry and exit barriers.
+                                           (entryBarrier,
+                                            exitBarrier,
+                                            gcdTuple,
+                                            this)).start());
 
             System.out.println("Starting GCD tests for cycle "
                                + cycle);

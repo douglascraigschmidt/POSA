@@ -146,45 +146,23 @@ public class GCDTesterTask
         mExitBarrier =
             new CyclicBarrier(mGcdTuples.size() + 1);
 
-        mGcdTesters =
-            mGcdTuples.stream()
-                      .map(gcdTuple ->
-                           new AndroidGCDCyclicBarrierTester
-                           // All threads share all the entry
-                           // and exit barriers.
-                           ("% complete for " + gcdTuple.mFuncName,
-                            (ProgressBar) mActivity.findViewById(gcdTuple.mProgressBarResId),
-                            (TextView) mActivity.findViewById(gcdTuple.mProgressCountResId),
-                            mEntryBarrier,
-                            mExitBarrier,
-                            gcdTuple,
-                            this))
-                      .collect(toList());
-        /*
-        // Create an empty list to hold the GCD testers.
-        mGcdTesters = new ArrayList<>(mGcdTuples.size());
-
-        // Iterate thru the tuples and call AsyncTask.execute() to run
-        // GCDCycliceBarrierTest for each one.
-        for (GCDTuple gcdTuple : mGcdTuples) {
-            String message = "% complete for " + gcdTuple.mFuncName;
-
-            // Create a runnable that will run a GCD implementation.
-            AndroidGCDCyclicBarrierTester gcdTester = new AndroidGCDCyclicBarrierTester
-                // All threads share all the entry
-                // and exit barriers.
-                (message,
-                 (ProgressBar) mActivity.findViewById(gcdTuple.mProgressBarResId),
-                 (TextView) mActivity.findViewById(gcdTuple.mProgressCountResId),
-                 mEntryBarrier,
-                 mExitBarrier,
-                 gcdTuple,
-                 this);
-
-            // Add to the list of Gcd testers.
-            mGcdTesters.add(gcdTester);
-        }
-        */
+        // Create a list of GCD testers.
+        mGcdTesters = mGcdTuples
+            // Covert the GCD tuples into a stream.
+            .stream()
+            // Map each GCD tuple into a GCD tester.
+            .map(gcdTuple ->
+                 new AndroidGCDCyclicBarrierTester
+                 // All threads share the entry and exit barriers.
+                 ("% complete for " + gcdTuple.mFuncName,
+                  (ProgressBar) mActivity.findViewById(gcdTuple.mProgressBarResId),
+                  (TextView) mActivity.findViewById(gcdTuple.mProgressCountResId),
+                  mEntryBarrier,
+                  mExitBarrier,
+                  gcdTuple,
+                  this))
+            // Collect into a list.
+            .collect(toList());
     }
 
     /**
