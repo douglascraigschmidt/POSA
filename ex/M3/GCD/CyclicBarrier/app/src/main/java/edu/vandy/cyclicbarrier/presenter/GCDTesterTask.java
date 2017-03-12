@@ -19,6 +19,8 @@ import edu.vandy.cyclicbarrier.utils.Chronometer;
 import edu.vandy.cyclicbarrier.utils.GCDs;
 import edu.vandy.cyclicbarrier.view.MainActivity;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  * This class provides a driver that tests the various GCD implementations.
  */
@@ -130,9 +132,6 @@ public class GCDTesterTask
         // Make the list of GCD pairs.
         mGcdTuples = makeGCDTuples();
 
-        // Create an empty list to hold the GCD testers.
-        mGcdTesters = new ArrayList<>(mGcdTuples.size());
-
         // Create an entry barrier that ensures all threads start at
         // the same time.  We add a "+ 1" for the thread that
         // initializes the tests.
@@ -146,6 +145,24 @@ public class GCDTesterTask
         // the tests to complete.
         mExitBarrier =
             new CyclicBarrier(mGcdTuples.size() + 1);
+
+        mGcdTesters =
+            mGcdTuples.stream()
+                      .map(gcdTuple ->
+                           new AndroidGCDCyclicBarrierTester
+                           // All threads share all the entry
+                           // and exit barriers.
+                           ("% complete for " + gcdTuple.mFuncName,
+                            (ProgressBar) mActivity.findViewById(gcdTuple.mProgressBarResId),
+                            (TextView) mActivity.findViewById(gcdTuple.mProgressCountResId),
+                            mEntryBarrier,
+                            mExitBarrier,
+                            gcdTuple,
+                            this))
+                      .collect(toList());
+        /*
+        // Create an empty list to hold the GCD testers.
+        mGcdTesters = new ArrayList<>(mGcdTuples.size());
 
         // Iterate thru the tuples and call AsyncTask.execute() to run
         // GCDCycliceBarrierTest for each one.
@@ -167,6 +184,7 @@ public class GCDTesterTask
             // Add to the list of Gcd testers.
             mGcdTesters.add(gcdTester);
         }
+        */
     }
 
     /**
