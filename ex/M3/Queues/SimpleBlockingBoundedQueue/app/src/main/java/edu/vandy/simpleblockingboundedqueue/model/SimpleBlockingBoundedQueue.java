@@ -83,7 +83,7 @@ public class SimpleBlockingBoundedQueue<E>
             notifyAll();
 
             // Remove/return the first item on the queue.
-            return mList.poll();;
+            return mList.poll();
         }
     } 
 
