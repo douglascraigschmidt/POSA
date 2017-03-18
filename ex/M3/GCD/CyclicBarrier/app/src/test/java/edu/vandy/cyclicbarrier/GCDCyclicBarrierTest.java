@@ -57,6 +57,9 @@ public class GCDCyclicBarrierTest
     @Test
     public void testGCDCountDownLatchQueue()
         throws BrokenBarrierException, InterruptedException {
+        // Make the list of GCD tuples.
+        List<GCDTuple> gcdTests = makeGCDTuples();
+
         // Create an entry barrier that ensures all threads start at
         // the same time.  We add a "+ 1" for the thread that
         // initializes the tests.
@@ -70,9 +73,6 @@ public class GCDCyclicBarrierTest
         // the tests to complete.
         CyclicBarrier exitBarrier =
             new CyclicBarrier(gcdTests.size() + 1);
-
-        // Make the list of GCD tuples.
-        List<GCDTuple> gcdTests = makeGCDTuples();
 
         // Iterate for each cycle.
         for (int cycle = 1; cycle <= sCYCLES; cycle++) {
