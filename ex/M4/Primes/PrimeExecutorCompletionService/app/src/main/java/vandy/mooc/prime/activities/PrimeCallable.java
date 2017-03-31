@@ -3,6 +3,9 @@ package vandy.mooc.prime.activities;
 import android.util.Log;
 
 import java.util.concurrent.Callable;
+import java.util.function.Function;
+
+import vandy.mooc.prime.utils.Memoizer;
 
 /**
  * Uses a brute-force algorithm to determine if a given number is
@@ -13,8 +16,8 @@ public class PrimeCallable
     /**
      * Debugging tag used by the Android logger.
      */
-    private final String TAG =
-        getClass().getSimpleName();
+    private static final String TAG =
+        PrimeCallable.class.getSimpleName();
 
     /** 
      * Number to evaluate for "primality".
@@ -54,24 +57,32 @@ public class PrimeCallable
     /**
      * This method provides a brute-force determination of whether
      * number @a n is prime.  Returns 0 if it is prime, or the
-     * smallest factor if it is not prime. 
+     * smallest factor if it is not prime.
      */
-    private long isPrime(long n) {
-        if (n > 3)
-            for (long factor = 2;
-                 factor <= n / 2; 
-                 ++factor)
-                if ((factor % (n / 10)) == 0
-                    && Thread.interrupted()) {
-                    Log.d(TAG,
-                          "Thread interrupted "
-                          + Thread.currentThread());
-                    break;
-                } else if (n / factor * factor == n)
-                    return factor;
+    private static final Function<Long, Long> sPrimeChecker =
+            n -> {
+                if (n > 3)
+                    for (long factor = 2;
+                         factor <= n / 2;
+                         ++factor)
+                        if ((factor % (n / 10)) == 0
+                            && Thread.interrupted()) {
+                            Log.d(TAG,
+                                  "Thread interrupted "
+                                  + Thread.currentThread());
+                            break;
+                        } else if (n / factor * factor == n)
+                            return factor;
 
-        return 0;
-    }
+                return 0L;
+            };
+
+    /**
+     * Cache used to generate and store the results of prime
+     * checking computations.
+     */
+    private static final Function<Long, Long> mCache =
+            new Memoizer<>(sPrimeChecker);
 
     /**
      * Hook method that determines if a given number is prime.
@@ -84,6 +95,6 @@ public class PrimeCallable
         return new PrimeResult(mPrimeCandidate,
                                // Determine if mPrimeCandidate is
                                // prime or not.
-                               isPrime(mPrimeCandidate));
+                               mCache.apply(mPrimeCandidate));
     }
 }

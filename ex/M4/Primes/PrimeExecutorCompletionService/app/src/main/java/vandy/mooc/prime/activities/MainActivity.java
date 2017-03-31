@@ -261,8 +261,10 @@ public class MainActivity
             // Submit "count" PrimeCallable objects that concurrently check
             // the primality of "count" random numbers.
             new Random()
-                // Generate "count" random between 0 and MAX_VALUE.
-                .longs(count, 0, Integer.MAX_VALUE)
+                // Generate "count" random between (MAX_VALUE - count)
+                // and MAX_VALUE.
+                .longs(count, Integer.MAX_VALUE - count, Integer.MAX_VALUE)
+                // .longs(count, 0, Integer.MAX_VALUE)
 
                 // Convert each random number into a PrimeCallable.
                 .mapToObj(PrimeCallable::new)
