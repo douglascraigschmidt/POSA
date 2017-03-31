@@ -95,6 +95,6 @@ public class PrimeCallable
         return new PrimeResult(mPrimeCandidate,
                                // Determine if mPrimeCandidate is
                                // prime or not.
-                               mCache.apply(mPrimeCandidate));
+                               mCache.get(mPrimeCandidate));
     }
 }
