@@ -12,34 +12,36 @@ import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import java.util.List;
 import java.util.Random;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
+import java.util.concurrent.Future;
 
 import vandy.mooc.prime.R;
-import vandy.mooc.prime.utils.Memoizer;
 import vandy.mooc.prime.utils.UiUtils;
 
 /**
- * Main activity for an app that shows how to use the Java Executor
- * interface and a fixed-size thread pool to determine if n random
- * numbers are prime or not.  In addition, runtime configuration
- * changes are handled relatively gracefully.
+ * Main activity for an app that shows how to use the Java
+ * ExecutorCompletionService interface and a fixed-size thread pool to
+ * determine if n random numbers are prime or not.  The user can
+ * interrupt the thread performing this computation at any point and
+ * the thread will also be interrupted when the activity is destroyed.
+ * In addition, runtime configuration changes are handled gracefully.
  */
 public class MainActivity 
        extends LifecycleLoggingActivity {
-   /**
-     * EditText field for entering the desired number of iterations.
-     */
-    private EditText mCountEditText;
-
     /**
-     * Number of primes to evaluate if the user doesn't specify
+     * Number of times to iterate if the user doesn't specify
      * otherwise.
      */
     private final static int sDEFAULT_COUNT = 50;
+
+    /**
+     * An EditText field uesd to enter the desired number of iterations.
+     */
+    private EditText mCountEditText;
 
     /**
      * Keeps track of whether the edit text is visible for the user to
@@ -53,9 +55,9 @@ public class MainActivity
     private FloatingActionButton mSetFab;
 
     /**
-     * Reference to the "start" floating action button.
+     * Reference to the "start or stop" floating action button.
      */
-    private FloatingActionButton mStartFab;
+    private FloatingActionButton mStartOrStopFab;
 
     /** 
      * A TextView used to display the output.
@@ -68,29 +70,32 @@ public class MainActivity
     private ScrollView mScrollView;
 
     /**
-     * Reference to the Executor that runs the primality computations.
-     * Only allocate as many threads as their are processor cores
-     * since determining primaility is a CPU-bound computation.
+     * State that must be preserved across runtime configuration
+     * changes.
      */
-    private Executor mExecutor =
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    static class RetainedState {
+        /**
+         * This object runs the prime computations.
+         */
+        ExecutorCompletionService<PrimeCallable.PrimeResult> mExecutorCompletionService;
+
+        /**
+         * This object manages a thread pool.
+         */
+        ExecutorService mExecutorService;
+
+        /**
+         * This runnable executes in a background thread to get the
+         * results of the futures.
+         */
+        CompletionRunnable mCompletionRunnable;
+    }
 
     /**
-     * Keeps track of whether the orientation of the phone has been
-     * changed.
+     * Store all the state that must be preserved across runtime
+     * configuration changes.
      */
-    private boolean mOrientationChange = false;
-
-    /**
-     * Keeps track of whether we're debugging or not.
-     */
-    private boolean mDebugging;
-
-    /**
-     * Keeps track of the number of running tasks.
-     */
-    private AtomicInteger mRunningTasks =
-            new AtomicInteger(0);
+    private RetainedState mRetainedState;
 
     /**
      * Hook method called when the activity is first launched.
@@ -103,34 +108,43 @@ public class MainActivity
         setContentView(R.layout.main_activity);
 
         // Initialize the views.
-        initializeViews(savedInstanceState);
+        initializeViews();
+
+        // Set mRetainedState to the object that was stored by
+        // onRetainNonConfigurationInstance().
+        mRetainedState =
+            (RetainedState) getLastNonConfigurationInstance();
+
+        if (mRetainedState != null) {
+            mRetainedState.mCompletionRunnable.setActivity(this);
+
+            // Update the start/stop FAB to display a stop icon.
+            mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);
+
+            // Show the "startOrStop" FAB.
+            UiUtils.showFab(mStartOrStopFab);
+        } 
     }
 
     /**
      * Initialize the views.
      */
-    private void initializeViews(Bundle savedInstanceState) {
+    private void initializeViews() {
         // Set the EditText that holds the count entered by the user
         // (if any).
         mCountEditText = (EditText) findViewById(R.id.count);
 
-        // Store floating action button that sets the count.
+        // Cache floating action button that sets the count.
         mSetFab = (FloatingActionButton) findViewById(R.id.set_fab);
 
-        // Store floating action button that starts playing ping/pong.
-        mStartFab = (FloatingActionButton) findViewById(R.id.play_fab);
+        // Cache floating action button that starts playing ping/pong.
+        mStartOrStopFab = (FloatingActionButton) findViewById(R.id.play_fab);
+
+        // Make the EditText invisible for animation purposes.
+        mCountEditText.setVisibility(View.INVISIBLE);
 
         // Make the count button invisible for animation purposes.
-        mStartFab.setVisibility(View.INVISIBLE);
-
-        if (TextUtils.isEmpty(mCountEditText.getText().toString().trim()))
-            // Make the EditText invisible for animation purposes.
-            mCountEditText.setVisibility(View.INVISIBLE);
-
-        // The activity is being restarted after an orientation
-        // change.
-        if (savedInstanceState != null) 
-            mOrientationChange = true;
+        mStartOrStopFab.setVisibility(View.INVISIBLE);
 
         // Store and initialize the TextView and ScrollView.
         mTextViewLog =
@@ -142,24 +156,23 @@ public class MainActivity
         // when the user hits enter.  This listener also sets a
         // default count value if the user enters no value.
         mCountEditText.setOnEditorActionListener
-                ((v, actionId, event) -> {
-                    if (actionId == EditorInfo.IME_ACTION_SEARCH
-                            || actionId == EditorInfo.IME_ACTION_DONE
-                            || event.getAction() == KeyEvent.ACTION_DOWN
-                            && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
-                        UiUtils.hideKeyboard(MainActivity.this,
-                                             mCountEditText.getWindowToken());
-                        if (TextUtils.isEmpty
-                            (mCountEditText.getText().toString().trim())) 
-                            mCountEditText.setText(String.valueOf(sDEFAULT_COUNT));
+            ((v, actionId, event) -> {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH
+                    || actionId == EditorInfo.IME_ACTION_DONE
+                    || event.getAction() == KeyEvent.ACTION_DOWN
+                    && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+                    UiUtils.hideKeyboard(MainActivity.this,
+                                         mCountEditText.getWindowToken());
+                    if (TextUtils.isEmpty
+                        (mCountEditText.getText().toString().trim())) 
+                        mCountEditText.setText(String.valueOf(sDEFAULT_COUNT));
 
-                        // Show the "start" FAB.
-                        UiUtils.showFab(mStartFab);
-                        return true;
-                    } else {
-                        return false;
-                    }
-                });
+                    UiUtils.showFab(mStartOrStopFab);
+                    return true;
+                } else {
+                    return false;
+                }
+            });
     }
 
     /**
@@ -184,8 +197,8 @@ public class MainActivity
             mSetFab.startAnimation
                 (AnimationUtils.loadAnimation(this,
                                               animRedId));
-            // Hides the start FAB.
-            UiUtils.hideFab(mStartFab);
+            // Hides the FAB.
+            UiUtils.hideFab(mStartOrStopFab);
         } else {
             // Reveal the EditText using circular reveal animation and
             // set boolean to true.
@@ -204,72 +217,183 @@ public class MainActivity
 
     /**
      * Called by the Android Activity framework when the user clicks
-     * the "startComputations" button.
+     * the "startOrStartComputations" button.
      *
      * @param view
      *            The view.
      */
-    public void handleStartButton(View view) {
-        // Start running the primality computations.
-        startComputations(Integer.valueOf(mCountEditText.getText().toString()));
+    public void startOrStopComputations(View view) {
+        if (mRetainedState != null)
+            // The ExecutorService only exists while prime
+            // computations are in progress.
+            interruptComputations();
+        else 
+            // Get the count from the edit view.
+            startComputations(Integer.valueOf(mCountEditText.getText().toString()));
     }
 
     /**
-     * Start running the primality computations.
-     *
-     * @param count Number of prime computations to perform.
+     * Start the prime computations.
      */
-    public void startComputations(int count) {
+    private void startComputations(int count) {
         // Make sure there's a non-0 count.
         if (count <= 0) 
             // Inform the user there's a problem with the input.
             UiUtils.showToast(this,
                               "Please specify a count value that's > 0");
         else {
-            // Hides the start FAB.
-            UiUtils.hideFab(mStartFab);
+            // Allocate the state that's retained across runtime
+            // configuration changes.
+            mRetainedState = new RetainedState();
 
-            // Set the number of running tasks to the count.
-            mRunningTasks.set(count);
+            // Allocate a thread pool with an extra thread for the
+            // "future waiter" task.
+            mRetainedState.mExecutorService =
+                Executors.newFixedThreadPool(Runtime.getRuntime()
+                                             .availableProcessors() + 1);
 
-            // Create and execute a new PrimeRunnable for each of the
-            // "count" random numbers between 0 and MAX_VALUE.
-            new Random().longs(count, Integer.MAX_VALUE - count, Integer.MAX_VALUE)
-                        .forEach(randomNumber ->
-                                 mExecutor.execute(new PrimeRunnable(this,
-                                                                     randomNumber)));
+            // Associate the ExecutorCompletionService with the
+            // ExecutorService.
+            mRetainedState.mExecutorCompletionService = 
+                new ExecutorCompletionService<>
+                    (mRetainedState.mExecutorService);
 
-            // Only print this message the first time the activity
-            // runs.
-            if (!mOrientationChange)
-                println("Starting primality computations");
+            // Submit "count" PrimeCallable objects that concurrently check
+            // the primality of "count" random numbers.
+            new Random()
+                // Generate "count" random between 0 and MAX_VALUE.
+                .longs(count, 0, Integer.MAX_VALUE)
+
+                // Convert each random number into a PrimeCallable.
+                .mapToObj(PrimeCallable::new)
+
+                // Submit each PrimeCallable to the ExecutorService.
+                .forEach(mRetainedState.mExecutorCompletionService::submit);
+
+            // Store the CompletionRunnable in a field so it can be
+            // updated during a runtime configuration change.
+            mRetainedState.mCompletionRunnable = new CompletionRunnable(this,
+                                                                        count);
+
+            // Execute a runnable that waits for all the results in
+            // the background so it doesn't block the UI thread.
+            mRetainedState.mExecutorCompletionService.submit
+                (mRetainedState.mCompletionRunnable,
+                 null);
         }
+
+        println("Starting primality computations");
+
+        // Update the start/stop FAB to display a stop icon.
+        mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);
+    }
+
+    /**
+     * The class runs in a background thread in the ExecutorService
+     * and gets the results of all the completed futures.
+     */
+    static private class CompletionRunnable 
+                   implements Runnable {
+        /**
+         * Count of the number of prime checker computations.
+         */
+        int mCount;
+
+        /**
+         * Reference back to the enclosing activity.
+         */
+        MainActivity mActivity;
+
+        /**
+         * Constructor initializes the field.
+         */
+        public CompletionRunnable(MainActivity activity,
+                                  int count) {
+            mActivity = activity;
+            mCount = count;
+        }
+
+        /**
+         * Reset the activity after a runtime configuration change.
+         */
+        public void setActivity(MainActivity activity) {
+            mActivity = activity;
+        }
+
+        /**
+         * Run in a background thread to get the results of all the
+         * completed futures.
+         */
+        @Override
+        public void run() {
+            // Iterate through all the futures to get the results.
+            for (int i = 0; i < mCount; ++i) {
+                try {
+                    // This call will block until the future is triggered.
+                    Future<PrimeCallable.PrimeResult> resultFuture = 
+                        mActivity.mRetainedState.mExecutorCompletionService.take();
+
+                    // The get() call will not block since the results
+                    // should be ready before they are added to the
+                    // completion queue.
+                    PrimeCallable.PrimeResult result = resultFuture.get();
+
+                    if (result.mSmallestFactor != 0)
+                        mActivity.println(""
+                                          + result.mPrimeCandidate
+                                          + " is not prime with smallest factor "
+                                          + result.mSmallestFactor);
+                    else
+                        mActivity.println(""
+                                          + result.mPrimeCandidate
+                                          + " is prime");
+                } catch (InterruptedException e) {
+                    return;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            // Finish up and reset the UI.
+            mActivity.done();
+        }
+    }
+
+    /**
+     * Stop the prime computations.
+     */
+    private void interruptComputations() {
+        // Interrupt the prime thread.
+        mRetainedState.mExecutorService.shutdownNow();
+
+        UiUtils.showToast(this,
+                          "Interrupting ExecutorService");
+
+        // Finish up and reset the UI.
+        done();
     }
 
     /**
      * Finish up and reset the UI.
      */
     public void done() {
-        Log.d(TAG,
-              "Finished in thread " 
-              + Thread.currentThread());
+        // Create a command to reset the UI.
+        Runnable command = () -> {
+            // Null out the reference to avoid later problems.
+            mRetainedState = null;
 
-        if (mRunningTasks.decrementAndGet() == 0) {
-            // Create a command to reset the UI.
-            Runnable command = () -> {
-                // Append the stringToPrint and terminate it with a
-                // newline.
-                mTextViewLog.append("Finished primality computations\n");
-                mScrollView.fullScroll(ScrollView.FOCUS_DOWN);
+            // Append the stringToPrint and terminate it with a
+            // newline.
+            mTextViewLog.append("Finished primality computations\n");
+            mScrollView.fullScroll(ScrollView.FOCUS_DOWN);
 
-                // Reshow the "start" FAB.
-                UiUtils.showFab(mStartFab);
-            };
+            // Reset the start/stop FAB to the play icon.
+            mStartOrStopFab.setImageResource(android.R.drawable.ic_media_play);
+        };
 
-            // Run the command on the UI thread.  This all is optimized
-            // for the case where println() is called from the UI thread.
-            runOnUiThread(command);
-        }
+        // Run the command on the UI thread, which optimizes for the
+        // case where println() is called from the UI thread.
+        runOnUiThread(command);
     }
 
     /**
@@ -291,24 +415,36 @@ public class MainActivity
     }
 
     /**
-     * Lifecycle hook method called when the activity is about gain
-     * focus.
+     * This hook method is called by Android as part of destroying an
+     * activity due to a configuration change, when it is known that a
+     * new instance will immediately be created for the new
+     * configuration.
      */
     @Override
-    protected void onResume() {
-        // Call to the super class.
-        super.onResume();
+    public Object onRetainNonConfigurationInstance() {
+        // Call the super class.
+        super.onRetainNonConfigurationInstance();
 
-        // Check to see if an orientation change occurred.  This
-        // implementation is simple and doesn't take into account how
-        // much progress was made before the orientation occurred.
-        if (mOrientationChange) {
-            // Show the "start" FAB.
-            UiUtils.showFab(mStartFab);
+        // Returns mRetainedState so that it will be saved across
+        // runtime configuration changes.
+        return mRetainedState;
+    }
 
-            // Start running the computations using the value
-            // originally entered by the user.
-            startComputations(Integer.valueOf(mCountEditText.getText().toString()));
+    /**
+     * Lifecycle hook method called when this activity is destroyed.
+     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (mRetainedState != null
+            && !isChangingConfigurations()) {
+            // Interrupt the ExecutorService since the activity is
+            // being destroyed.
+            mRetainedState.mExecutorService.shutdownNow();
+
+            Log.d(TAG,
+                  "interrupting ExecutorService");
         }
     }
 }

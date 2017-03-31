@@ -45,7 +45,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentLeft="true"
                 android:layout_margin="@dimen/fab_margin"
-                android:onClick="handleStartButton"
+                android:onClick="startOrStopComputations"
                 android:src="@android:drawable/ic_media_play"
                 android:tint="@android:color/white"/>
 

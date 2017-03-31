@@ -81,11 +81,10 @@ public class MainActivity
     private ScrollView mScrollView;
 
     /**
-     * State that's related to an AsyncTask that must be preserved
-     * across runtime configuration changes.
+     * State's related to an AsyncTask that must be preserved across
+     * runtime configuration changes.
      */
     class AsyncTaskRelatedState {
-
         /**
          * Reference to the ExecutorService that runs the GCD
          * computations.
