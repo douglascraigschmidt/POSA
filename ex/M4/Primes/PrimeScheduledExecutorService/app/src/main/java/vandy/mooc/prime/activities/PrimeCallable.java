@@ -32,7 +32,7 @@ public class PrimeCallable
     /**
      * The result returned via the future.
      */
-    public static class PrimeResult {
+    static class PrimeResult {
         /**
          * Value that was evaluated for primality.
          */

@@ -3,6 +3,9 @@ package vandy.mooc.prime.utils;
 import android.util.Log;
 
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Future;
@@ -15,9 +18,11 @@ import static vandy.mooc.prime.utils.LaunderThrowable.launderThrowable;
  * This class defines a "memoizing" cache that maps a key to the value
  * produced by a function.  FutureTask is used to ensure only a single
  * call to the function is run when a key and value is first added to
- * the cache.  This code is based on an example in "Java Concurrency
- * in Practice" by Brian Goetz et al.  More information on memoization 
- * is available at https://en.wikipedia.org/wiki/Memoization.
+ * the cache.  This implementation uses the ScheduledExecutorService
+ * to remove a key from the cache after a timeout elapses.  This code
+ * is based on an example in "Java Concurrency in Practice" by Brian
+ * Goetz et al.  More information on memoization is available at
+ * https://en.wikipedia.org/wiki/Memoization.
  */
 public class Memoizer<K, V>
        implements Function<K, V> {
@@ -41,10 +46,25 @@ public class Memoizer<K, V>
     private final Function<K, V> mFunction;
 
     /**
+     * The amount of time to retain a value in the cache.
+     */
+    private final long mTimeoutInMillisecs;
+
+    /**
+     * Executor service that will execute Runnable after certain
+     * timeouts to remove expired CacheValues.
+     */
+    private ScheduledExecutorService mScheduledExecutorService = 
+        Executors.newScheduledThreadPool(1);
+
+
+    /**
      * Constructor initializes the function field.
      */
-    public Memoizer(Function<K, V> function) {
+    public Memoizer(Function<K, V> function,
+                    long timeoutInMillisecs) {
         mFunction = function; 
+        mTimeoutInMillisecs = timeoutInMillisecs;
     }
 
     /**
@@ -61,7 +81,7 @@ public class Memoizer<K, V>
         if (future == null) {
             // Create a FutureTask whose run() method will compute
             // the value and store it in the cache.
-            FutureTask<V> futureTask =
+            final FutureTask<V> futureTask =
                 new FutureTask<>(() -> mFunction.apply(key));
 
             // Atomically add futureTask to the cache as the value
@@ -77,9 +97,33 @@ public class Memoizer<K, V>
                 future = futureTask;
 
                 // Run futureTask to compute the value, which is
-                // implicitly stored in the cache when the
+                // (implicitly) stored in the cache when the
                 // computation is finished.
                 futureTask.run();
+
+                // Don't schedule a cleanup if the futureTask was
+                // interrupted or the timeout value is 0.
+                if (!Thread.currentThread().isInterrupted()
+                    && mTimeoutInMillisecs > 0) {
+                    // Runnable that when executed will remove the
+                    // futureTask from the cache when its timeout
+                    // expires.
+                    final Runnable cleanupCacheRunnable = () -> {
+                        // Only remove key if it is currently
+                        // associated with futureTask.
+                        if (mCache.remove(key,
+                                          futureTask))
+                            Log.d(TAG, "key " + key + " removed from cache upon timeout");
+                        else
+                            Log.d(TAG, "key " + key + " NOT removed from cache upon timeout");
+                    };
+
+                    // Schedule the cleanupCacheRunnable to execute
+                    // after the designated timeout.
+                    mScheduledExecutorService.schedule(cleanupCacheRunnable,
+                                                       mTimeoutInMillisecs,
+                                                       TimeUnit.MILLISECONDS);
+                }
             }
         } else 
             System.out.println("value " 

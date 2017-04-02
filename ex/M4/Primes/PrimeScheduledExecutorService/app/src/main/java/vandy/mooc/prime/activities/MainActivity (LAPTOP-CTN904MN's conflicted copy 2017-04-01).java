@@ -20,8 +20,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import vandy.mooc.prime.R;
-import vandy.mooc.prime.utils.Memoizer;
-import vandy.mooc.prime.utils.PrimeCheckers;
 import vandy.mooc.prime.utils.UiUtils;
 
 /**
@@ -72,11 +70,6 @@ public class MainActivity
     private ScrollView mScrollView;
 
     /**
-     * Keeps track of whether the app is running or not.
-     */
-    private boolean mIsRunning;
-
-    /**
      * State that must be preserved across runtime configuration
      * changes.
      */
@@ -96,24 +89,6 @@ public class MainActivity
          * results of the futures.
          */
         CompletionRunnable mCompletionRunnable;
-
-        /**
-         * Thread that waits for all the results to complete.
-         */
-        Thread mThread;
-        
-        RetainedState() {
-            // Create a thread pool that matches the number of cores.
-            mExecutorService =
-                Executors.newFixedThreadPool(Runtime.getRuntime()
-                                             .availableProcessors());
-
-            // Associate the ExecutorCompletionService with the
-            // ExecutorService.
-            mExecutorCompletionService =
-                new ExecutorCompletionService<>
-                (mExecutorService);
-        }
     }
 
     /**
@@ -148,10 +123,7 @@ public class MainActivity
 
             // Show the "startOrStop" FAB.
             UiUtils.showFab(mStartOrStopFab);
-        } else 
-            // Allocate the state that's retained across runtime
-            // configuration changes.
-            mRetainedState = new RetainedState();
+        } 
     }
 
     /**
@@ -251,7 +223,7 @@ public class MainActivity
      *            The view.
      */
     public void startOrStopComputations(View view) {
-        if (mIsRunning)
+        if (mRetainedState != null)
             // The ExecutorService only exists while prime
             // computations are in progress.
             interruptComputations();
@@ -270,12 +242,21 @@ public class MainActivity
             UiUtils.showToast(this,
                               "Please specify a count value that's > 0");
         else {
-            mIsRunning = true;
+            // Allocate the state that's retained across runtime
+            // configuration changes.
+            mRetainedState = new RetainedState();
 
-            // Cache used to generate, store, and retrieve the results
-            // of prime checking computations.
-            final Memoizer<Long, Long> primeMemoizer =
-                new Memoizer<>(PrimeCheckers::bruteForceChecker);
+            // Allocate a thread pool with an extra thread for the
+            // "future waiter" task.
+            mRetainedState.mExecutorService =
+                Executors.newFixedThreadPool(Runtime.getRuntime()
+                                             .availableProcessors() + 1);
+
+            // Associate the ExecutorCompletionService with the
+            // ExecutorService.
+            mRetainedState.mExecutorCompletionService = 
+                new ExecutorCompletionService<>
+                    (mRetainedState.mExecutorService);
 
             // Submit "count" PrimeCallable objects that concurrently check
             // the primality of "count" random numbers.
@@ -285,7 +266,7 @@ public class MainActivity
                 .longs(count, Integer.MAX_VALUE - count, Integer.MAX_VALUE)
 
                 // Convert each random number into a PrimeCallable.
-                .mapToObj(randomNumber -> new PrimeCallable(randomNumber, primeMemoizer))
+                .mapToObj(PrimeCallable::new)
 
                 // Submit each PrimeCallable to the ExecutorService.
                 .forEach(mRetainedState.mExecutorCompletionService::submit);
@@ -295,10 +276,11 @@ public class MainActivity
             mRetainedState.mCompletionRunnable = new CompletionRunnable(this,
                                                                         count);
 
-            // Create/start a thread that waits for all the results in
+            // Execute a runnable that waits for all the results in
             // the background so it doesn't block the UI thread.
-            mRetainedState.mThread = new Thread(mRetainedState.mCompletionRunnable);
-            mRetainedState.mThread.start();
+            mRetainedState.mExecutorCompletionService.submit
+                (mRetainedState.mCompletionRunnable,
+                 null);
         }
 
         println("Starting primality computations");
@@ -313,12 +295,6 @@ public class MainActivity
      */
     static private class CompletionRunnable 
                    implements Runnable {
-        /**
-         * Debugging tag used by the Android logger.
-         */
-        protected final String TAG =
-                getClass().getSimpleName();
-
         /**
          * Count of the number of prime checker computations.
          */
@@ -363,7 +339,6 @@ public class MainActivity
                     // completion queue.
                     PrimeCallable.PrimeResult result = resultFuture.get();
 
-                    // Check the results and display the appropriate message.
                     if (result.mSmallestFactor != 0)
                         mActivity.println(""
                                           + result.mPrimeCandidate
@@ -374,9 +349,6 @@ public class MainActivity
                                           + result.mPrimeCandidate
                                           + " is prime");
                 } catch (InterruptedException e) {
-                    Log.d(TAG,
-                          "Prime waiter thread interrupted "
-                          + Thread.currentThread());
                     return;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -392,17 +364,11 @@ public class MainActivity
      * Stop the prime computations.
      */
     private void interruptComputations() {
-        // Shutdown the thread pool.
+        // Interrupt the prime thread.
         mRetainedState.mExecutorService.shutdownNow();
 
-        // Interrupt the prime waiter thread.
-        mRetainedState.mThread.interrupt();
-
         UiUtils.showToast(this,
-                          "Interrupting ExecutorService and waiter thread");
-
-        // Trigger a reset of the retained state on cancellation.
-        mRetainedState = new RetainedState();
+                          "Interrupting ExecutorService");
 
         // Finish up and reset the UI.
         done();
@@ -414,8 +380,8 @@ public class MainActivity
     public void done() {
         // Create a command to reset the UI.
         Runnable command = () -> {
-            // Indicate the app is not longer running.
-            mIsRunning = false;
+            // Null out the reference to avoid later problems.
+            mRetainedState = null;
 
             // Append the stringToPrint and terminate it with a
             // newline.

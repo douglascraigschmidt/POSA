@@ -275,7 +275,10 @@ public class MainActivity
             // Cache used to generate, store, and retrieve the results
             // of prime checking computations.
             final Memoizer<Long, Long> primeMemoizer =
-                new Memoizer<>(PrimeCheckers::bruteForceChecker);
+                new Memoizer<>(PrimeCheckers::efficientChecker,
+                               // Timeout cache entries after count *
+                               // 1 seconds.
+                               count * 1000);
 
             // Submit "count" PrimeCallable objects that concurrently check
             // the primality of "count" random numbers.
