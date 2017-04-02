@@ -3,6 +3,7 @@ package vandy.mooc.prime.activities;
 import android.util.Log;
 
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 
 /**
  * Uses a brute-force algorithm to determine if a given number is
@@ -20,6 +21,11 @@ public class PrimeCallable
      * Number to evaluate for "primality".
      */
     private final long mPrimeCandidate;
+
+    /**
+     * This function checks if a number if prime.
+     */
+    private Function<Long, Long> mPrimeChecker;
 
     /**
      * The result returned via the future.
@@ -47,32 +53,12 @@ public class PrimeCallable
     /**
      * Constructor initializes the fields.
      */
-    public PrimeCallable(long primeCandidate) {
+    PrimeCallable(long primeCandidate,
+                  Function<Long, Long> primeChecker) {
         mPrimeCandidate = primeCandidate;
+        mPrimeChecker = primeChecker;
     }
     
-    /**
-     * This method provides a brute-force determination of whether
-     * number @a n is prime.  Returns 0 if it is prime, or the
-     * smallest factor if it is not prime. 
-     */
-    private long isPrime(long n) {
-        if (n > 3)
-            for (long factor = 2;
-                 factor <= n / 2; 
-                 ++factor)
-                if ((factor % (n / 10)) == 0
-                    && Thread.interrupted()) {
-                    Log.d(TAG,
-                          "Thread interrupted "
-                          + Thread.currentThread());
-                    break;
-                } else if (n / factor * factor == n)
-                    return factor;
-
-        return 0;
-    }
-
     /**
      * Hook method that determines if a given number is prime.
      * Returns 0 if it is prime or the smallest factor if it is not
@@ -84,6 +70,6 @@ public class PrimeCallable
         return new PrimeResult(mPrimeCandidate,
                                // Determine if mPrimeCandidate is
                                // prime or not.
-                               isPrime(mPrimeCandidate));
+                               mPrimeChecker.apply(mPrimeCandidate));
     }
 }

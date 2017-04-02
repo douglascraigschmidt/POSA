@@ -55,7 +55,7 @@ public class PrimeCallable
     /**
      * Constructor initializes the fields.
      */
-    PrimeCallable(Long primeCandidate,
+    PrimeCallable(long primeCandidate,
                   Function<Long, Long> primeChecker) {
         mPrimeCandidate = primeCandidate;
         mPrimeChecker = primeChecker;
