@@ -93,7 +93,7 @@ public class Memoizer<K, V>
             // if the futureTask hasn't finished running yet.
             return future.get();
         } catch (Exception e) {
-            // Try to remove key from the cache.
+            // Try to remove key from the cache if an exception occurs.
             if (mCache.remove(key,
                               future))
                 Log.d(TAG, "key " + key + " removed from cache upon exception");

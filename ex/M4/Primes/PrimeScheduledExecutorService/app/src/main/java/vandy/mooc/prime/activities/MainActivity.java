@@ -155,6 +155,22 @@ public class MainActivity
     }
 
     /**
+     * This hook method is called by Android as part of destroying an
+     * activity due to a configuration change, when it is known that a
+     * new instance will immediately be created for the new
+     * configuration.
+     */
+    @Override
+    public Object onRetainNonConfigurationInstance() {
+        // Call the super class.
+        super.onRetainNonConfigurationInstance();
+
+        // Returns mRetainedState so that it will be saved across
+        // runtime configuration changes.
+        return mRetainedState;
+    }
+
+    /**
      * Initialize the views.
      */
     private void initializeViews() {
@@ -450,22 +466,6 @@ public class MainActivity
         // optimizes for the case where println() is called from the
         // UI thread.
         runOnUiThread(command);
-    }
-
-    /**
-     * This hook method is called by Android as part of destroying an
-     * activity due to a configuration change, when it is known that a
-     * new instance will immediately be created for the new
-     * configuration.
-     */
-    @Override
-    public Object onRetainNonConfigurationInstance() {
-        // Call the super class.
-        super.onRetainNonConfigurationInstance();
-
-        // Returns mRetainedState so that it will be saved across
-        // runtime configuration changes.
-        return mRetainedState;
     }
 
     /**

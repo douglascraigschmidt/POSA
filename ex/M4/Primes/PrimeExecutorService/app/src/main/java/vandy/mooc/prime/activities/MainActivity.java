@@ -98,7 +98,10 @@ public class MainActivity
          * Thread that waits for all the results to complete.
          */
         Thread mThread;
-        
+
+        /**
+         * Constructor initializes the ExecutorService thread pool.
+         */
         RetainedState() {
             // Create a thread pool that matches the number of cores.
             mExecutorService =
@@ -143,6 +146,22 @@ public class MainActivity
             // Allocate the state that's retained across runtime
             // configuration changes.
             mRetainedState = new RetainedState();
+    }
+
+    /**
+     * This hook method is called by Android as part of destroying an
+     * activity due to a configuration change, when it is known that a
+     * new instance will immediately be created for the new
+     * configuration.
+     */
+    @Override
+    public Object onRetainNonConfigurationInstance() {
+        // Call the super class.
+        super.onRetainNonConfigurationInstance();
+
+        // Returns mRetainedState so that it will be saved across
+        // runtime configuration changes.
+        return mRetainedState;
     }
 
     /**
@@ -425,22 +444,6 @@ public class MainActivity
     }
 
     /**
-     * This hook method is called by Android as part of destroying an
-     * activity due to a configuration change, when it is known that a
-     * new instance will immediately be created for the new
-     * configuration.
-     */
-    @Override
-    public Object onRetainNonConfigurationInstance() {
-        // Call the super class.
-        super.onRetainNonConfigurationInstance();
-
-        // Returns mRetainedState so that it will be saved across
-        // runtime configuration changes.
-        return mRetainedState;
-    }
-
-    /**
      * Lifecycle hook method called when this activity is destroyed.
      */
     @Override
@@ -452,6 +455,9 @@ public class MainActivity
             // Interrupt the ExecutorService since the activity is
             // being destroyed.
             mRetainedState.mExecutorService.shutdownNow();
+
+            // Interrupt the background thread.
+            mRetainedState.mThread.interrupt();
 
             Log.d(TAG,
                   "interrupting ExecutorService");
