@@ -13,11 +13,13 @@ import static vandy.mooc.prime.utils.LaunderThrowable.launderThrowable;
 
 /**
  * This class defines a "memoizing" cache that maps a key to the value
- * produced by a function.  FutureTask is used to ensure only a single
- * call to the function is run when a key and value is first added to
- * the cache.  This code is based on an example in "Java Concurrency
- * in Practice" by Brian Goetz et al.  More information on memoization 
- * is available at https://en.wikipedia.org/wiki/Memoization.
+ * produced by a function.  If a value has previously been computed it
+ * is returned rather than calling the function to compute it again.
+ * The Java FutureTask class is used to ensure only a single call to
+ * the function is run when a key and value is first added to the
+ * cache.  This code is based on an example in "Java Concurrency in
+ * Practice" by Brian Goetz et al.  More information on memoization is
+ * available at https://en.wikipedia.org/wiki/Memoization.
  */
 public class Memoizer<K, V>
        implements Function<K, V> {
