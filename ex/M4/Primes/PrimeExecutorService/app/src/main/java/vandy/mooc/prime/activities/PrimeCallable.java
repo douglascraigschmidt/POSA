@@ -34,12 +34,12 @@ public class PrimeCallable
         /**
          * Value that was evaluated for primality.
          */
-        long mPrimeCandidate;
+        final long mPrimeCandidate;
         
         /**
          * Result of the isPrime() method.
          */
-        long mSmallestFactor;
+        final long mSmallestFactor;
         
         /**
          * Constructor initializes the fields.
