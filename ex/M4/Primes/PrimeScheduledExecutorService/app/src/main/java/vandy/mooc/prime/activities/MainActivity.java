@@ -294,7 +294,7 @@ public class MainActivity
                 new Memoizer<>(PrimeCheckers::bruteForceChecker,
                                // Timeout cache entries after count *
                                // 1 seconds.
-                               count * 1000);
+                               5000);
 
             // Submit "count" PrimeCallable objects that concurrently check
             // the primality of "count" random numbers.

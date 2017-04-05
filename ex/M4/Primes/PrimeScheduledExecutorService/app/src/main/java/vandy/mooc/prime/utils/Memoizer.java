@@ -110,17 +110,12 @@ public class Memoizer<K, V>
                     // futureTask from the cache when its timeout
                     // expires.
                     final Runnable cleanupCache = () -> {
-                        // Only remove key if it is currently
-                        // associated with futureTask.
-                        if (mCache.remove(key,
-                                          futureTask))
-                            ;
-                            /*
+                        // Remove the key.
+                        if (mCache.remove(key))
                             Log.d(TAG,
                                   "key " 
                                   + key 
                                   + " removed from cache upon timeout");
-                            */
                         else
                             Log.d(TAG, 
                                   "key "
