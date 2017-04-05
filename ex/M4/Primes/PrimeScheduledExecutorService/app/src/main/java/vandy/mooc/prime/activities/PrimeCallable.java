@@ -30,7 +30,7 @@ public class PrimeCallable
     private Function<Long, Long> mPrimeChecker;
 
     /**
-     * The result returned via the future.
+     * The immutable result returned via the future.
      */
     static class PrimeResult {
         /**

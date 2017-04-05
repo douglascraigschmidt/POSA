@@ -20,9 +20,11 @@ import static vandy.mooc.prime.utils.LaunderThrowable.launderThrowable;
  * is returned rather than calling the function to compute it again.
  * The Java FutureTask class is used to ensure only a single call to
  * the function is run when a key and value is first added to the
- * cache.  This code is based on an example in "Java Concurrency in
- * Practice" by Brian Goetz et al.  More information on memoization is
- * available at https://en.wikipedia.org/wiki/Memoization.
+ * cache.  The ScheduledExecutorService is used to limit the amount of
+ * time a key/value is retained in the cache.  This code is based on
+ * an example in "Java Concurrency in Practice" by Brian Goetz et al.
+ * More information on memoization is available at
+ * https://en.wikipedia.org/wiki/Memoization.
  */
 public class Memoizer<K, V>
        implements Function<K, V> {
@@ -51,15 +53,14 @@ public class Memoizer<K, V>
     private final long mTimeoutInMillisecs;
 
     /**
-     * Executor service that will execute Runnable after certain
-     * timeouts to remove expired CacheValues.
+     * Executor service that executes runnable after a given timeout
+     * to remove expired keys.
      */
     private ScheduledExecutorService mScheduledExecutorService = 
         Executors.newScheduledThreadPool(1);
 
-
     /**
-     * Constructor initializes the function field.
+     * Constructor initializes the fields.
      */
     public Memoizer(Function<K, V> function,
                     long timeoutInMillisecs) {
@@ -108,19 +109,30 @@ public class Memoizer<K, V>
                     // Runnable that when executed will remove the
                     // futureTask from the cache when its timeout
                     // expires.
-                    final Runnable cleanupCacheRunnable = () -> {
+                    final Runnable cleanupCache = () -> {
                         // Only remove key if it is currently
                         // associated with futureTask.
                         if (mCache.remove(key,
                                           futureTask))
-                            Log.d(TAG, "key " + key + " removed from cache upon timeout");
+                            ;
+                            /*
+                            Log.d(TAG,
+                                  "key " 
+                                  + key 
+                                  + " removed from cache upon timeout");
+                            */
                         else
-                            Log.d(TAG, "key " + key + " NOT removed from cache upon timeout");
+                            Log.d(TAG, 
+                                  "key "
+                                  + key 
+                                  + " NOT removed from cache upon timeout"
+                                  + " for futureTask "
+                                  + futureTask);
                     };
 
-                    // Schedule the cleanupCacheRunnable to execute
-                    // after the designated timeout.
-                    mScheduledExecutorService.schedule(cleanupCacheRunnable,
+                    // Schedule the cleanupCache to execute after the
+                    // given timeout.
+                    mScheduledExecutorService.schedule(cleanupCache,
                                                        mTimeoutInMillisecs,
                                                        TimeUnit.MILLISECONDS);
                 }
