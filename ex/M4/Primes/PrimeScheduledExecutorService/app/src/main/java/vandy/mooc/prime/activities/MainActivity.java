@@ -84,12 +84,12 @@ public class MainActivity
         /**
          * This object runs the prime computations.
          */
-        ExecutorCompletionService<PrimeCallable.PrimeResult> mExecutorCompletionService;
+        final ExecutorCompletionService<PrimeCallable.PrimeResult> mExecutorCompletionService;
 
         /**
          * This object manages a thread pool.
          */
-        ExecutorService mExecutorService;
+        final ExecutorService mExecutorService;
 
         /**
          * This runnable executes in a background thread to get the
@@ -341,7 +341,7 @@ public class MainActivity
         /**
          * Count of the number of prime checker computations.
          */
-        int mCount;
+        final int mCount;
 
         /**
          * Reference back to the enclosing activity.

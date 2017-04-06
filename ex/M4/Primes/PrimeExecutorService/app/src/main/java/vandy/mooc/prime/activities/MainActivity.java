@@ -86,7 +86,7 @@ public class MainActivity
         /**
          * This object manages a thread pool.
          */
-        ExecutorService mExecutorService;
+        final ExecutorService mExecutorService;
 
         /**
          * This runnable executes in a background thread to get the
@@ -327,7 +327,7 @@ public class MainActivity
         /**
          * List of futures to the results of the PrimeCallable computations.
          */
-        List<Future<PrimeCallable.PrimeResult>> mFutures;
+        final List<Future<PrimeCallable.PrimeResult>> mFutures;
 
         /**
          * Reference back to the enclosing activity.

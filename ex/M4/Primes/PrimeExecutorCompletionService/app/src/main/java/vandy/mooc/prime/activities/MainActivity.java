@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Function;
 
 import vandy.mooc.prime.R;
 import vandy.mooc.prime.utils.Memoizer;
@@ -84,12 +85,12 @@ public class MainActivity
         /**
          * This object runs the prime computations.
          */
-        ExecutorCompletionService<PrimeCallable.PrimeResult> mExecutorCompletionService;
+        final ExecutorCompletionService<PrimeCallable.PrimeResult> mExecutorCompletionService;
 
         /**
          * This object manages a thread pool.
          */
-        ExecutorService mExecutorService;
+        final ExecutorService mExecutorService;
 
         /**
          * This runnable executes in a background thread to get the
@@ -294,7 +295,7 @@ public class MainActivity
 
             // Cache used to generate, store, and retrieve the results
             // of prime checking computations.
-            final Memoizer<Long, Long> primeMemoizer =
+            final Function<Long, Long> primeMemoizer =
                 new Memoizer<>(PrimeCheckers::bruteForceChecker);
 
             // Submit "count" PrimeCallable objects that concurrently check
@@ -342,7 +343,7 @@ public class MainActivity
         /**
          * Count of the number of prime checker computations.
          */
-        int mCount;
+        final int mCount;
 
         /**
          * Reference back to the enclosing activity.

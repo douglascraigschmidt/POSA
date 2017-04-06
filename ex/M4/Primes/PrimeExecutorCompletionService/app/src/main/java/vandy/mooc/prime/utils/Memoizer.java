@@ -94,7 +94,7 @@ public class Memoizer<K, V>
             return future.get();
         } catch (Exception e) {
             // Try to remove key from the cache if an exception occurs.
-            if (mCache.remove(key))
+            if (mCache.remove(key) != null)
                 Log.d(TAG, "key " + key + " removed from cache upon exception");
             else
                 Log.d(TAG, "key " + key + " NOT removed from cache upon exception");

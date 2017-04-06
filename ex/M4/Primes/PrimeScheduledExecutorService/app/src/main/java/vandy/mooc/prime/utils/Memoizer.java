@@ -111,7 +111,7 @@ public class Memoizer<K, V>
                     // expires.
                     final Runnable cleanupCache = () -> {
                         // Remove the key.
-                        if (mCache.remove(key))
+                        if (mCache.remove(key) != null)
                             Log.d(TAG,
                                   "key " 
                                   + key 
