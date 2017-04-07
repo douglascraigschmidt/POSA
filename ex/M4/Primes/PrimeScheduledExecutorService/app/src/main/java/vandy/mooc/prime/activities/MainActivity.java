@@ -18,9 +18,10 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Function;
 
 import vandy.mooc.prime.R;
-import vandy.mooc.prime.utils.Memoizer;
+import vandy.mooc.prime.utils.TimedMemoizer;
 import vandy.mooc.prime.utils.PrimeCheckers;
 import vandy.mooc.prime.utils.UiUtils;
 
@@ -290,11 +291,11 @@ public class MainActivity
 
             // Cache used to generate, store, and retrieve the results
             // of prime checking computations.
-            final Memoizer<Long, Long> primeMemoizer =
-                new Memoizer<>(PrimeCheckers::bruteForceChecker,
-                               // Timeout cache entries after count *
-                               // 1 seconds.
-                               5000);
+            final Function<Long, Long> timedMemoizer =
+                new TimedMemoizer<>(PrimeCheckers::bruteForceChecker,
+                                    // Timeout cache entries after count *
+                                    // 1 seconds.
+                                    500);
 
             // Submit "count" PrimeCallable objects that concurrently check
             // the primality of "count" random numbers.
@@ -304,7 +305,8 @@ public class MainActivity
                 .longs(count, Integer.MAX_VALUE - count, Integer.MAX_VALUE)
 
                 // Convert each random number into a PrimeCallable.
-                .mapToObj(randomNumber -> new PrimeCallable(randomNumber, primeMemoizer))
+                .mapToObj(randomNumber 
+                          -> new PrimeCallable(randomNumber, timedMemoizer))
 
                 // Submit each PrimeCallable to the ExecutorService.
                 .forEach(mRetainedState.mExecutorCompletionService::submit);
