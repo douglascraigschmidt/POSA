@@ -1,6 +1,5 @@
 package vandy.mooc.prime.utils;
 
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.util.concurrent.Callable;
@@ -23,10 +22,10 @@ import static vandy.mooc.prime.utils.LaunderThrowable.launderThrowable;
  * is returned rather than calling the function to compute it again.
  * The Java FutureTask class is used to ensure only a single call to
  * the function is run when a key and value is first added to the
- * cache.  The ScheduledExecutorService is used to limit the amount of
- * time a key/value is retained in the cache.  This code is based on
- * an example in "Java Concurrency in Practice" by Brian Goetz et al.
- * More information on memoization is available at
+ * cache.  The Java ScheduledExecutorService is used to limit the
+ * amount of time a key/value is retained in the cache.  This code is
+ * based on an example in "Java Concurrency in Practice" by Brian
+ * Goetz et al.  More information on memoization is available at
  * https://en.wikipedia.org/wiki/Memoization.
  */
 public class TimedMemoizer<K, V>
@@ -77,7 +76,7 @@ public class TimedMemoizer<K, V>
         /**
          * Constructor initializes the superclass and field.
          */
-        public RefCountedFutureTask(Callable<V> callable,
+        RefCountedFutureTask(Callable<V> callable,
                                     long initialCount) {
             super(callable);
             mRefCount = new AtomicLong(initialCount);
@@ -88,8 +87,13 @@ public class TimedMemoizer<K, V>
          */
         @Override
         public boolean equals(Object obj) {
-            final RefCountedFutureTask<V> t = (RefCountedFutureTask<V>) obj;
-            return mRefCount.get() == t.mRefCount.get();
+            if (getClass() != obj.getClass())
+                return false;
+            else {
+                @SuppressWarnings("unchecked")
+                final RefCountedFutureTask<V> t = (RefCountedFutureTask<V>) obj;
+                return mRefCount.get() == t.mRefCount.get();
+            }
         }
 
         /**
@@ -124,7 +128,8 @@ public class TimedMemoizer<K, V>
      * Returns the value associated with the key in cache.  If there
      * is no value associated with the key then the function is called
      * to create the value and store it in the cache before returning
-     * it.
+     * it.  A key/value entry will be purged from the cache if it's
+     * not used within mTimeoutInMillisecs.
      */
     public V apply(final K key) {
         // Try to find the key in the cache.
@@ -142,9 +147,9 @@ public class TimedMemoizer<K, V>
             // associated with key.
             future = mCache.putIfAbsent(key, futureTask);
 
-            // A value of null from put() indicates the key was
-            // just added (i.e., it's the "first time in"), which
-            // also indicates the value hasn't been computed yet.
+            // A value of null from put() indicates the key was just
+            // added (i.e., it's the "first time in"), which also
+            // indicates the value hasn't been computed yet.
             if (future == null) {
                 // A RefCountedFutureTask "isa" Future, so this
                 // assignment is fine.
@@ -166,12 +171,16 @@ public class TimedMemoizer<K, V>
                                                    1);
 
                     /*
-                      This class is needed to decouple scheduling of a runnable from
-                      the actual logic invoked when the runnable is dispatched.
+                      Decouples scheduling of a runnable from the
+                      logic invoked when the runnable is dispatched.
                      */
                     class DelegatingRunnable
                           implements Runnable {
-                        private Runnable mActualRunnable;
+                        /**
+                         * The actual runnable that is delegated to by
+                         * the run() hook method below.
+                         */
+                        Runnable mActualRunnable;
 
                         /**
                          * Delegate to the underlying runnable.
@@ -194,12 +203,12 @@ public class TimedMemoizer<K, V>
                     final ScheduledFuture<?> cancellableFuture =
                         mScheduledExecutorService.scheduleAtFixedRate
                             (delegatingRunnable,
-                             mTimeoutInMillisecs,
-                             mTimeoutInMillisecs,
+                             mTimeoutInMillisecs, // Initial timeout
+                             mTimeoutInMillisecs, // Periodic timeout
                              TimeUnit.MILLISECONDS);
 
                     // Runnable that when executed will remove the
-                    // futureTask from the cache when its timeout
+                    // futureTask from the cache if its timeout
                     // expires and it hasn't been accessed in
                     // mTimeoutInMillisecs.
                     delegatingRunnable.mActualRunnable = () -> {
@@ -210,15 +219,15 @@ public class TimedMemoizer<K, V>
                             Log.d(TAG,
                                   "key "
                                   + key
-                                  + " removed from cache upon timeout");
-                            // Cancel the delegatingRunnable.
+                                  + " removed from cache since it hasn't been accessed recently");
+                            // Stop the ScheduledExecutorService from
+                            // dispatching the delegatingRunnable.
                             cancellableFuture.cancel(true);
                         } else {
                             Log.d(TAG,
                                   "key "
                                   + key
-                                  + " NOT removed from cache upon timeout"
-                                  + " since ref count "
+                                  + " NOT removed from cache since its ref count "
                                   + futureTask.mRefCount.get()
                                   + " indicates recent access");
                             // Reset the key's value so it won't be
@@ -230,9 +239,9 @@ public class TimedMemoizer<K, V>
                 }
             }
         } else 
-            System.out.println("value " 
+            System.out.println("key " 
                                + key 
-                               + " was cached");
+                               + "'s value was retrieved from the cache");
 
         try {
             // Get the result of the future, which will block if the
@@ -242,9 +251,15 @@ public class TimedMemoizer<K, V>
             // Unilaterally remove the key from the cache when an
             // exception occurs.
             if (mCache.remove(key) != null)
-                Log.d(TAG, "key " + key + " removed from cache upon exception");
+                Log.d(TAG,
+                      "key "
+                      + key 
+                      + " removed from cache upon exception");
             else
-                Log.d(TAG, "key " + key + " NOT removed from cache upon exception");
+                Log.d(TAG,
+                      "key "
+                      + key 
+                      + " NOT removed from cache upon exception");
 
             // Rethrow the exception.
             throw launderThrowable(e.getCause());

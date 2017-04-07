@@ -81,7 +81,7 @@ public class MainActivity
      * State that must be preserved across runtime configuration
      * changes.
      */
-    static class RetainedState {
+    private static class RetainedState {
         /**
          * This object runs the prime computations.
          */
@@ -294,8 +294,8 @@ public class MainActivity
             final Function<Long, Long> timedMemoizer =
                 new TimedMemoizer<>(PrimeCheckers::bruteForceChecker,
                                     // Timeout cache entries after count *
-                                    // 1 seconds.
-                                    count * 1000);
+                                    // 0.5 seconds.
+                                    count * 500);
 
             // Submit "count" PrimeCallable objects that concurrently check
             // the primality of "count" random numbers.
@@ -337,7 +337,7 @@ public class MainActivity
         /**
          * Debugging tag used by the Android logger.
          */
-        protected final String TAG =
+        final String TAG =
                 getClass().getSimpleName();
 
         /**
@@ -353,7 +353,7 @@ public class MainActivity
         /**
          * Constructor initializes the field.
          */
-        public CompletionRunnable(MainActivity activity,
+        CompletionRunnable(MainActivity activity,
                                   int count) {
             mActivity = activity;
             mCount = count;
@@ -362,7 +362,7 @@ public class MainActivity
         /**
          * Reset the activity after a runtime configuration change.
          */
-        public void setActivity(MainActivity activity) {
+        void setActivity(MainActivity activity) {
             mActivity = activity;
         }
 
