@@ -12,7 +12,6 @@ import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
@@ -21,8 +20,8 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 
 import vandy.mooc.prime.R;
-import vandy.mooc.prime.utils.TimedMemoizer;
 import vandy.mooc.prime.utils.PrimeCheckers;
+import vandy.mooc.prime.utils.TimedMemoizer;
 import vandy.mooc.prime.utils.UiUtils;
 
 /**

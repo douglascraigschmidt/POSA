@@ -129,120 +129,153 @@ public class TimedMemoizer<K, V>
      * is no value associated with the key then the function is called
      * to create the value and store it in the cache before returning
      * it.  A key/value entry will be purged from the cache if it's
-     * not used within mTimeoutInMillisecs.
+     * not used within the timeout passed to the constructor.
      */
-    public V apply(final K key) {
+    public V apply(K key) {
         // Try to find the key in the cache.
         RefCountedFutureTask<V> future = mCache.get(key);
 
-        // If the key isn't present we must compute its value.
-        if (future == null) {
-            // Create a RefCountedFutureTask whose run() method will
-            // compute the value and store it in the cache.
-            final RefCountedFutureTask<V> futureTask =
+        // If the key isn't present then compute its value.
+        if (future == null)
+            future = computeValue(key);
+
+        // Return the value of the future, blocking until it's
+        // computed.
+        return getFutureValue(key, future);
+    }
+
+    /**
+     * Compute the value associated with the key and return a
+     * unique RefCountedFutureTask associated with it.
+     */
+    private RefCountedFutureTask<V> computeValue(K key) {
+        // Create a RefCountedFutureTask whose run() method will
+        // compute the value and store it in the cache.
+        final RefCountedFutureTask<V> futureTask =
+            new RefCountedFutureTask<>(() -> mFunction.apply(key),
+                                       0);
+
+        // Atomically try to add futureTask to the cache as the value
+        // associated with key.
+        RefCountedFutureTask<V> future =
+            mCache.putIfAbsent(key, futureTask);
+
+        // If future != null the value was already in the cache, so
+        // just return it.
+        if (future != null) {
+            Log.d(TAG, 
+                  "key " 
+                  + key 
+                  + "'s value was retrieved from the cache");
+            return future;
+        }
+
+        // A value of null from put() indicates the key was just added
+        // (i.e., it's the "first time in"), which indicates the value
+        // hasn't been computed yet.
+        else {
+            // Run futureTask to compute the value, which is
+            // (implicitly) stored in the cache when the computation
+            // is finished.
+            futureTask.run();
+
+            // Use the ScheduledExecutorService to remove @a key from
+            // the cache if its timeout expires and it hasn't been
+            // accessed in mTimeoutInMillisecs.
+            scheduleTimeout(key);
+
+            // Return the future.
+            return futureTask;
+        }
+    }
+
+    /**
+     * Use the ScheduledExecutorService to remove @a key from the
+     * cache if its timeout expires and it hasn't been accessed in
+     * mTimeoutInMillisecs.
+     */
+    private void scheduleTimeout(K key) {
+        // Don't schedule a cleanup if the futureTask was interrupted
+        // or the timeout value is 0.
+        if (!Thread.currentThread().isInterrupted()
+            && mTimeoutInMillisecs > 0) {
+            // An object with ref count of 1 indicates its key hasn't
+            // been accessed in mTimeoutInMillisecs.
+            final RefCountedFutureTask<V> nonAccessedValue =
                 new RefCountedFutureTask<>(() -> mFunction.apply(key),
-                                           0);
+                                           1);
 
-            // Atomically add futureTask to the cache as the value
-            // associated with key.
-            future = mCache.putIfAbsent(key, futureTask);
+            /*
+              Decouples scheduling of a runnable from the logic
+              invoked when the runnable is dispatched.
+            */
+            class DelegatingRunnable
+                implements Runnable {
+                /**
+                 * The actual runnable that is delegated to by
+                 * the run() hook method below.
+                 */
+                Runnable mActualRunnable;
 
-            // A value of null from put() indicates the key was just
-            // added (i.e., it's the "first time in"), which also
-            // indicates the value hasn't been computed yet.
-            if (future == null) {
-                // A RefCountedFutureTask "isa" Future, so this
-                // assignment is fine.
-                future = futureTask;
-
-                // Run futureTask to compute the value, which is
-                // (implicitly) stored in the cache when the
-                // computation is finished.
-                futureTask.run();
-
-                // Don't schedule a cleanup if the futureTask was
-                // interrupted or the timeout value is 0.
-                if (!Thread.currentThread().isInterrupted()
-                    && mTimeoutInMillisecs > 0) {
-                    // An object with ref count of 1 indicates its key
-                    // hasn't been accessed in mTimeoutInMillisecs.
-                    final RefCountedFutureTask<V> nonAccessedValue =
-                        new RefCountedFutureTask<>(() -> mFunction.apply(key),
-                                                   1);
-
-                    /*
-                      Decouples scheduling of a runnable from the
-                      logic invoked when the runnable is dispatched.
-                     */
-                    class DelegatingRunnable
-                          implements Runnable {
-                        /**
-                         * The actual runnable that is delegated to by
-                         * the run() hook method below.
-                         */
-                        Runnable mActualRunnable;
-
-                        /**
-                         * Delegate to the underlying runnable.
-                         */
-                        @Override
-                        public void run() {
-                            mActualRunnable.run();
-                        }
-                    }
-
-                    // Create a DelegatingRunnable so it can be
-                    // registered with the ScheduledExecutorService.
-                    final DelegatingRunnable delegatingRunnable =
-                            new DelegatingRunnable();
-
-                    // Schedule the delegatingRunnable to execute
-                    // after the given timeout.  This runnable keeps
-                    // executing periodically as long as the key is
-                    // accessed within mTimeoutInMillisecs.
-                    final ScheduledFuture<?> cancellableFuture =
-                        mScheduledExecutorService.scheduleAtFixedRate
-                            (delegatingRunnable,
-                             mTimeoutInMillisecs, // Initial timeout
-                             mTimeoutInMillisecs, // Periodic timeout
-                             TimeUnit.MILLISECONDS);
-
-                    // Runnable that when executed will remove the
-                    // futureTask from the cache if its timeout
-                    // expires and it hasn't been accessed in
-                    // mTimeoutInMillisecs.
-                    delegatingRunnable.mActualRunnable = () -> {
-                        // Remove the key only if it hasn't been
-                        // accessed in mTimeoutInMillisecs.
-                        if (mCache.remove(key,
-                                          nonAccessedValue)) {
-                            Log.d(TAG,
-                                  "key "
-                                  + key
-                                  + " removed from cache since it hasn't been accessed recently");
-                            // Stop the ScheduledExecutorService from
-                            // dispatching the delegatingRunnable.
-                            cancellableFuture.cancel(true);
-                        } else {
-                            Log.d(TAG,
-                                  "key "
-                                  + key
-                                  + " NOT removed from cache since its ref count "
-                                  + futureTask.mRefCount.get()
-                                  + " indicates recent access");
-                            // Reset the key's value so it won't be
-                            // considered as accessed (yet).
-                            mCache.replace(key,
-                                           nonAccessedValue);
-                        }
-                    };
+                /**
+                 * Delegate to the underlying runnable.
+                 */
+                @Override
+                public void run() {
+                    mActualRunnable.run();
                 }
             }
-        } else 
-            System.out.println("key " 
-                               + key 
-                               + "'s value was retrieved from the cache");
 
+            // Create a DelegatingRunnable so it can be
+            // registered with the ScheduledExecutorService.
+            final DelegatingRunnable delegatingRunnable =
+                new DelegatingRunnable();
+
+            // Schedule the delegatingRunnable to execute after the
+            // given timeout.  This runnable keeps executing
+            // periodically as long as the key is accessed within
+            // mTimeoutInMillisecs.
+            final ScheduledFuture<?> cancellableFuture =
+                mScheduledExecutorService.scheduleAtFixedRate
+                (delegatingRunnable,
+                 mTimeoutInMillisecs, // Initial timeout
+                 mTimeoutInMillisecs, // Periodic timeout
+                 TimeUnit.MILLISECONDS);
+
+            // Runnable that when executed will remove the key and
+            // futureTask from the cache if its timeout expires and it
+            // hasn't been accessed in mTimeoutInMillisecs.
+            delegatingRunnable.mActualRunnable = () -> {
+                // Remove the key only if it hasn't been accessed in
+                // mTimeoutInMillisecs.
+                if (mCache.remove(key,
+                                  nonAccessedValue)) {
+                    Log.d(TAG,
+                          "key "
+                          + key
+                          + " removed from cache since it hasn't been accessed recently");
+                    // Stop the ScheduledExecutorService from
+                    // dispatching the delegatingRunnable.
+                    cancellableFuture.cancel(true);
+                } else {
+                    Log.d(TAG,
+                          "key "
+                          + key
+                          + " NOT removed from cache since its been accessed recently");
+                    // Reset the key's value so it won't be considered
+                    // as accessed (yet).
+                    mCache.replace(key,
+                                   nonAccessedValue);
+                }
+            };
+        }
+    }
+
+    /**
+     * Return the value of the future, blocking until it's computed.
+     */
+    private V getFutureValue(K key,
+                             RefCountedFutureTask<V> future) {
         try {
             // Get the result of the future, which will block if the
             // futureTask hasn't finished running yet.
