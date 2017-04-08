@@ -138,6 +138,13 @@ public class TimedMemoizer<K, V>
         // If the key isn't present then compute its value.
         if (future == null)
             future = computeValue(key);
+        else
+            /*
+            Log.d(TAG,
+                  "key "
+                  + key
+                  + "'s value was retrieved from the cache");
+                 */;
 
         // Return the value of the future, blocking until it's
         // computed.
@@ -163,10 +170,10 @@ public class TimedMemoizer<K, V>
         // If future != null the value was already in the cache, so
         // just return it.
         if (future != null) {
-            Log.d(TAG, 
-                  "key " 
-                  + key 
-                  + "'s value was retrieved from the cache");
+            Log.d(TAG,
+                  "key "
+                  + key
+                  + "'s value was added to the cache");
             return future;
         }
 

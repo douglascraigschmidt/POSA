@@ -17,7 +17,7 @@ public final class PrimeCheckers {
             for (long factor = 2;
                  factor <= n / 2;
                  ++factor)
-                if ((factor % (n / 10)) == 0
+                if ((factor % (n / 1000)) == 0
                     && Thread.interrupted()) {
                     System.out.println("Prime checker thread interrupted "
                                        + Thread.currentThread());
@@ -40,10 +40,17 @@ public final class PrimeCheckers {
         if (n % 2 == 0) 
             return 2L;
 
-        // if not, then just check the odds
-        for (long i = 3; i * i <= n; i += 2)
-            if (n % i == 0)
-                return i;
+        // If not, then just check the odds.
+        for (long factor = 3;
+             factor * factor <= n;
+             factor += 2)
+            if ((factor % (n / 1000)) == 0
+                && Thread.interrupted()) {
+                    System.out.println("Prime checker thread interrupted "
+                                       + Thread.currentThread());
+                    break;
+            } else if (n % factor == 0)
+                return factor;
 
         return 0L;
     }
