@@ -201,7 +201,7 @@ public class TimedMemoizer<K, V>
      * cache if its timeout expires and it hasn't been accessed in
      * mTimeoutInMillisecs.
      */
-    private void scheduleTimeout(K key) {
+    private void scheduleAtFixedRateTimeout(K key) {
         // Don't schedule a cleanup if the futureTask was interrupted
         // or the timeout value is 0.
         if (!Thread.currentThread().isInterrupted()
@@ -260,7 +260,7 @@ public class TimedMemoizer<K, V>
                     Log.d(TAG,
                           "key "
                           + key
-                          + " removed from cache since it hasn't been accessed recently");
+                          + " removed from cache since it wasn't accessed recently");
                     // Stop the ScheduledExecutorService from
                     // dispatching the delegatingRunnable.
                     cancellableFuture.cancel(true);
@@ -268,13 +268,70 @@ public class TimedMemoizer<K, V>
                     Log.d(TAG,
                           "key "
                           + key
-                          + " NOT removed from cache since its been accessed recently");
+                          + " NOT removed from cache since it was accessed recently");
                     // Reset the key's value so it won't be considered
                     // as accessed (yet).
                     mCache.replace(key,
                                    nonAccessedValue);
                 }
             };
+        }
+    }
+
+    /**
+     * Use the ScheduledExecutorService to remove @a key from the
+     * cache if its timeout expires and it hasn't been accessed in
+     * mTimeoutInMillisecs.
+     */
+    private void scheduleTimeout(K key) {
+        // Don't schedule a cleanup if the futureTask was interrupted
+        // or the timeout value is 0.
+        if (!Thread.currentThread().isInterrupted()
+            && mTimeoutInMillisecs > 0) {
+            // An object with ref count of 1 indicates its key hasn't
+            // been accessed in mTimeoutInMillisecs.
+            final RefCountedFutureTask<V> nonAccessedValue =
+                new RefCountedFutureTask<>(() -> mFunction.apply(key),
+                                           1);
+
+            // Create a runnable that will check if the cached entry
+            // has become stale (i.e., not accessed within
+            // mTimeoutInMillisecs) and if so will remove that entry.
+            final Runnable checkForStaleness = new Runnable() {
+                @Override
+                public void run() {
+                    // Remove the key only if it hasn't been accessed in
+                    // mTimeoutInMillisecs.
+                    if (mCache.remove(key,
+                            nonAccessedValue)) {
+                        Log.d(TAG, "key "
+                              + key
+                              + " removed from cache since it wasn't accessed recently");
+                    } else {
+                        Log.d(TAG, "key "
+                              + key
+                              + " NOT removed from cache since it was accessed recently");
+                        // Reset the key's value so it won't be considered
+                        // as accessed (yet).
+                        mCache.replace(key,
+                                nonAccessedValue);
+
+                        // Reschedule this runnable to be run in
+                        // mTimeoutInMillisecs.
+                        mScheduledExecutorService.schedule
+                                (this,
+                                 mTimeoutInMillisecs,
+                                 TimeUnit.MILLISECONDS);
+                    }
+                }
+            };
+
+            // Schedule the runnable to be executed after
+            // mTimeoutInMillisecs.
+            mScheduledExecutorService.schedule
+                (checkForStaleness,
+                 mTimeoutInMillisecs,
+                 TimeUnit.MILLISECONDS);
         }
     }
 
