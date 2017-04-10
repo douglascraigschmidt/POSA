@@ -297,7 +297,7 @@ public class TimedMemoizer<K, V>
             // Create a runnable that will check if the cached entry
             // has become stale (i.e., not accessed within
             // mTimeoutInMillisecs) and if so will remove that entry.
-            final Runnable checkForStaleness = new Runnable() {
+            final Runnable removeIfStale = new Runnable() {
                 @Override
                 public void run() {
                     // Remove the key only if it hasn't been accessed in
@@ -329,7 +329,7 @@ public class TimedMemoizer<K, V>
             // Schedule the runnable to be executed after
             // mTimeoutInMillisecs.
             mScheduledExecutorService.schedule
-                (checkForStaleness,
+                (removeIfStale,
                  mTimeoutInMillisecs,
                  TimeUnit.MILLISECONDS);
         }
