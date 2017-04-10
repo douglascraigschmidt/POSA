@@ -303,7 +303,7 @@ public class TimedMemoizer<K, V>
                     // Remove the key only if it hasn't been accessed in
                     // mTimeoutInMillisecs.
                     if (mCache.remove(key,
-                            nonAccessedValue)) {
+                                      nonAccessedValue)) {
                         Log.d(TAG, "key "
                               + key
                               + " removed from cache since it wasn't accessed recently");
