@@ -106,7 +106,8 @@ public class TimedMemoizer<K, V>
                 return false;
             else {
                 @SuppressWarnings("unchecked")
-                    final RefCountedFutureTask<V> t = (RefCountedFutureTask<V>) obj;
+                final RefCountedFutureTask<V> t =
+                    (RefCountedFutureTask<V>) obj;
                 return mRefCount.get() == t.mRefCount.get();
             }
         }
@@ -154,8 +155,8 @@ public class TimedMemoizer<K, V>
                                   "key "
                                   + key
                                   + " NOT removed from cache since it was accessed recently");
-                            // Reset reference count so that it won't be
-                            // considered as accessed (yet).
+                            // Reset reference count so that it won't
+                            // be considered as accessed (yet).
                             mRefCount.set(1);
 
                             // Reschedule this runnable to be run in
@@ -194,9 +195,9 @@ public class TimedMemoizer<K, V>
                     mScheduledFuture.cancel(true);
                 } else {
                     Log.d(TAG,
-                            "key "
-                                    + key
-                                    + " NOT removed from cache since it was accessed recently");
+                          "key "
+                          + key
+                          + " NOT removed from cache since it was accessed recently");
 
                     // Reset reference count so that it won't be
                     // considered as accessed (yet).

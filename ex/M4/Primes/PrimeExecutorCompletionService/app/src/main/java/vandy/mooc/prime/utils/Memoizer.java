@@ -2,7 +2,6 @@ package vandy.mooc.prime.utils;
 
 import android.util.Log;
 
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Future;
@@ -60,44 +59,78 @@ public class Memoizer<K, V>
         Future<V> future = mCache.get(key);
 
         // If the key isn't present we must compute its value.
-        if (future == null) {
-            // Create a FutureTask whose run() method will compute
-            // the value and store it in the cache.
-            FutureTask<V> futureTask =
-                new FutureTask<>(() -> mFunction.apply(key));
+        if (future == null) 
+            future = computeValue(key);
+        else
+            Log.d(TAG,
+                  "key "
+                  + key
+                  + "'s value was retrieved from the cache");
 
-            // Atomically add futureTask to the cache as the value
-            // associated with key.
-            future = mCache.putIfAbsent(key, futureTask);
+        // Return the value of the future, blocking until it's
+        // computed.
+        return getFutureValue(key, future);
+    } 
 
-            // A value of null from put() indicates the key was
-            // just added (i.e., it's the "first time in"), which
-            // also indicates the value hasn't been computed yet.
-            if (future == null) {
-                // A FutureTask "isa" Future, so this assignment
-                // is fine.
-                future = futureTask;
+    /**
+     * Compute the value associated with the key and return a
+     * unique RefCountedFutureTask associated with it.
+     */
+    private Future<V> computeValue(K key) {
+        // Create a FutureTask whose run() method will compute the
+        // value and store it in the cache.
+        final FutureTask<V> futureTask =
+            new FutureTask<>(() -> mFunction.apply(key));
 
-                // Run futureTask to compute the value, which is
-                // implicitly stored in the cache when the
-                // computation is finished.
-                futureTask.run();
-            }
-        } else 
-            System.out.println("value " 
-                               + key 
-                               + " was cached");
+        // Atomically try to add futureTask to the cache as the value
+        // associated with key.
+        Future<V> future = mCache.putIfAbsent(key, futureTask);
 
+        // If future != null the value was already in the cache, so
+        // just return it.
+        if (future != null) {
+            Log.d(TAG,
+                  "key "
+                  + key
+                  + "'s value was added to the cache");
+            return future;
+        }
+        // A value of null from put() indicates the key was just added
+        // (i.e., it's the "first time in"), which indicates the value
+        // hasn't been computed yet.
+        else {
+            // Run futureTask to compute the value, which is
+            // (implicitly) stored in the cache when the computation
+            // is finished.
+            futureTask.run();
+
+            // Return the future.
+            return futureTask;
+        }
+    }
+
+    /**
+     * Return the value of the future, blocking until it's computed.
+     */
+    private V getFutureValue(K key,
+                             Future<V> future) {
         try {
-            // Return the result of the future, which will block
-            // if the futureTask hasn't finished running yet.
+            // Get the result of the future, which will block if the
+            // future hasn't finished running yet.
             return future.get();
         } catch (Exception e) {
-            // Try to remove key from the cache if an exception occurs.
+            // Unilaterally remove the key from the cache when an
+            // exception occurs.
             if (mCache.remove(key) != null)
-                Log.d(TAG, "key " + key + " removed from cache upon exception");
+                Log.d(TAG,
+                      "key "
+                      + key 
+                      + " removed from cache upon exception");
             else
-                Log.d(TAG, "key " + key + " NOT removed from cache upon exception");
+                Log.d(TAG,
+                      "key "
+                      + key 
+                      + " NOT removed from cache upon exception");
 
             // Rethrow the exception.
             throw launderThrowable(e.getCause());
