@@ -21,6 +21,7 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 
 import vandy.mooc.prime.R;
+import vandy.mooc.prime.utils.Memoizer;
 import vandy.mooc.prime.utils.PrimeCheckers;
 import vandy.mooc.prime.utils.UiUtils;
 
@@ -284,14 +285,14 @@ public class MainActivity
 
             // Setup a function.
             final Function<Long, Long> primeChecker =
-                PrimeCheckers::bruteForceChecker;
+                new Memoizer<>(PrimeCheckers::bruteForceChecker);
 
             // Create a list of futures that will contain the results
             // of concurrently checking the primality of "count"
             // random numbers.
             final List<Future<PrimeCallable.PrimeResult>> futures = new Random()
-                // Generate "count" random between 0 and MAX_VALUE.
-                .longs(count, 0, Integer.MAX_VALUE)
+                // Generate "count" random between MAX_VALUE - count and MAX_VALUE.
+                .longs(count, Integer.MAX_VALUE - count, Integer.MAX_VALUE)
 
                 // Convert each random number into a PrimeCallable.
                 .mapToObj(randomNumber -> new PrimeCallable(randomNumber, primeChecker))

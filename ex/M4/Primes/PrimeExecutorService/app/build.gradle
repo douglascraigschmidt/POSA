@@ -5,14 +5,11 @@ android {
     buildToolsVersion '25.0.0'
 
     defaultConfig {
-        applicationId "vandy.mooc.primeexecutorcompletionservice"
+        applicationId "vandy.mooc.primeexecutorservice"
         minSdkVersion 24
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
-        jackOptions {
-            enabled true
-        }
     }
 
     buildTypes {

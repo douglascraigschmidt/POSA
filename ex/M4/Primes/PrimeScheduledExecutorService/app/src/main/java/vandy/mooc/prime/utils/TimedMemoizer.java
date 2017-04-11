@@ -142,6 +142,9 @@ public class TimedMemoizer<K, V>
             final Runnable removeIfStale = new Runnable() {
                     @Override
                     public void run() {
+                        // Store the current ref count.
+                        long oldCount = mRefCount.get();
+
                         // Remove the key only if it hasn't been
                         // accessed in mTimeoutInMillisecs.
                         if (mCache.remove(key,
@@ -155,12 +158,16 @@ public class TimedMemoizer<K, V>
                                   "key "
                                   + key
                                   + " NOT removed from cache since it was accessed recently");
-                            // Reset reference count so that it won't
-                            // be considered as accessed (yet).
-                            mRefCount.set(1);
 
-                            // Reschedule this runnable to be run in
-                            // mTimeoutInMillisecs.
+                            // Try to reset ref count to 1 so that it won't be
+                            // considered as accessed (yet).  However, if ref
+                            // count has increased between the call to
+                            // remove() and here don't reset it to 1.
+                            mRefCount.getAndUpdate(curCount -> 
+                                                   curCount > oldCount ? curCount : 1);
+
+                            // Reschedule this runnable to run again
+                            // in mTimeoutInMillisecs.
                             mScheduledExecutorService.schedule
                                 (this,
                                  mTimeoutInMillisecs,
@@ -183,6 +190,9 @@ public class TimedMemoizer<K, V>
          */
         void scheduleAtFixedRateTimeout(K key) {
             Runnable cancelRunnable = () -> {
+                // Store the current ref count.
+                long oldCount = mRefCount.get();
+
                 // Remove the key only if it hasn't been accessed in
                 // mTimeoutInMillisecs.
                 if (mCache.remove(key, mNonAccessedValue)) {
@@ -199,9 +209,12 @@ public class TimedMemoizer<K, V>
                           + key
                           + " NOT removed from cache since it was accessed recently");
 
-                    // Reset reference count so that it won't be
-                    // considered as accessed (yet).
-                    mRefCount.set(1);
+                    // Try to reset ref count to 1 so that it won't be
+                    // considered as accessed (yet).  However, if ref
+                    // count has increased between the call to
+                    // remove() and here don't reset it to 1.
+                    mRefCount.getAndUpdate(curCount -> 
+                                           curCount > oldCount ? curCount : 1);
                 }
             };
 

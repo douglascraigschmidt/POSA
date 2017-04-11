@@ -21,7 +21,7 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 
 import vandy.mooc.prime.R;
-import vandy.mooc.prime.utils.Memoizer;
+import vandy.mooc.prime.utils.TimedMemoizer;
 import vandy.mooc.prime.utils.PrimeCheckers;
 import vandy.mooc.prime.utils.UiUtils;
 
@@ -296,7 +296,10 @@ public class MainActivity
             // Cache used to generate, store, and retrieve the results
             // of prime checking computations.
             final Function<Long, Long> primeMemoizer =
-                new Memoizer<>(PrimeCheckers::bruteForceChecker);
+                new TimedMemoizer<>(PrimeCheckers::bruteForceChecker,
+                                    // Timeout cache entries after count *
+                                    // 0.5 seconds.
+                                    count * 500);
 
             // Submit "count" PrimeCallable objects that concurrently check
             // the primality of "count" random numbers.
