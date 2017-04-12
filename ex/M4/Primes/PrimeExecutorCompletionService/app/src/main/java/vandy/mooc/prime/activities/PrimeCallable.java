@@ -5,8 +5,6 @@ import android.util.Log;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 
-import vandy.mooc.prime.utils.Memoizer;
-
 /**
  * Uses a brute-force algorithm to determine if a given number is
  * prime or not.
