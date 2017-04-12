@@ -7,6 +7,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
@@ -16,11 +19,11 @@ import java.util.function.Function;
  * is returned rather than calling the function to compute it again.
  * The ConcurrentHashMap computeIfAbsent() method is used to ensure
  * only a single call to the function is run when a key/value pair is
- * first added to the cache.  The Java Timer class is used to limit
- * the amount of time a key/value is retained in the cache.  This code
- * is based on an example in "Java Concurrency in Practice" by Brian
- * Goetz et al.  More information on memoization is available at
- * https://en.wikipedia.org/wiki/Memoization.
+ * first added to the cache.  The Java ScheduledExecutorClass is used
+ * to scalably limit the amount of time a key/value is retained in the
+ * cache.  This code is based on an example in "Java Concurrency in
+ * Practice" by Brian Goetz et al.  More information on memoization is
+ * available at https://en.wikipedia.org/wiki/Memoization.
  */
 public class TimedMemoizer<K, V>
        implements Function<K, V> {
@@ -43,10 +46,11 @@ public class TimedMemoizer<K, V>
     private final Function<K, V> mFunction;
 
     /**
-     * Timer that executes a runnable after a given timeout to remove
-     * expired keys.
+     * ScheduledExecutorService executes a runnable after a given
+     * timeout to remove expired keys.
      */
-    private final Timer mTimer;
+    private final ScheduledExecutorService mScheduledExecutorService
+        = new ScheduledThreadPoolExecutor(1);
 
     /**
      * An object with ref count of 1 indicates its key hasn't been
@@ -114,55 +118,52 @@ public class TimedMemoizer<K, V>
         // Store the function for subsequent use.
         mFunction = function; 
 
-        // Create a timer and schedule a new timer task to purge keys
-        // that have not been accessed recently.
-        mTimer = new Timer();
-        mTimer.scheduleAtFixedRate(new TimerTask() {
-                /**
-                 * Iterate through all the keys in the map and remove
-                 * those that haven't been accessed recently.
-                 */
-                @Override
-                public void run() {
+        // Create a runnable that will purge entries in the map that
+        // haven't been accessed recently.
+        final Runnable purgeEntries = () -> {
+            Log.d(TAG,
+                  "start the purge of keys not accessed recently");
+
+            // Iterate through all the keys in the map and purge those
+            // that haven't been accessed recently.
+            for (Map.Entry<K, RefCountedValue<V>> e : mCache.entrySet()) {
+                // Store the current ref count.
+                long oldCount = e.getValue().mRefCount.get();
+
+                // Remove the key only if it hasn't been
+                // accessed in mTimeoutInMillisecs.
+                if (mCache.remove(e.getKey(),
+                                  mNonAccessedValue)) {
                     Log.d(TAG,
-                          "start the purge of keys not accessed recently");
-
-                    // Iterate through all the elements in the queue.
-                    for (Map.Entry<K, RefCountedValue<V>> e : mCache.entrySet()) {
-                        // Store the current ref count.
-                        long oldCount = e.getValue().mRefCount.get();
-
-                        // Remove the key only if it hasn't been
-                        // accessed in mTimeoutInMillisecs.
-                        if (mCache.remove(e.getKey(),
-                                          mNonAccessedValue)) {
-                            Log.d(TAG,
-                                  "key "
-                                  + e.getKey()
-                                  + " removed from cache since it wasn't accessed recently");
-                        } else {
-                            Log.d(TAG,
-                                  "key "
-                                  + e.getKey()
-                                  + " NOT removed from cache since it was accessed recently");
-
-                            // Try to reset ref count to 1 so that it
-                            // won't be considered as accessed (yet).
-                            // However, if ref count has increased
-                            // between the call to remove() and here
-                            // don't reset it to 1.
-                            e.getValue().mRefCount.getAndUpdate(curCount ->
-                                                                curCount > oldCount
-                                                                ? curCount
-                                                                : 1);
-                        }
-                    }
+                          "key "
+                          + e.getKey()
+                          + " removed from cache since it wasn't accessed recently");
+                } else {
                     Log.d(TAG,
-                          "ending the purge of keys not accessed recently");
+                          "key "
+                          + e.getKey()
+                          + " NOT removed from cache since it was accessed recently");
+
+                    // Try to reset ref count to 1 so that it won't be
+                    // considered as accessed (yet).  However, if ref
+                    // count has increased between the call to
+                    // remove() and here don't reset it to 1.
+                    e.getValue().mRefCount.getAndUpdate(curCount ->
+                                                        curCount > oldCount
+                                                        ? curCount
+                                                        : 1);
                 }
-            },
-            timeoutInMillisecs,  // Initial timeout
-            timeoutInMillisecs); // Periodic timeout 
+            }
+            Log.d(TAG,
+                  "ending the purge of keys not accessed recently");
+        };
+
+        // Schedule a new runnable to purge keys that have not been
+        // accessed recently.
+        mScheduledExecutorService.scheduleAtFixedRate(purgeEntries,
+                                                      timeoutInMillisecs, // Initial timeout
+                                                      timeoutInMillisecs, // Periodic timeout
+                                                      TimeUnit.MILLISECONDS);
     }
 
     /**
