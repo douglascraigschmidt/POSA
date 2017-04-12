@@ -5,26 +5,21 @@ import android.util.Log;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
-
-import static vandy.mooc.prime.utils.LaunderThrowable.launderThrowable;
 
 /**
  * This class defines a "memoizing" cache that maps a key to the value
  * produced by a function.  If a value has previously been computed it
  * is returned rather than calling the function to compute it again.
- * The Java FutureTask class is used to ensure only a single call to
- * the function is run when a key and value is first added to the
- * cache.  The Java Timer class is used to limit the amount of time a
- * key/value is retained in the cache.  This code is based on an
- * example in "Java Concurrency in Practice" by Brian Goetz et al.
- * More information on memoization is available at
+ * The ConcurrentHashMap computeIfAbsent() method is used to ensure
+ * only a single call to the function is run when a key/value pair is
+ * first added to the cache.  The Java Timer class is used to limit
+ * the amount of time a key/value is retained in the cache.  This code
+ * is based on an example in "Java Concurrency in Practice" by Brian
+ * Goetz et al.  More information on memoization is available at
  * https://en.wikipedia.org/wiki/Memoization.
  */
 public class TimedMemoizer<K, V>
@@ -37,10 +32,9 @@ public class TimedMemoizer<K, V>
 
     /**
      * This map associates a key K with a value V that's produced by a
-     * function.  A RefCountedFutureTask is used to ensure that the
-     * function is only called once.
+     * function.
      */
-    private final ConcurrentMap<K, RefCountedFutureTask<V>> mCache =
+    private final ConcurrentMap<K, RefCountedValue<V>> mCache =
             new ConcurrentHashMap<>();
 
     /**
@@ -58,15 +52,14 @@ public class TimedMemoizer<K, V>
      * An object with ref count of 1 indicates its key hasn't been
      * accessed in mTimeoutInMillisecs.
      */
-    private final RefCountedFutureTask<?> mNonAccessedValue =
-            new RefCountedFutureTask<>(() -> null, 1);
+    private final RefCountedValue<?> mNonAccessedValue =
+            new RefCountedValue<>(null,1);
 
     /**
      * Extends FutureTask to keep track of the number of times a key
      * is referenced within mTimeoutInMillisecs.
      */
-    private class RefCountedFutureTask<V>
-            extends FutureTask<V> {
+    private class RefCountedValue<V> {
         /**
          * Keeps track of the number of times a key is referenced
          * within mTimeoutInMillisecs.
@@ -74,11 +67,15 @@ public class TimedMemoizer<K, V>
         final AtomicLong mRefCount;
 
         /**
-         * Constructor initializes the superclass and field.
+         * The value that's being reference counted.
          */
-        RefCountedFutureTask(Callable<V> callable,
-                             long initialCount) {
-            super(callable);
+        final V mValue;
+
+        /**
+         * Constructor initializes the fields.
+         */
+        RefCountedValue(V value, long initialCount) {
+            mValue = value;
             mRefCount = new AtomicLong(initialCount);
         }
 
@@ -91,28 +88,21 @@ public class TimedMemoizer<K, V>
                 return false;
             else {
                 @SuppressWarnings("unchecked")
-                final RefCountedFutureTask<V> t =
-                    (RefCountedFutureTask<V>) obj;
+                final RefCountedValue<V> t =
+                    (RefCountedValue<V>) obj;
                 return mRefCount.get() == t.mRefCount.get();
             }
         }
 
         /**
-         * Waits if necessary for the computation to complete, and
-         * then retrieves its result.  Also increments the ref count
-         * atomically.
+         * Increments the ref count atomically and returns the value.
          */
-        @Override
-        public V get() throws ExecutionException, InterruptedException {
-            // Call the super get(), which blocks until the value is
-            // computed.
-            V value = super.get();
-
+        public V get() {
             // Increment ref count atomically.
             mRefCount.getAndIncrement();
 
             // Return the value;
-            return value;
+            return mValue;
         }
     }
 
@@ -121,7 +111,11 @@ public class TimedMemoizer<K, V>
      */
     public TimedMemoizer(Function<K, V> function,
                          long timeoutInMillisecs) {
+        // Store the function for subsequent use.
         mFunction = function; 
+
+        // Create a timer and schedule a new timer task to purge keys
+        // that have not been accessed recently.
         mTimer = new Timer();
         mTimer.scheduleAtFixedRate(new TimerTask() {
                 /**
@@ -133,12 +127,13 @@ public class TimedMemoizer<K, V>
                     Log.d(TAG,
                           "start the purge of keys not accessed recently");
 
-                    for (Map.Entry<K, RefCountedFutureTask<V>> e : mCache.entrySet()) {
+                    // Iterate through all the elements in the queue.
+                    for (Map.Entry<K, RefCountedValue<V>> e : mCache.entrySet()) {
                         // Store the current ref count.
                         long oldCount = e.getValue().mRefCount.get();
 
-                        // Remove the key only if it hasn't been accessed
-                        // in mTimeoutInMillisecs.
+                        // Remove the key only if it hasn't been
+                        // accessed in mTimeoutInMillisecs.
                         if (mCache.remove(e.getKey(),
                                           mNonAccessedValue)) {
                             Log.d(TAG,
@@ -166,8 +161,8 @@ public class TimedMemoizer<K, V>
                           "ending the purge of keys not accessed recently");
                 }
             },
-            timeoutInMillisecs,
-            timeoutInMillisecs);
+            timeoutInMillisecs,  // Initial timeout
+            timeoutInMillisecs); // Periodic timeout 
     }
 
     /**
@@ -179,87 +174,24 @@ public class TimedMemoizer<K, V>
      */
     public V apply(K key) {
         // Try to find the key in the cache.
-        RefCountedFutureTask<V> future = mCache.get(key);
+        RefCountedValue<V> rcValue = mCache.get(key);
 
         // If the key isn't present then compute its value.
-        if (future == null)
-            future = computeValue(key);
+        if (rcValue == null)
+            // If the key isn't present then atomically compute the
+            // value associated with the key and return a unique
+            // RefCountedValue associated with it.
+            rcValue = mCache.computeIfAbsent
+                (key,
+                 (k) -> new RefCountedValue<>(mFunction.apply(k),
+                                              0));
         else
             Log.d(TAG,
                   "key "
                   + key
                   + "'s value was retrieved from the cache");
 
-        // Return the value of the future, blocking until it's
-        // computed.
-        return getFutureValue(key, future);
-    }
-
-    /**
-     * Compute the value associated with the key and return a
-     * unique RefCountedFutureTask associated with it.
-     */
-    private RefCountedFutureTask<V> computeValue(K key) {
-        // Create a RefCountedFutureTask whose run() method will
-        // compute the value and store it in the cache.
-        final RefCountedFutureTask<V> futureTask =
-            new RefCountedFutureTask<>(() -> mFunction.apply(key),
-                                       0);
-
-        // Atomically try to add futureTask to the cache as the value
-        // associated with key.
-        RefCountedFutureTask<V> future =
-            mCache.putIfAbsent(key, futureTask);
-
-        // If future != null the value was already in the cache, so
-        // just return it.
-        if (future != null) {
-            Log.d(TAG,
-                  "key "
-                  + key
-                  + "'s value was added to the cache");
-            return future;
-        }
-
-        // A value of null from put() indicates the key was just added
-        // (i.e., it's the "first time in"), which indicates the value
-        // hasn't been computed yet.
-        else {
-            // Run futureTask to compute the value, which is
-            // (implicitly) stored in the cache when the computation
-            // is finished.
-            futureTask.run();
-
-            // Return the future.
-            return futureTask;
-        }
-    }
-
-    /**
-     * Return the value of the future, blocking until it's computed.
-     */
-    private V getFutureValue(K key,
-                             RefCountedFutureTask<V> future) {
-        try {
-            // Get the result of the future, which will block if the
-            // futureTask hasn't finished running yet.
-            return future.get();
-        } catch (Exception e) {
-            // Unilaterally remove the key from the cache when an
-            // exception occurs.
-            if (mCache.remove(key) != null)
-                Log.d(TAG,
-                      "key "
-                      + key 
-                      + " removed from cache upon exception");
-            else
-                Log.d(TAG,
-                      "key "
-                      + key 
-                      + " NOT removed from cache upon exception");
-
-            // Rethrow the exception.
-            throw launderThrowable(e.getCause());
-        }
+        // Return the value of the rcValue.
+        return rcValue.get();
     }
 }
