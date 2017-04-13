@@ -57,11 +57,11 @@ public class TimedMemoizer<K, V>
      * accessed in mTimeoutInMillisecs.
      */
     private final RefCountedValue<?> mNonAccessedValue =
-            new RefCountedValue<>(null,1);
+            new RefCountedValue<>(null, 1);
 
     /**
-     * Extends FutureTask to keep track of the number of times a key
-     * is referenced within mTimeoutInMillisecs.
+     * Keeps track of the number of times a key/value is referenced
+     * within mTimeoutInMillisecs.
      */
     private class RefCountedValue<V> {
         /**
