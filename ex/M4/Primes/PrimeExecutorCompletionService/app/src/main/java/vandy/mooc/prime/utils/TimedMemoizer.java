@@ -2,12 +2,10 @@ package vandy.mooc.prime.utils;
 
 import android.util.Log;
 
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -30,35 +28,8 @@ public class TimedMemoizer<K, V>
     /**
      * Debugging tag used by the Android logger.
      */
-    protected final String TAG =
+    private final String TAG =
         getClass().getSimpleName();
-
-    /**
-     * This map associates a key K with a value V that's produced by a
-     * function.  A RefCountedValue is used to keep track of how many
-     * times a key/value pair is accessed.
-     */
-    private final ConcurrentMap<K, RefCountedValue<V>> mCache =
-            new ConcurrentHashMap<>();
-
-    /**
-     * This function produces a value based on the key.
-     */
-    private final Function<K, V> mFunction;
-
-    /**
-     * ScheduledExecutorService executes a runnable after a given
-     * timeout to remove expired keys.
-     */
-    private final ScheduledExecutorService mScheduledExecutorService
-        = new ScheduledThreadPoolExecutor(1);
-
-    /**
-     * An object with ref count of 1 indicates its key hasn't been
-     * accessed in mTimeoutInMillisecs.
-     */
-    private final RefCountedValue<?> mNonAccessedValue =
-            new RefCountedValue<>(null, 1);
 
     /**
      * Keeps track of the number of times a key/value is referenced
@@ -102,7 +73,7 @@ public class TimedMemoizer<K, V>
         /**
          * Increments the ref count atomically and returns the value.
          */
-        public V get() {
+        V get() {
             // Increment ref count atomically.
             mRefCount.getAndIncrement();
 
@@ -112,6 +83,121 @@ public class TimedMemoizer<K, V>
     }
 
     /**
+     * An object with ref count of 1 indicates its key hasn't been
+     * accessed in mTimeoutInMillisecs.
+     */
+    private final RefCountedValue<?> mNonAccessedValue =
+        new RefCountedValue<>(null, 1);
+
+    /**
+     * This map associates a key K with a value V that's produced by a
+     * function.  A RefCountedValue is used to keep track of how many
+     * times a key/value pair is accessed.
+     */
+    private final ConcurrentMap<K, RefCountedValue<V>> mCache =
+            new ConcurrentHashMap<>();
+
+    /**
+     * Keeps track of the number of entries in mCache so mPurgeEntries
+     * can be properly scheduled and cancelled.
+     */
+    private final AtomicLong mCacheCount = 
+        new AtomicLong(0);
+
+    /**
+     * A scheduled future that can be used to cancel a runnable that
+     * has been scheduled to run at a fixed interval to check if
+     * entries in the ConcurrentHashMap have become stale and should
+     * be removed from the cache.
+     */
+    private ScheduledFuture<?> mScheduledFuture;
+
+    /** 
+     * This runnable will purge entries in the map that haven't been
+     * accessed recently.
+     */
+    private final Runnable mPurgeEntries = () -> {
+        Log.d(TAG,
+              "start the purge of keys not accessed recently");
+
+        // Iterate through all the keys in the map and purge those
+        // that haven't been accessed recently.
+        for (ConcurrentMap.Entry<K, RefCountedValue<V>> e : mCache.entrySet()) {
+            final K key = e.getKey();
+            final RefCountedValue<V> value = e.getValue();
+
+            // Store the current ref count.
+            long oldCount = value.mRefCount.get();
+
+            // Remove the key only if it hasn't been
+            // accessed in mTimeoutInMillisecs.
+            if (mCache.remove(key,
+                              mNonAccessedValue)) {
+                Log.d(TAG,
+                      "key "
+                      + key
+                      + " removed from cache (" 
+                      + mCache.size()
+                      + ") since it wasn't accessed recently");
+
+                // Decrement the count of cached entries by one.
+                mCacheCount.getAndDecrement();
+            } else {
+                Log.d(TAG,
+                      "key "
+                      + key
+                      + " NOT removed from cache ("
+                      + mCache.size() + ") since it was accessed recently ("
+                      + value.mRefCount.get()
+                      + ") and ("
+                      + mNonAccessedValue.mRefCount.get()
+                      + ")");
+                assert(mCache.get(key) != null);
+
+                // Try to reset ref count to 1 so that it won't be
+                // considered as accessed (yet).  However, if ref
+                // count has increased between the call to
+                // remove() and here don't reset it to 1.
+                value.mRefCount.getAndUpdate(curCount ->
+                                             curCount > oldCount
+                                             ? curCount
+                                             : 1);
+            }
+        }
+
+        // If there are no more entries in the cache then cancel
+        // mPurgeEntries from being called.
+        if (mCacheCount.get() == 0) {
+            mScheduledFuture.cancel(true);
+            Log.d(TAG,
+                  "cancelling mPurgeEntries");
+        } else
+            Log.d(TAG,
+                  "mCacheCount = "
+                  + mCacheCount.get());
+
+        Log.d(TAG,
+              "ending the purge of keys not accessed recently");
+    };
+
+    /**
+     * This function produces a value based on the key.
+     */
+    private final Function<K, V> mFunction;
+
+    /**
+     * The amount of time to retain a value in the cache.
+     */
+    private final long mTimeoutInMillisecs;
+
+    /**
+     * ScheduledExecutorService executes a runnable after a given
+     * timeout to remove expired keys.
+     */
+    private ScheduledExecutorService mScheduledExecutorService
+        = new ScheduledThreadPoolExecutor(1);
+
+    /**
      * Constructor initializes the fields.
      */
     public TimedMemoizer(Function<K, V> function,
@@ -119,52 +205,15 @@ public class TimedMemoizer<K, V>
         // Store the function for subsequent use.
         mFunction = function; 
 
-        // Create a runnable that will purge entries in the map that
-        // haven't been accessed recently.
-        final Runnable purgeEntries = () -> {
-            Log.d(TAG,
-                  "start the purge of keys not accessed recently");
+        // Store the timeout for subsequent use.
+        mTimeoutInMillisecs = timeoutInMillisecs;
 
-            // Iterate through all the keys in the map and purge those
-            // that haven't been accessed recently.
-            for (ConcurrentMap.Entry<K, RefCountedValue<V>> e : mCache.entrySet()) {
-                // Store the current ref count.
-                long oldCount = e.getValue().mRefCount.get();
-
-                // Remove the key only if it hasn't been
-                // accessed in mTimeoutInMillisecs.
-                if (mCache.remove(e.getKey(),
-                                  mNonAccessedValue)) {
-                    Log.d(TAG,
-                          "key "
-                          + e.getKey()
-                          + " removed from cache since it wasn't accessed recently");
-                } else {
-                    Log.d(TAG,
-                          "key "
-                          + e.getKey()
-                          + " NOT removed from cache since it was accessed recently");
-
-                    // Try to reset ref count to 1 so that it won't be
-                    // considered as accessed (yet).  However, if ref
-                    // count has increased between the call to
-                    // remove() and here don't reset it to 1.
-                    e.getValue().mRefCount.getAndUpdate(curCount ->
-                                                        curCount > oldCount
-                                                        ? curCount
-                                                        : 1);
-                }
-            }
-            Log.d(TAG,
-                  "ending the purge of keys not accessed recently");
-        };
-
-        // Schedule a new runnable to purge keys that have not been
-        // accessed recently.
-        mScheduledExecutorService.scheduleAtFixedRate(purgeEntries,
-                                                      timeoutInMillisecs, // Initial timeout
-                                                      timeoutInMillisecs, // Periodic timeout
-                                                      TimeUnit.MILLISECONDS);
+        // Set the policies to clean everything up on shutdown.
+        ScheduledThreadPoolExecutor exec =
+                (ScheduledThreadPoolExecutor) mScheduledExecutorService;
+        exec.setRemoveOnCancelPolicy(true);
+        exec.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+        exec.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
     }
 
     /**
@@ -185,8 +234,30 @@ public class TimedMemoizer<K, V>
             // RefCountedValue associated with it.
             rcValue = mCache.computeIfAbsent
                 (key,
-                 (k) -> new RefCountedValue<>(mFunction.apply(k),
-                                              0));
+                 (k) -> {
+                    // Apply the function and store the result. 
+                    RefCountedValue<V> rcv = 
+                        new RefCountedValue<>(mFunction.apply(k),
+                                              0);
+
+                    // Schedule the mPurgeEntries runnable when the
+                    // first entry is added to the cache.
+                    if (mCacheCount.getAndIncrement() == 0) {
+                        Log.d(TAG,
+                              "scheduling mPurgeEntries for key "
+                              + key);
+
+                        // Schedule a new runnable to purge keys that have
+                        // not been accessed recently.
+                        mScheduledFuture = 
+                            mScheduledExecutorService.scheduleAtFixedRate
+                                (mPurgeEntries,
+                                 mTimeoutInMillisecs, // Initial timeout
+                                 mTimeoutInMillisecs, // Periodic timeout
+                                 TimeUnit.MILLISECONDS);
+                    }
+                    return rcv;
+                });
         else
             Log.d(TAG,
                   "key "
@@ -195,5 +266,35 @@ public class TimedMemoizer<K, V>
 
         // Return the value of the rcValue.
         return rcValue.get();
+    }
+
+    /**
+     * Shutdown the TimedMemoizer and remove all the entries from its
+     * ScheduledExecutorService.
+     */
+    public void shutdown() {
+        // Reset the count.
+        mCacheCount.set(0);
+
+        // Shutdown the ScheduledExecutorService.
+        mScheduledExecutorService.shutdownNow();
+        mScheduledExecutorService = null;
+
+        // Iterate through all the keys in the map and cancel/remove
+        // them all.
+        for (ConcurrentMap.Entry<K, RefCountedValue<V>> e : mCache.entrySet()) {
+            final K key = e.getKey();
+            final RefCountedValue<V> value = e.getValue();
+
+            Log.d(TAG,
+                  "key "
+                  + key
+                  + " and value "
+                  + value.mValue
+                  + " were removed from the TimedMemoizer cache");
+
+            // Remove the key (and value) from the map.
+            mCache.remove(key);
+        }
     }
 }

@@ -82,9 +82,9 @@ public class TimedMemoizer<K, V>
 
         /**
          * A scheduled future that can be used to cancel a runnable
-         * that has been scheduled to run at a fixed inteval to check
-         * if this future task has become stale and should be removed
-         * from the cache (see scheduleAtFixedRateTimeout()).
+         * that has been scheduled to run at a fixed interval to check
+         * if this RefCountedValue has become stale and should be
+         * removed from the cache (see scheduleAtFixedRateTimeout()).
          */
         ScheduledFuture<?> mScheduledFuture;
 
@@ -168,7 +168,7 @@ public class TimedMemoizer<K, V>
 
                             // Reschedule this runnable to run again
                             // in mTimeoutInMillisecs.
-                            mScheduledFuture = mScheduledExecutorService.schedule
+                            mScheduledExecutorService.schedule
                                 (this,
                                  mTimeoutInMillisecs,
                                  TimeUnit.MILLISECONDS);
@@ -177,7 +177,7 @@ public class TimedMemoizer<K, V>
                 };
 
             // Schedule runnable to execute after mTimeoutInMillisecs.
-            mScheduledFuture = mScheduledExecutorService.schedule
+            mScheduledExecutorService.schedule
                 (removeIfStale,
                  mTimeoutInMillisecs,
                  TimeUnit.MILLISECONDS);
@@ -245,10 +245,13 @@ public class TimedMemoizer<K, V>
      */
     public TimedMemoizer(Function<K, V> function,
                          long timeoutInMillisecs) {
+        // Store the function for subsequent use.
         mFunction = function; 
+
+        // Store the timeout for subsequent use.
         mTimeoutInMillisecs = timeoutInMillisecs;
 
-        // Enable the remove on cancel" policy.
+        // Set the policies to clean everything up on shutdown.
         ScheduledThreadPoolExecutor exec =
                 (ScheduledThreadPoolExecutor) mScheduledExecutorService;
         exec.setRemoveOnCancelPolicy(true);
@@ -291,9 +294,10 @@ public class TimedMemoizer<K, V>
         return mCache.computeIfAbsent
             (key,
              (k) -> {
+                // Apply the function and store the result. 
                 RefCountedValue<V> rcv =
-                new RefCountedValue<>(mFunction.apply(k),
-                                      0);
+                    new RefCountedValue<>(mFunction.apply(k),
+                                          0);
                 // The code below *must* be done here so that it's
                 // protected by the ConcurrentHashMap lock.
                 if (!Thread.currentThread().isInterrupted()
@@ -329,9 +333,9 @@ public class TimedMemoizer<K, V>
                   + key
                   + " and value "
                   + value.mValue
-                  + " were removed from the TimedMemoizer");
+                  + " were removed from the TimedMemoizer cache");
 
-            // Remove the item from the map.
+            // Remove the key (and value) from the map.
             mCache.remove(key);
         }
     }

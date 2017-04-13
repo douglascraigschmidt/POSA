@@ -354,7 +354,8 @@ public class MainActivity
 
                 // Convert each random number into a PrimeCallable.
                 .mapToObj(randomNumber 
-                          -> new PrimeCallable(randomNumber, mRetainedState.mTimedMemoizer))
+                          -> new PrimeCallable(randomNumber,
+                                               mRetainedState.mTimedMemoizer))
 
                 // Submit each PrimeCallable to the ExecutorService.
                 .forEach(mRetainedState.mExecutorCompletionService::submit);
