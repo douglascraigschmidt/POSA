@@ -82,6 +82,12 @@ public class MainActivity
      */
     private static class RetainedState {
         /**
+         * Debugging tag used by the Android logger.
+         */
+        private final String TAG =
+                getClass().getSimpleName();
+
+        /**
          * This object runs the prime computations.
          */
         final ExecutorCompletionService<PrimeCallable.PrimeResult> mExecutorCompletionService;
@@ -89,7 +95,7 @@ public class MainActivity
         /**
          * This object manages a thread pool.
          */
-        final ExecutorService mExecutorService;
+        ExecutorService mExecutorService;
 
         /**
          * This runnable executes in a background thread to get the
@@ -102,6 +108,16 @@ public class MainActivity
          */
         Thread mThread;
         
+        /**
+         * Cache used to generate, store, and retrieve the results of
+         * prime checking computations.
+         */
+        TimedMemoizer<Long, Long> mTimedMemoizer;
+
+        /**
+         * Constructor initializes the state that's retained across
+         * runtime configuration changes.
+         */
         RetainedState() {
             // Create a thread pool that matches the number of cores.
             mExecutorService =
@@ -113,6 +129,35 @@ public class MainActivity
             mExecutorCompletionService =
                 new ExecutorCompletionService<>
                 (mExecutorService);
+        }
+
+        /**
+         * Shutdown the retained state.
+         */
+        void shutdown() {
+            Log.d(TAG,
+                  "The retained state is being shutdown");
+
+            // Shutdown the ExecutorService.
+            if (mExecutorService != null) {
+                mExecutorService.shutdownNow();
+                mExecutorService = null;
+            }
+
+            // Shutdown the memoizer if it already exists.
+            if (mTimedMemoizer != null) {
+                mTimedMemoizer.shutdown();
+                mTimedMemoizer = null;
+            }
+
+            // Interrupt the prime waiter thread.
+            if (mThread != null) {
+                mThread.interrupt();
+                mThread = null;
+            }
+
+            // Help the GC.
+            mCompletionRunnable = null;
         }
     }
 
@@ -288,9 +333,13 @@ public class MainActivity
         else {
             mIsRunning = true;
 
-            // Cache used to generate, store, and retrieve the results
-            // of prime checking computations.
-            final Function<Long, Long> timedMemoizer =
+            // Shutdown the memoizer if it already exists.
+            if (mRetainedState.mTimedMemoizer != null) 
+                mRetainedState.mTimedMemoizer.shutdown();
+
+            // Create the cache used to generate, store, and retrieve
+            // the results of prime checking computations.
+            mRetainedState.mTimedMemoizer =
                 new TimedMemoizer<>(PrimeCheckers::bruteForceChecker,
                                     // Timeout cache entries after count *
                                     // 0.5 seconds.
@@ -305,7 +354,7 @@ public class MainActivity
 
                 // Convert each random number into a PrimeCallable.
                 .mapToObj(randomNumber 
-                          -> new PrimeCallable(randomNumber, timedMemoizer))
+                          -> new PrimeCallable(randomNumber, mRetainedState.mTimedMemoizer))
 
                 // Submit each PrimeCallable to the ExecutorService.
                 .forEach(mRetainedState.mExecutorCompletionService::submit);
@@ -412,14 +461,12 @@ public class MainActivity
      * Stop the prime computations.
      */
     private void interruptComputations() {
-        // Shutdown the thread pool.
-        mRetainedState.mExecutorService.shutdownNow();
-
-        // Interrupt the prime waiter thread.
-        mRetainedState.mThread.interrupt();
-
+        // Inform user an interrupt occurred.
         UiUtils.showToast(this,
-                          "Interrupting ExecutorService and waiter thread");
+                          "Interrupting the computations");
+
+        // Shutdown the retained state.
+        mRetainedState.shutdown();
 
         // Trigger a reset of the retained state on cancellation.
         mRetainedState = new RetainedState();
@@ -478,12 +525,9 @@ public class MainActivity
 
         if (mRetainedState != null
             && !isChangingConfigurations()) {
-            // Interrupt the ExecutorService since the activity is
-            // being destroyed.
-            mRetainedState.mExecutorService.shutdownNow();
-
-            Log.d(TAG,
-                  "interrupting ExecutorService");
+            // Shutdown the retained state since the activity is being
+            // destroyed.
+            mRetainedState.shutdown();
         }
     }
 }

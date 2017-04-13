@@ -19,7 +19,7 @@ import java.util.function.Function;
  * is returned rather than calling the function to compute it again.
  * The ConcurrentHashMap computeIfAbsent() method is used to ensure
  * only a single call to the function is run when a key/value pair is
- * first added to the cache.  The Java ScheduledExecutorClass is used
+ * first added to the cache.  The Java ScheduledExecutor class is used
  * to scalably limit the amount of time a key/value is retained in the
  * cache.  This code is based on an example in "Java Concurrency in
  * Practice" by Brian Goetz et al.  More information on memoization is
@@ -35,7 +35,8 @@ public class TimedMemoizer<K, V>
 
     /**
      * This map associates a key K with a value V that's produced by a
-     * function.
+     * function.  A RefCountedValue is used to keep track of how many
+     * times a key/value pair is accessed.
      */
     private final ConcurrentMap<K, RefCountedValue<V>> mCache =
             new ConcurrentHashMap<>();
@@ -126,7 +127,7 @@ public class TimedMemoizer<K, V>
 
             // Iterate through all the keys in the map and purge those
             // that haven't been accessed recently.
-            for (Map.Entry<K, RefCountedValue<V>> e : mCache.entrySet()) {
+            for (ConcurrentMap.Entry<K, RefCountedValue<V>> e : mCache.entrySet()) {
                 // Store the current ref count.
                 long oldCount = e.getValue().mRefCount.get();
 
