@@ -142,14 +142,15 @@ public class TimedMemoizer<K, V>
 
                 // Decrement the count of cached entries by one, which
                 // will invoke the lambda when the count drops to 0.
-                mCacheCount.decrementAndCallAtN(0,
-                                                () -> {
-                                                    // If there are no more entries in the cache then cancel
-                                                    // mPurgeEntries from being called.
-                                                    mScheduledFuture.cancel(true);
-                                                    Log.d(TAG,
-                                                          "cancelling mPurgeEntries");
-                                                });
+                mCacheCount.decrementAndCallAtN
+                    (0,
+                     () -> {
+                        // If there are no entries in the cache cancel
+                        // mPurgeEntries from being called henceforth.
+                        mScheduledFuture.cancel(true);
+                        Log.d(TAG,
+                              "cancelling mPurgeEntries");
+                    });
             } else {
                 Log.d(TAG,
                       "key "
@@ -164,8 +165,8 @@ public class TimedMemoizer<K, V>
 
                 // Try to reset ref count to 1 so that it won't be
                 // considered as accessed (yet).  However, if ref
-                // count has increased between the call to
-                // remove() and here don't reset it to 1.
+                // count has increased between the call to remove()
+                // and here don't reset it to 1.
                 value.mRefCount.getAndUpdate(curCount ->
                                              curCount > oldCount
                                              ? curCount
@@ -238,19 +239,20 @@ public class TimedMemoizer<K, V>
                     mCacheCount.incrementAndCallAtN
                         (1,
                          () -> {
-                            Log.d(TAG,
-                                  "scheduling mPurgeEntries for key "
-                                  + key);
-                                                        
-                            // Schedule a new runnable to purge keys
-                            // that have not been accessed recently.
-                            mScheduledFuture = 
-                            mScheduledExecutorService.scheduleAtFixedRate
-                            (mPurgeEntries,
-                             mTimeoutInMillisecs, // Initial timeout
-                             mTimeoutInMillisecs, // Periodic timeout
-                             TimeUnit.MILLISECONDS);
-                        });
+                            if (mScheduledExecutorService != null) {
+                                Log.d(TAG,
+                                      "scheduling mPurgeEntries for key "
+                                      + key);
+
+                                // Schedule a runnable to purge keys
+                                // not accessed recently.
+                                mScheduledFuture =
+                                mScheduledExecutorService.scheduleAtFixedRate
+                                    (mPurgeEntries,
+                                     mTimeoutInMillisecs, // Initial timeout
+                                     mTimeoutInMillisecs, // Periodic timeout
+                                     TimeUnit.MILLISECONDS);
+                            }});
 
                     // Apply the function store/return the result.
                     return new RefCountedValue<>(mFunction.apply(k),
@@ -278,8 +280,7 @@ public class TimedMemoizer<K, V>
         mScheduledExecutorService.shutdownNow();
         mScheduledExecutorService = null;
 
-        // Iterate through all the keys in the map and cancel/remove
-        // them all.
+        // Iterate through keys in the map and cancel/remove them all.
         for (ConcurrentMap.Entry<K, RefCountedValue<V>> e : mCache.entrySet()) {
             final K key = e.getKey();
             final RefCountedValue<V> value = e.getValue();
