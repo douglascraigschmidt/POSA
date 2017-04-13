@@ -101,8 +101,8 @@ public class TimedMemoizer<K, V>
      * Keeps track of the number of entries in mCache so mPurgeEntries
      * can be properly scheduled and cancelled.
      */
-    private final AtomicLong mCacheCount = 
-        new AtomicLong(0);
+    private final ThresholdCrosser mCacheCount = 
+        new ThresholdCrosser(0);
 
     /**
      * A scheduled future that can be used to cancel a runnable that
@@ -140,8 +140,16 @@ public class TimedMemoizer<K, V>
                       + mCache.size()
                       + ") since it wasn't accessed recently");
 
-                // Decrement the count of cached entries by one.
-                mCacheCount.getAndDecrement();
+                // Decrement the count of cached entries by one, which
+                // will invoke the lambda when the count drops to 0.
+                mCacheCount.decrementAndCallAtN(0,
+                                                () -> {
+                                                    // If there are no more entries in the cache then cancel
+                                                    // mPurgeEntries from being called.
+                                                    mScheduledFuture.cancel(true);
+                                                    Log.d(TAG,
+                                                          "cancelling mPurgeEntries");
+                                                });
             } else {
                 Log.d(TAG,
                       "key "
@@ -164,17 +172,6 @@ public class TimedMemoizer<K, V>
                                              : 1);
             }
         }
-
-        // If there are no more entries in the cache then cancel
-        // mPurgeEntries from being called.
-        if (mCacheCount.get() == 0) {
-            mScheduledFuture.cancel(true);
-            Log.d(TAG,
-                  "cancelling mPurgeEntries");
-        } else
-            Log.d(TAG,
-                  "mCacheCount = "
-                  + mCacheCount.get());
 
         Log.d(TAG,
               "ending the purge of keys not accessed recently");
@@ -235,28 +232,29 @@ public class TimedMemoizer<K, V>
             rcValue = mCache.computeIfAbsent
                 (key,
                  (k) -> {
-                    // Apply the function and store the result. 
-                    RefCountedValue<V> rcv = 
-                        new RefCountedValue<>(mFunction.apply(k),
-                                              0);
-
-                    // Schedule the mPurgeEntries runnable when the
-                    // first entry is added to the cache.
-                    if (mCacheCount.getAndIncrement() == 0) {
-                        Log.d(TAG,
-                              "scheduling mPurgeEntries for key "
-                              + key);
-
-                        // Schedule a new runnable to purge keys that have
-                        // not been accessed recently.
-                        mScheduledFuture = 
+                    // Determine if this is the first entry added to
+                    // the cache after it was empty and invoke the
+                    // lambda expression if so.
+                    mCacheCount.incrementAndCallAtN
+                        (1,
+                         () -> {
+                            Log.d(TAG,
+                                  "scheduling mPurgeEntries for key "
+                                  + key);
+                                                        
+                            // Schedule a new runnable to purge keys
+                            // that have not been accessed recently.
+                            mScheduledFuture = 
                             mScheduledExecutorService.scheduleAtFixedRate
-                                (mPurgeEntries,
-                                 mTimeoutInMillisecs, // Initial timeout
-                                 mTimeoutInMillisecs, // Periodic timeout
-                                 TimeUnit.MILLISECONDS);
-                    }
-                    return rcv;
+                            (mPurgeEntries,
+                             mTimeoutInMillisecs, // Initial timeout
+                             mTimeoutInMillisecs, // Periodic timeout
+                             TimeUnit.MILLISECONDS);
+                        });
+
+                    // Apply the function store/return the result.
+                    return new RefCountedValue<>(mFunction.apply(k),
+                                                 0);
                 });
         else
             Log.d(TAG,
@@ -274,7 +272,7 @@ public class TimedMemoizer<K, V>
      */
     public void shutdown() {
         // Reset the count.
-        mCacheCount.set(0);
+        mCacheCount.setInitialCount(0);
 
         // Shutdown the ScheduledExecutorService.
         mScheduledExecutorService.shutdownNow();
