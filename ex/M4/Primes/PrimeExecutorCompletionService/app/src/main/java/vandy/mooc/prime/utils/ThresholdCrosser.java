@@ -33,7 +33,7 @@ public class ThresholdCrosser {
                                     Runnable action) {
         synchronized(this) {
             if (++mCount == n)
-                acount.run();
+                action.run();
         }
     }
 
