@@ -2,7 +2,7 @@ package edu.vandy.gcdtesttask.view;
 
 import android.support.v4.app.Fragment;
 
-import edu.vandy.tasktesterframeworklib.view.MainFragmentActivity;
+import edu.vandy.fwklib.view.AbstractMainFragmentActivity;
 
 /**
  * Main (Fragment) Activity of the application.
@@ -10,14 +10,14 @@ import edu.vandy.tasktesterframeworklib.view.MainFragmentActivity;
  * Activity that is listed in Manifest and launched by Android.
  */
 public class GCDMainActivity
-       extends MainFragmentActivity {
+       extends AbstractMainFragmentActivity {
     /**
-     * This sets what Fragment to use in this App.
+     * This factory method sets what Fragment to use in this app.
      *
      * @return Fragment to display in the Activity.
      */
     @Override
-    public Fragment setTesterFragment() {
+    public Fragment makeTesterFragment() {
         return new TestTaskFragment();
     }
 }

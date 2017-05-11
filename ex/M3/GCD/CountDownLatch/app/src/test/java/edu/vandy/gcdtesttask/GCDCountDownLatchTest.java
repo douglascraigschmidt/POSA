@@ -3,21 +3,21 @@ package edu.vandy.gcdtesttask;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 
 import edu.vandy.fwklib.model.TaskTuple;
 import edu.vandy.fwklib.utils.ProgressReporter;
-import edu.vandy.gcdtesttask.functionality.GCDCyclicBarrierTester;
+import edu.vandy.gcdtesttask.functionality.GCDCountDownLatchTester;
 import edu.vandy.gcdtesttask.functionality.GCDImplementations;
 import edu.vandy.gcdtesttask.functionality.GCDInterface;
 
 /**
- * This JUnit test evaluates the GCDCyclicBarrierTest class.
+ * This JUnit test evaluates the GCDCountDownLatchTest class.
  */
-public class GCDCyclicBarrierTest 
+public class GCDCountDownLatchTest 
        implements ProgressReporter {
     /**
      * Number of times to iterate, which is 100 million to ensure the
@@ -60,35 +60,31 @@ public class GCDCyclicBarrierTest
     }
 
     /**
-     * Main entry point that tests the GCDCyclicBarrierTester class.
+     * Main entry point that tests the GCDCountDownLatchTester class.
      */
     @Test
-    public void testGCDCyclicBarrierTester()
+    public void testGCDCountDownLatchTester()
         throws BrokenBarrierException, InterruptedException {
         // Make the list of GCD tuples.
         List<TaskTuple<GCDInterface>> gcdTests = makeGCDTuples();
 
-        // Create an entry barrier that ensures all threads start at
-        // the same time.  We add a "+ 1" for the thread that
-        // initializes the tests.
-        CyclicBarrier entryBarrier =
-            new CyclicBarrier(gcdTests.size() + 1,
-                              // Barrier action (re)initializes the test data.
-                              () -> GCDCyclicBarrierTester.initializeInputs(sITERATIONS));
+        // Create an entry barrier that ensures the threads don't
+        // start until this thread lets them begin.
+        CountDownLatch entryBarrier = new CountDownLatch(1);
 
-        // Create an exit barrier that ensures all threads end at the
-        // same time.  We add a "+ 1" for the thread that waits for
-        // the tests to complete.
-        CyclicBarrier exitBarrier =
-            new CyclicBarrier(gcdTests.size() + 1);
+        // Create an exit barrier that ensures this thread doesn't
+        // complete until all the test threads complete.
+        CountDownLatch exitBarrier = new CountDownLatch(gcdTests.size());
 
         // Iterate for each cycle.
         for (int cycle = 1; cycle <= sCYCLES; cycle++) {
+            // Initialize the input arrays.
+            GCDCountDownLatchTester.initializeInputs(sITERATIONS);
 
             // Iterate through all the GCD tuples and start a new
-            // thread to run GCDCyclicBarrierTest for each one.
+            // thread to run GCDCountDownLatchTest for each one.
             gcdTests.forEach(gcdTuple
-                             -> new Thread(new GCDCyclicBarrierTester
+                             -> new Thread(new GCDCountDownLatchTester
                                            // All threads share the
                                            // entry and exit barriers.
                                            (entryBarrier,
@@ -99,12 +95,13 @@ public class GCDCyclicBarrierTest
             System.out.println("Starting GCD tests for cycle "
                                + cycle);
 
-            // Wait until all threads are ready to run.
-            entryBarrier.await();     
+            // Wait until all the worker threads are ready to run.
+            entryBarrier.countDown();
             System.out.println("Waiting for results from cycle "
                                + cycle);
 
-            // Wait until all threads are finished running.
+            // Wait until all the worker threads are finished
+            // running.
             exitBarrier.await();
             System.out.println("All threads are done for cycle "
                                + cycle);
