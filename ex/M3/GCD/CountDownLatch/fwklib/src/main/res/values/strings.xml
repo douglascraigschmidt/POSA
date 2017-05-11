@@ -1,9 +1,5 @@
 <resources>
-<<<<<<< HEAD
     <string name="app_name">GCDTestTask(CountDownLatch)</string>
-=======
-    <string name="app_name">GCDTestTask(CyclicBarrier)</string>
->>>>>>> 349ec3b1bf64dd99edcccefcae3c75bdebb5c7e2
     <string name="action_settings">Settings</string>
     <string name="enter_count">Enter count (or return for default)</string>
 </resources>
