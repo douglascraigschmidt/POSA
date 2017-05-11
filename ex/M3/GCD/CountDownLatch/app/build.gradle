@@ -4,7 +4,11 @@ android {
     compileSdkVersion 25
     buildToolsVersion "25.0.0"
     defaultConfig {
+<<<<<<< HEAD
         applicationId "edu.vandy.gcdtesttask.countdownlatch"
+=======
+        applicationId "edu.vandy.gcdtesttask.cyclicbarrier"
+>>>>>>> 349ec3b1bf64dd99edcccefcae3c75bdebb5c7e2
         minSdkVersion 25
         targetSdkVersion 25
         versionCode 1

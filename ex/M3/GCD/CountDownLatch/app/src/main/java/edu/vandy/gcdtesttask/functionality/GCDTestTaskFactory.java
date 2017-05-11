@@ -50,9 +50,16 @@ public class GCDTestTaskFactory
                                                        ModelStateInterface<GCDInterface> modelStateInterface,
                                                        PresenterLogic<GCDInterface> presenterLogic,
                                                        int numberOfTests) {
+<<<<<<< HEAD
         return new GCDCountDownLatchTestTask(viewInterface,
                                              modelStateInterface,
                                              presenterLogic,
                                              numberOfTests);
+=======
+        return new GCDCyclicBarrierTestTask(viewInterface,
+                               modelStateInterface,
+                               presenterLogic,
+                               numberOfTests);
+>>>>>>> 349ec3b1bf64dd99edcccefcae3c75bdebb5c7e2
     }
 }
