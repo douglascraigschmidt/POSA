@@ -20,6 +20,9 @@ public class Chronometer
     private static final String TAG =
         Chronometer.class.getCanonicalName();
 
+    /**
+     * A callback that notifies when the chronometer has incremented on its own.
+     */
     public interface OnChronometerTickListener {
         void onChronometerTick(Chronometer chronometer);
     }
@@ -34,12 +37,20 @@ public class Chronometer
 
     private long timeElapsed;
 
+    /**
+     * Initialize this Chronometer object.
+     * Sets the base to the current time.
+     */
     public Chronometer(Context context) {
         this(context,
              null,
              0);
     }
 
+    /**
+     * Initialize with standard view layout information.
+     * Sets the base to the current time.
+     */
     public Chronometer(Context context,
                        AttributeSet attrs) {
         this(context,
@@ -47,6 +58,10 @@ public class Chronometer
              0);
     }
 
+    /**
+     * Initialize with standard view layout information.
+     * Sets the base to the current time.
+     */
     public Chronometer(Context context,
                        AttributeSet attrs,
                        int defStyle) {
@@ -62,38 +77,75 @@ public class Chronometer
         updateText(mBase);
     }
 
+    /**
+     * Set the time that the count-up timer is in reference to.
+     *
+     * @param base Use the {@link SystemClock#elapsedRealtime} time base.
+     */
     public void setBase(long base) {
         mBase = base;
         dispatchChronometerTick();
         updateText(SystemClock.elapsedRealtime());
     }
 
+    /**
+     * Return the base time as set through {@link #setBase}.
+     */
     public long getBase() {
         return mBase;
     }
 
+    /**
+     * Sets the listener to be called when the chronometer changes.
+     * 
+     * @param listener The listener.
+     */
     public void setOnChronometerTickListener(OnChronometerTickListener listener) {
         mOnChronometerTickListener = listener;
     }
 
+    /**
+     * @return The listener (may be null) that is listening for chronometer change
+     *         events.
+     */
     public OnChronometerTickListener getOnChronometerTickListener() {
         return mOnChronometerTickListener;
     }
 
+    /**
+     * Start counting up.  This does not affect the base as set from {@link #setBase}, just
+     * the view display.
+     * 
+     * Chronometer works by regularly scheduling messages to the handler, even when the 
+     * Widget is not visible.  To make sure resource leaks do not occur, the user should 
+     * make sure that each start() call has a reciprocal call to {@link #stop}. 
+     */
     public void start() {
         mStarted = true;
         updateRunning();
     }
 
+    /**
+     * Stop counting up.  This does not affect the base as set from {@link #setBase}, just
+     * the view display.
+     * 
+     * This stops the messages to the handler, effectively releasing resources that would
+     * be held as the chronometer is running, via {@link #start}. 
+     */
     public void stop() {
         mStarted = false;
         updateRunning();
     }
 
+
     public boolean getStarted() {
         return mStarted;
     }
 
+    /**
+     * The same as calling {@link #start} or {@link #stop}.
+     * @hide pending API council approval
+     */
     public void setStarted(boolean started) {
         mStarted = started;
         updateRunning();
