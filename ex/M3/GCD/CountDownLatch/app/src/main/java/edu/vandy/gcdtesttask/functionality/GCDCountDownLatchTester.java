@@ -193,7 +193,7 @@ public class GCDCountDownLatchTester
 
             // Inform the coordinator thread that this test is
             // finished.
-            mExitBarrier.await();
+            mExitBarrier.countDown();
         } catch (Exception ex) {
             System.out.println(TAG
                                + ", exception "
