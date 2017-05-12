@@ -138,7 +138,8 @@ public class GCDCyclicBarrierTestTask
              cycle <= cycles[0];
              cycle++) {
             try {
-                // Execute each GCDInterface tester in the ExecutorService.
+                // Execute each GCDInterface tester in the
+                // ExecutorService.
                 mQueuesTesters.forEach(mExecutor::execute);
                 
                 try {
