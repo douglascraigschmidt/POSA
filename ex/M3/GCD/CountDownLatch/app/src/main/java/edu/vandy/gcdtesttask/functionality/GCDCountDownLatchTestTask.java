@@ -135,16 +135,13 @@ public class GCDCountDownLatchTestTask
                 // Initialize the input arrays.
                 GCDCountDownLatchTester.initializeInputs(mIterations);
 
-                // Iterate for each GCDInterface tester.
-                for (GCDCountDownLatchTesterAndroidAdapter gcdTester : mGcdTesters)
-                    // Execute the GCDInterface tester in the executor service
-                    // thread pool.
-                    mExecutor.execute(gcdTester);
-            
+                // Execute each GCDInterface tester in the ExecutorService.
+                mQueuesTesters.forEach(mExecutor::execute);
+                
                 try {
                     // Create a runnable on the UI thread to
                     // initialize the chronometer.
-                    updateProgress((Runnable) () -> {
+                    updateProgress(() -> {
                             // Log.d(TAG,
                             //       "publish progress from inside doInBackground.");
 
