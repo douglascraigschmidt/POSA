@@ -1,7 +1,9 @@
 package edu.vandy.gcdtesttask.functionality;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.ArrayList;
+import java.util.List;
 
 import edu.vandy.fwklib.model.abstracts.AbstractTestTask;
 import edu.vandy.fwklib.model.abstracts.AbstractTestTaskFactory;
@@ -15,25 +17,22 @@ import edu.vandy.fwklib.view.interfaces.ViewInterface;
  */
 public class GCDTestTaskFactory
        extends AbstractTestTaskFactory<GCDInterface> {
-    /**
-     * Returns a Map containing the functions to test (as the map's
-     * values) and the names of each function (as the map's keys).
-     */
     @Override
-    public Map<String, GCDInterface> getFuncsAndNames() {
-        // Return a HashMap containing the name and function to test.
-        return new HashMap<String, GCDInterface>() {
-                { 
-                    put("GCD BigInteger",
-                        GCDImplementations::computeGCDBigInteger);
-                    put("GCD Iterative Euclid",
-                        GCDImplementations::computeGCDIterativeEuclid);
-                    put("GCD Binary",
-                        GCDImplementations::computeGCDBinary);
-                    put("GCD Recursive Euclid",
-                        GCDImplementations::computeGCDRecursiveEuclid);
-                }
-            };
+    public List<SimpleImmutableEntry<String, GCDInterface>> getFuncsAndNames() {
+        // Return an ArrayList containing the name and function to
+        // test.
+        return new ArrayList<SimpleImmutableEntry<String, GCDInterface>>() {
+            { 
+                add(new AbstractMap.SimpleImmutableEntry<>("BigInteger",
+                                               GCDImplementations::computeGCDBigInteger));
+                add(new AbstractMap.SimpleImmutableEntry<>("Binary",
+                                               GCDImplementations::computeGCDBinary));
+                add(new AbstractMap.SimpleImmutableEntry<>("IterativeEuclid",
+                                               GCDImplementations::computeGCDIterativeEuclid));
+                add(new AbstractMap.SimpleImmutableEntry<>("RecursiveEuclid",
+                                               GCDImplementations::computeGCDRecursiveEuclid));
+            }
+        };
     }
 
     /**

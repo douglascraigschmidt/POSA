@@ -1,10 +1,9 @@
 package edu.vandy.fwklib.model.abstracts;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import java.util.AbstractMap.SimpleImmutableEntry;
 import edu.vandy.fwklib.model.TaskTuple;
 import edu.vandy.fwklib.model.interfaces.ModelStateInterface;
 import edu.vandy.fwklib.presenter.PresenterLogic;
@@ -18,20 +17,18 @@ import static java.util.stream.Collectors.toList;
  */
 abstract public class AbstractTestTaskFactory<TestFunc> {
     /**
-     * Return the list of GCDInterface tasks to test.
+     * Return the list of TaskTuples to test.
      */
     public final List<TaskTuple<TestFunc>> getTasksToTest() {
         // Get the functions and their names to test.
-        Map<String, TestFunc> funcsToRun = getFuncsAndNames();
+        List<SimpleImmutableEntry<String, TestFunc>> funcsToRun =
+            getFuncsAndNames();
 
         // Automatically generates a unique id.
         AtomicInteger uniqueId = new AtomicInteger(0);
 
         // Return a List of TaskTuples containing the test tasks to run.
         return funcsToRun
-            // Get the EntrySet for this map.
-            .entrySet()
-            
             // Convert the EntrySet into a stream.
             .stream()
 
@@ -51,10 +48,11 @@ abstract public class AbstractTestTaskFactory<TestFunc> {
     }
 
     /**
-     * Returns a Map containing the functions to test (as the map's
-     * values) and the names of each function ( as the map's keys).
+     * The abstract method must be overridden by a subclass to returns
+     * a List containing the functions to test (as the values) and the
+     * names of each function ( as the keys).
      */
-    protected abstract Map<String, TestFunc> getFuncsAndNames();
+    protected abstract List<SimpleImmutableEntry<String, TestFunc>> getFuncsAndNames();
 
     /**
      * A factory method that returns an AbstractTestTask to perform

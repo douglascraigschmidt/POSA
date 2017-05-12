@@ -106,7 +106,7 @@ public class GCDCountDownLatchTestTask
             // Map each GCDInterface tuple into a GCDInterface tester.
             .map(gcdTaskTuple ->
                  new GCDCountDownLatchTesterAndroidAdapter
-                 // All threads share the entry and exit barriers.
+                 // All test tasks share the entry and exit barriers.
                  (mViewInterface,
                   gcdTaskTuple.getTaskUniqueId(),
                   mEntryBarrier,
