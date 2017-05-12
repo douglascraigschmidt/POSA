@@ -10,7 +10,7 @@ import edu.vandy.fwklib.presenter.PresenterLogic;
 import edu.vandy.fwklib.view.interfaces.ViewInterface;
 
 /**
- * Factory class that creates the list of tests to run and the Task
+ * Factory class that creates the list of tests to run and the task
  * that actually runs them.
  */
 public class GCDTestTaskFactory
@@ -37,13 +37,13 @@ public class GCDTestTaskFactory
     }
 
     /**
-     * Create the actual AsyncTask that will run the tests on Android.
+     * Create the actual AbstractTestTask that will run the tests on Android.
      *
      * @param viewInterface       Reference to the View Layer (Created and passed in by the framework)
      * @param modelStateInterface Reference to the Model Layer (Created and passed in by the framework)
      * @param presenterLogic      Reference to the Presentation Layer (Created and passed in by the framework)
      * @param numberOfTests       Number of test iterations to run, Determined by user at run time
-     * @return AsyncTask that actually runs all the tests.
+     * @return An AbstractTestTask that actually runs all the tests.
      */
     @Override
     public AbstractTestTask<GCDInterface> makeTestTask(ViewInterface<GCDInterface> viewInterface,

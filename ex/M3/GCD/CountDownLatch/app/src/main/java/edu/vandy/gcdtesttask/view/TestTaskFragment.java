@@ -13,8 +13,9 @@ public class TestTaskFragment
     /**
      * Get the task factory used to create TaskTuple(s).
      *
-     * @return The concrete instance of AbstractTestTaskFactory to use for
-     * this app.
+     * @return The concrete instance of AbstractTestTaskFactory to use
+     * for this app, which creates and tests various GCD
+     * implementations using the CountDownLatch barrier synchronizer.
      */
     public AbstractTestTaskFactory<GCDInterface> makeTaskFactory() {
         return new GCDTestTaskFactory();

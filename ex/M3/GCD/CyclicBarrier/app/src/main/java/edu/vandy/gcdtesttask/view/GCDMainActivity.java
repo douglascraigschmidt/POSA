@@ -5,9 +5,9 @@ import android.support.v4.app.Fragment;
 import edu.vandy.fwklib.view.AbstractMainFragmentActivity;
 
 /**
- * Main (Fragment) Activity of the application.
-
- * Activity that is listed in Manifest and launched by Android.
+ * The main (Fragment) Activity of the GCD app that showcases the
+ * CountDownLatch barrier synchronizer.  This Activity is listed in
+ * the AndroidManifest.xml file and launched by Android.
  */
 public class GCDMainActivity
        extends AbstractMainFragmentActivity {

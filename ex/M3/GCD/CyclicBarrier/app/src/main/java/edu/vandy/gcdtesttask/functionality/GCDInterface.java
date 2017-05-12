@@ -1,8 +1,9 @@
 package edu.vandy.gcdtesttask.functionality;
 
 /**
- * This functional interface matches the signature of all the
- * GCDInterface methods.
+/**
+ * This functional interface matches the signature of all the GCD
+ * implementation methods.
  */
 @FunctionalInterface
 public interface GCDInterface {
