@@ -22,7 +22,6 @@ import java.util.List;
 
 import edu.vandy.fwklib.R;
 import edu.vandy.fwklib.model.Model;
-import edu.vandy.fwklib.model.ProgramState;
 import edu.vandy.fwklib.model.TaskTuple;
 import edu.vandy.fwklib.model.abstracts.AbstractTestTask;
 import edu.vandy.fwklib.model.abstracts.AbstractTestTaskFactory;
@@ -164,7 +163,9 @@ public abstract class AbstractTestTaskFragment<TestFunc>
      */
     @Override
     public void notifyDataSetChanged() {
-        mListAdapter.notifyDataSetChanged();
+        if (mListAdapter != null) {
+            mListAdapter.notifyDataSetChanged();
+        }
     }
 
     /**
@@ -174,14 +175,13 @@ public abstract class AbstractTestTaskFragment<TestFunc>
     public void setProgress(int uniqueID,
                             int progress) {
 
-        // if progress is 100% then store timestamp.
-        if (progress == 100) {
-            mRetainedState.mTasks
-                    .get(uniqueID)
-                    .setTimeCompletedString(
-                            mChronometerRef.get(0).get().getText().toString()
-                    );
-        }
+        // Store Timestamp of most recent progress update.
+        mRetainedState.mTasks
+                .get(uniqueID)
+                .setTimeCompletedString(
+                        mChronometerRef.get(0).get().getText().toString()
+                );
+
 
         mRetainedState.mTasks
                 .get(uniqueID)
@@ -330,22 +330,22 @@ public abstract class AbstractTestTaskFragment<TestFunc>
             // Assign these tasks to the Model layer.
             mModelStateInterface.setTaskTuples(mTasks);
 
-            // Set starting state of application.
-            mModelStateInterface.setState(ProgramState.NEW);
         }
 
         ViewState mViews = new ViewState();
 
+        /**
+         * Class to store state of Views between hardware changes.
+          */
         class ViewState {
-
-            public boolean countVisible;
-            public boolean countEditable;
-            public boolean ChronoStarted;
-            public boolean ChronoVisible;
-            public long ChronoTime;
-            public long ChronoElapsed;
-
-
+            boolean countVisible;
+            boolean countEditable;
+            boolean ChronoStarted;
+            boolean ChronoVisible;
+            long ChronoTime;
+            long ChronoElapsed;
+            boolean playFABVisible;
+            boolean setFABVisible;
         }
 
     }
@@ -376,6 +376,7 @@ public abstract class AbstractTestTaskFragment<TestFunc>
     public void onActivityCreated(Bundle savedInstanceState) {
         // Initialize the super class.
         super.onActivityCreated(savedInstanceState);
+
 
         if (savedInstanceState != null) {
             // If count EditText is visible, then set its settings.
@@ -408,6 +409,7 @@ public abstract class AbstractTestTaskFragment<TestFunc>
             // application state.
             switch (mRetainedState.mModelStateInterface.getCurrentState()) {
                 case CANCELLED:
+                case FINISHED:
                     getFABStartOrStop().setImageResource(R.drawable.ic_autorenew_white_24dp);
                     break;
                 case RUNNING:
@@ -417,7 +419,20 @@ public abstract class AbstractTestTaskFragment<TestFunc>
                 default:
                     getFABStartOrStop().setImageResource(android.R.drawable.ic_media_play);
             }
+
+            if (mRetainedState.mViews.playFABVisible) {
+                UiUtils.showFab(getFABStartOrStop());
+            } else {
+                UiUtils.hideFab(getFABStartOrStop());
+            }
+
+            if (mRetainedState.mViews.setFABVisible) {
+                UiUtils.showFab(getFABSet());
+            } else {
+                UiUtils.hideFab(getFABSet());
+            }
         }
+
     }
 
     /**
@@ -427,23 +442,25 @@ public abstract class AbstractTestTaskFragment<TestFunc>
      */
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
-        // @@ Mike, can any of this code be moved into the RetainedState?
-
-
         // Save the current value of various GUI fields so they will be
         // available after a runtime configuration change.
-        savedInstanceState.putBoolean("",
-                mCounterEditText.getVisibility() == View.VISIBLE);
-        savedInstanceState.putBoolean("countEditable",
-                mCounterEditText.isEnabled());
-        savedInstanceState.putLong("ChronoTime",
-                getChronometer().getBase());
-        savedInstanceState.putBoolean("ChronoVisible",
-                getChronometer().getVisibility() == View.VISIBLE);
-        savedInstanceState.putBoolean("ChronoStarted",
-                getChronometer().getStarted());
-        savedInstanceState.putLong("ChronoElapsed",
-                getChronometer().getTimeElapsed());
+        mRetainedState.mViews.countVisible =
+                (mCounterEditText.getVisibility() == View.VISIBLE);
+        mRetainedState.mViews.countEditable =
+                (mCounterEditText.isEnabled());
+        mRetainedState.mViews.ChronoTime =
+                (getChronometer().getBase());
+        mRetainedState.mViews.ChronoVisible =
+                (getChronometer().getVisibility() == View.VISIBLE);
+        mRetainedState.mViews.ChronoStarted =
+                (getChronometer().getStarted());
+        mRetainedState.mViews.ChronoElapsed =
+                (getChronometer().getTimeElapsed());
+
+        mRetainedState.mViews.playFABVisible =
+                (getFABStartOrStop().getVisibility() == View.VISIBLE);
+        mRetainedState.mViews.setFABVisible =
+                (getFABSet().getVisibility() == View.VISIBLE);
 
         // Call up to the super class.
         super.onSaveInstanceState(savedInstanceState);

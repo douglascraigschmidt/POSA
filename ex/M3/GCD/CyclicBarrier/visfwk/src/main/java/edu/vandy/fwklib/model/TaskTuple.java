@@ -32,7 +32,7 @@ public class TaskTuple<TestFunc> {
      */
     private ProgressBarInterface mProgressBar;
 
-    private String mTimeCompletedString = "";
+    private String mTimeCompletedString = "00:00:00";
 
     /**
      * Constructor initializes the fields.

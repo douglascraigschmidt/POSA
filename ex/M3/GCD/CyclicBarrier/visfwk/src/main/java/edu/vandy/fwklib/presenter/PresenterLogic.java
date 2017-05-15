@@ -1,6 +1,5 @@
 package edu.vandy.fwklib.presenter;
 
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 
@@ -19,7 +18,7 @@ import edu.vandy.fwklib.view.interfaces.ViewInterface;
  */
 @SuppressWarnings("unused")
 public abstract class PresenterLogic<TestFunc>
-       implements PresenterInterface {
+        implements PresenterInterface {
     /**
      * TAG for logging.
      */
@@ -83,16 +82,17 @@ public abstract class PresenterLogic<TestFunc>
                 "fabSetPressed(...)" + mModelStateInterface.getCurrentState());
 
         switch (mModelStateInterface.getCurrentState()) {
-            case NEW:
-                enableConfigUI(view);
-                break;
+
+
             case ENABLED:
-                fillDefaultNumber(view);
+                fillDefaultNumber();
                 break;
             case RUNNING:
             case CANCELLED:
             case FINISHED:
+            case NEW:
             default:
+                startConfig(view);
                 break;
         }
     }
@@ -114,11 +114,11 @@ public abstract class PresenterLogic<TestFunc>
             case RUNNING:
                 cancelTests(view);
                 break;
+            case FINISHED:
             case CANCELLED:
-                resetUIAfterCancel(view);
+                resetUIAfterCancelOrFinish(view);
                 break;
             case NEW:
-            case FINISHED:
             default:
                 break;
         }
@@ -129,30 +129,19 @@ public abstract class PresenterLogic<TestFunc>
      *
      * @param view View that was pressed that started this method.
      */
-    private void enableConfigUI(View view) {
+    private void startConfig(View view) {
         Log.d(TAG,
-                "enableConfigUI(...)");
+                "startConfig(...)");
+//        mViewInterface.chronometerSetBase(SystemClock.elapsedRealtime());
 
-        mViewInterface.getCountEditText()
-                      .setVisibility(View.VISIBLE);
-        fillDefaultNumber(view);
-        // Reset the backend data for tracking of the Progress bars,
-        // and then update the UI.
-        PresenterLogicUtils.resetProgressBars(mViewInterface,
-                mModelStateInterface);
-        mViewInterface.notifyDataSetChanged();
-
-        mViewInterface.chronometerSetBase(SystemClock.elapsedRealtime());
         mModelStateInterface.setState(ProgramState.ENABLED);
     }
 
     /**
      * Helper method to contain code to run when filling default
      * number of runs.
-     *
-     * @param view View pressed.
      */
-    private void fillDefaultNumber(View view) {
+    private void fillDefaultNumber() {
         Log.d(TAG,
                 "fillDefaultNumber(...)");
 
@@ -163,7 +152,7 @@ public abstract class PresenterLogic<TestFunc>
 
         // Hide the keyboard.
         UiUtils.hideKeyboard(mViewInterface.getFragmentActivity(),
-                             mViewInterface.getCountEditText().getWindowToken());
+                mViewInterface.getCountEditText().getWindowToken());
     }
 
     /**
@@ -206,24 +195,11 @@ public abstract class PresenterLogic<TestFunc>
             // Set state to running.
             mModelStateInterface.setState(ProgramState.RUNNING);
 
-            // Disable edit text.
-            mViewInterface.getCountEditText().setEnabled(false);
-
-            // Hide set FAB.
-            UiUtils.hideFab(mViewInterface.getFABSet());
-
-            // Change play fab to stop.
-            mViewInterface.getFABStartOrStop()
-                          .setImageResource(android.R.drawable.ic_delete);
-
-            // Start running the chronometer.
-            PresenterLogicUtils.resetAndStartChronometer(mViewInterface);
-
             // Create the test task.
             mTestTask = makeTestTask(mViewInterface,
-                                     mModelStateInterface,
-                                     this,
-                                     numberOfTests);
+                    mModelStateInterface,
+                    this,
+                    numberOfTests);
 
             // Execute the test task.
             mTestTask.execute(sCYCLES);
@@ -235,24 +211,14 @@ public abstract class PresenterLogic<TestFunc>
      *
      * @param view View pressed that initiated this method being called.
      */
-    private void resetUIAfterCancel(View view) {
+    private void resetUIAfterCancelOrFinish(View view) {
         Log.d(TAG,
-                "resetUIAfterCancel(...)");
-
-        // reset the FABs, EditText, and Chronometer
-        PresenterLogicUtils.resetControlUI(mViewInterface,
-                                           mModelStateInterface);
+                "resetUIAfterCancelOrFinish(...)");
 
         // Reset the backend data for tracking of the Progress bars,
         // and then update the UI.
         PresenterLogicUtils.resetProgressBars(mViewInterface,
-                                              mModelStateInterface);
-
-        // Set the Chronometer to be invisible
-        mViewInterface.getChronometer()
-                      .stop();
-        mViewInterface.getChronometer()
-                      .setVisibility(View.INVISIBLE);
+                mModelStateInterface);
 
         // Set the application state to NEW.
         mModelStateInterface.setState(ProgramState.NEW);
@@ -273,40 +239,21 @@ public abstract class PresenterLogic<TestFunc>
             mTestTask.cancel(true);
 
             Runnable cancelTestsCommand = () -> {
-                mViewInterface.showToast("Tests are cancelled");
                 Log.d(TAG,
                         "Tests Cancelled");
 
                 // Set the state to CANCELLED
                 mModelStateInterface.setState(ProgramState.CANCELLED);
 
-                // Set the start/stop FAB to have 'refresh' image.
-                mViewInterface.getFABStartOrStop()
-                              .setImageResource(R.drawable.ic_autorenew_white_24dp);
-
-                // Stop the Chronometer from continuing to count.
-                mViewInterface.getChronometer()
-                              .stop();
             };
 
             // Run the command to cancel the tests in the UI thread.
             mViewInterface.getFragmentActivity()
-                          .runOnUiThread(cancelTestsCommand);
+                    .runOnUiThread(cancelTestsCommand);
         } catch (Exception ex) {
             Log.e(TAG,
                     ex.getMessage());
         }
-    }
-
-    /**
-     * Tell the UI to reset the Control Interface Views/FABs.
-     */
-    @Override
-    public void resetControlUI() {
-        Log.d(TAG,
-                "resetControlUI()");
-        PresenterLogicUtils.resetControlUI(mViewInterface,
-                                           mModelStateInterface);
     }
 
     /**
@@ -320,13 +267,17 @@ public abstract class PresenterLogic<TestFunc>
                 "notifyOfStateChange(...)" + state);
 
         switch (state) {
+            case NEW:
+                processingNew();
+                break;
             case ENABLED:
+                processingEnabled();
                 break;
             case RUNNING:
+                processingRunning();
                 break;
             case CANCELLED:
-                break;
-            case NEW:
+                processingCancelled();
                 break;
             case FINISHED:
                 processingFinished();
@@ -337,13 +288,102 @@ public abstract class PresenterLogic<TestFunc>
     }
 
     /**
-     * Reset the UI to indicate that processing is complete.
+     * Update the UI to represent being in the New State.
+     */
+    private void processingNew() {
+
+        // Stop & Set the Chronometer to be invisible
+        mViewInterface.getChronometer()
+                .stop();
+        mViewInterface.getChronometer()
+                .setVisibility(View.INVISIBLE);
+
+        // Reset the backend data for tracking of the Progress bars,
+        // and then update the UI.
+        PresenterLogicUtils.resetProgressBars(mViewInterface,
+                mModelStateInterface);
+        // Notify the View Layer that the data(Model) has changed.
+        mViewInterface.notifyDataSetChanged();
+
+        // reset FABs, hide play/stop and show set.
+        UiUtils.hideFab(mViewInterface.getFABStartOrStop());
+        mViewInterface.getFABStartOrStop()
+                .setImageResource(android.R.drawable.ic_media_play);
+        mViewInterface.getFABStartOrStop()
+                .setVisibility(View.INVISIBLE);
+        UiUtils.showFab(mViewInterface.getFABSet());
+
+        // clear and make invisible the EditText for run count.
+        mViewInterface.getCountEditText()
+                .getText()
+                .clear();
+        mViewInterface.getCountEditText()
+                .setVisibility(View.INVISIBLE);
+        mViewInterface.getCountEditText().setEnabled(true);
+
+    }
+
+    /**
+     * Update the UI to represent being in the Enabled State.
+     */
+    private void processingEnabled() {
+
+        // Enable the EditText, clear the number of runs, and fill default.
+        mViewInterface.getCountEditText()
+                .setEnabled(true);
+        mViewInterface.getCountEditText()
+                .getText()
+                .clear();
+        mViewInterface.getCountEditText()
+                .setVisibility(View.VISIBLE);
+        fillDefaultNumber();
+
+        mViewInterface.getFABStartOrStop()
+                .setImageResource(android.R.drawable.ic_media_play);
+        UiUtils.showFab(mViewInterface.getFABStartOrStop());
+
+    }
+
+    /**
+     * Update the UI to represent being in the Running State.
+     */
+    private void processingRunning() {
+
+        // Disable edit text.
+        mViewInterface.getCountEditText().setEnabled(false);
+
+        // Hide set FAB.
+        UiUtils.hideFab(mViewInterface.getFABSet());
+
+        // Change play fab to stop.
+        mViewInterface.getFABStartOrStop()
+                .setImageResource(android.R.drawable.ic_delete);
+
+        // Start running the chronometer.
+        PresenterLogicUtils.resetAndStartChronometer(mViewInterface);
+
+    }
+
+    /**
+     * Update the UI to represent being in the Finished State.
      */
     private void processingFinished() {
-        Log.d("PRESENTER_LOGIC","processingFinished()");
-//        mViewInterface.getFABStartOrStop()
-//                      .setImageResource(android.R.drawable.ic_media_play);
-//        mViewInterface.getCountEditText()
-//                      .setEnabled(true);
+        mViewInterface.getFABStartOrStop()
+                .setImageResource(R.drawable.ic_autorenew_white_24dp);
+        mViewInterface.getChronometer().stop();
     }
+
+    /**
+     * Update the UI to represent being in the Cancelled State.
+     */
+    private void processingCancelled() {
+        // Set the start/stop FAB to have 'refresh' image.
+        mViewInterface.getFABStartOrStop()
+                .setImageResource(R.drawable.ic_autorenew_white_24dp);
+
+        // Stop the Chronometer from continuing to count.
+        mViewInterface.getChronometer()
+                .stop();
+    }
+
 }
