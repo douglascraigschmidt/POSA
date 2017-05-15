@@ -72,7 +72,8 @@ public abstract class AbstractTestTask<TestFunc>
         Log.d(TAG,
                 "onPostExecute(...)");
         mModelStateInterface.setState(ProgramState.FINISHED);
-        mPresenterInterface.resetControlUI();
+
+//        mPresenterInterface.resetControlUI();
     }
 
     /**

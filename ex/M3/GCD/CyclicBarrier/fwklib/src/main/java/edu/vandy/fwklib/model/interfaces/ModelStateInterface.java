@@ -83,6 +83,7 @@ public interface ModelStateInterface<TestFunc> {
 
         mPresenterInterfaceRef.add(0,
                 new WeakReference<>(presenterInterface));
+        mProgramState.add(ProgramState.NEW);
     }
 
     /**

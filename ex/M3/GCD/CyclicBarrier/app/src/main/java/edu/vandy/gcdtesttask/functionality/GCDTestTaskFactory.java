@@ -62,7 +62,7 @@ public class GCDTestTaskFactory
      */
     @Override
     public long setDefaultRuns() {
-        return 1000000;
+        return 100000;
     }
 
 }

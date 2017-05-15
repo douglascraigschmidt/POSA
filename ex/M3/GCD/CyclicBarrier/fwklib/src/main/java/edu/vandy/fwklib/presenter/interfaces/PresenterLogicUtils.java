@@ -2,11 +2,8 @@ package edu.vandy.fwklib.presenter.interfaces;
 
 import android.os.SystemClock;
 import android.util.Log;
-import android.view.View;
 
-import edu.vandy.fwklib.model.ProgramState;
 import edu.vandy.fwklib.model.interfaces.ModelStateInterface;
-import edu.vandy.fwklib.utils.UiUtils;
 import edu.vandy.fwklib.view.interfaces.ViewInterface;
 
 /**
@@ -19,7 +16,7 @@ public class PresenterLogicUtils {
      * TAG for logging.
      */
     private final static String TAG =
-        PresenterLogicUtils.class.getCanonicalName();
+            PresenterLogicUtils.class.getCanonicalName();
 
     /**
      * Ensure this class is only used as a utility.
@@ -31,18 +28,17 @@ public class PresenterLogicUtils {
     /**
      * Reset and Start the Chronometer.
      *
-     * @param viewInterface
-     * 	the interface instance for interacting with the View Layer.
+     * @param viewInterface the interface instance for interacting with the View Layer.
      */
     public static <TestFunc> void resetAndStartChronometer(ViewInterface<TestFunc> viewInterface) {
         Log.d(TAG,
-              "resetAndStartChronometer(....)");
+                "resetAndStartChronometer(....)");
 
         // Run a new Runnable on the UI thread to reset and start the
         // Chronometer.
         viewInterface
-            .getFragmentActivity()
-            .runOnUiThread(() -> {
+                .getFragmentActivity()
+                .runOnUiThread(() -> {
                     viewInterface.chronometerStop();
                     viewInterface.chronometerSetBase(SystemClock.elapsedRealtime());
                     viewInterface.chronometerSetVisibility(true);
@@ -54,15 +50,13 @@ public class PresenterLogicUtils {
      * Reset the state and then display of the progress bars for each
      * test.
      *
-     * @param viewInterface
-     * 	the interface instance for interacting with the View Layer.
-     * @param modelStateInterface
-     * 	the interface instance for interacting with the Model Layer.
+     * @param viewInterface       the interface instance for interacting with the View Layer.
+     * @param modelStateInterface the interface instance for interacting with the Model Layer.
      */
     public static <TestFunc> void resetProgressBars(ViewInterface<TestFunc> viewInterface,
                                                     ModelStateInterface<TestFunc> modelStateInterface) {
         Log.d(TAG,
-              "resetProgressBars(....)");
+                "resetProgressBars(....)");
 
         // For each of the underlying TaskTuple(s) do the following:
         for (int counter = 0;
@@ -70,55 +64,8 @@ public class PresenterLogicUtils {
              counter++) {
             // Set the progress to 0.
             modelStateInterface.getTaskTuple(counter).setProgressStatus(0);
-            modelStateInterface.getTaskTuple(counter).setTimeCompletedString("");
+            modelStateInterface.getTaskTuple(counter).setTimeCompletedString("00:00:00");
         }
 
-    }
-
-    /**
-     * Helper method to reset Control UI elements.
-     *
-     * @param viewInterface
-     * 	Interface for interacting with View layer.
-     * @param modelStateInterface
-     * 	Interface for interacting with Model layer.
-     */
-    public static <TestFunc> void resetControlUI(ViewInterface<TestFunc> viewInterface,
-                                                 ModelStateInterface<TestFunc> modelStateInterface) {
-        Log.d(TAG,
-              "resetControlUI(....)");
-
-        // Runnable to be ran on the UI thread for actually resetting
-        // the UI's views and state.
-        Runnable resetUIRunnableCommand = () -> {
-            // Enable the EditText and clear the number of runs.
-            viewInterface.getCountEditText()
-                         .setEnabled(true);
-            viewInterface.getCountEditText()
-                         .getText()
-                         .clear();
-            viewInterface.getCountEditText()
-                         .setVisibility(View.INVISIBLE);
-
-            // Reset start/stop FAB.
-            UiUtils.hideFab(viewInterface.getFABStartOrStop());
-            viewInterface.getFABStartOrStop()
-                         .setImageResource(android.R.drawable.ic_media_play);
-            viewInterface.getFABStartOrStop()
-                         .setVisibility(View.INVISIBLE);
-
-            // Reset set FAB.
-            UiUtils.showFab(viewInterface.getFABSet());
-
-            // Stop the Chronometer.
-            viewInterface.getChronometer().stop();
-
-            // Set the app state.
-            modelStateInterface.setState(ProgramState.NEW);
-        };
-
-        // Run the command on the UI thread.
-        viewInterface.getFragmentActivity()
-                     .runOnUiThread(resetUIRunnableCommand);
     }
 }
