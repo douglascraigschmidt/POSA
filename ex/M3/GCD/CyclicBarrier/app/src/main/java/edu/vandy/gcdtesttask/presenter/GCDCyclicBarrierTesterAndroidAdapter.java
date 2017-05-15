@@ -1,4 +1,4 @@
-package edu.vandy.gcdtesttask.functionality;
+package edu.vandy.gcdtesttask.presenter;
 
 import edu.vandy.fwklib.model.TaskTuple;
 import edu.vandy.fwklib.utils.ProgressReporter;

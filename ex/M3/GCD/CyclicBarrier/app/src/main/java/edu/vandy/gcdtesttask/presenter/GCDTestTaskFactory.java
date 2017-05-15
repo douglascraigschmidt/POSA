@@ -1,4 +1,4 @@
-package edu.vandy.gcdtesttask.functionality;
+package edu.vandy.gcdtesttask.presenter;
 
 import java.util.AbstractMap;
 import java.util.AbstractMap.SimpleImmutableEntry;
@@ -17,6 +17,12 @@ import edu.vandy.fwklib.view.interfaces.ViewInterface;
  */
 public class GCDTestTaskFactory
         extends AbstractTestTaskFactory<GCDInterface> {
+    /**
+     * Default number of runs to fill EditText when button pressed if
+     * the user doesn't specify otherwise.
+     */
+    private final static long sDEFAULT_RUNS = 10000000;
+
     @Override
     public List<SimpleImmutableEntry<String, GCDInterface>> getFuncsAndNames() {
         // Return an ArrayList containing the name and function to
@@ -62,7 +68,6 @@ public class GCDTestTaskFactory
      */
     @Override
     public long setDefaultRuns() {
-        return 1000000;
+        return sDEFAULT_RUNS;
     }
-
 }

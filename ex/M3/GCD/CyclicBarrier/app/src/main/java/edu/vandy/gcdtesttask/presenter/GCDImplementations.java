@@ -1,4 +1,4 @@
-package edu.vandy.gcdtesttask.functionality;
+package edu.vandy.gcdtesttask.presenter;
 
 import java.math.BigInteger;
 
