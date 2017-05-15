@@ -140,7 +140,7 @@ public class GCDCyclicBarrierTestTask
             try {
                 // Execute each GCDInterface tester in the
                 // ExecutorService.
-                mQueuesTesters.forEach(mExecutor::execute);
+                mGcdTesters.forEach(mExecutor::execute);
                 
                 try {
                     // Create a runnable on the UI thread to

@@ -40,13 +40,13 @@ import edu.vandy.fwklib.view.interfaces.ViewInterface;
  * {@link TaskTuple} tuples of data.
  */
 public abstract class AbstractTestTaskFragment<TestFunc>
-         extends Fragment
-         implements ViewInterface<TestFunc> {
+        extends Fragment
+        implements ViewInterface<TestFunc> {
     /**
      * TAG used for logging to identify statements from this class.
      */
     public final static String TAG =
-        AbstractTestTaskFragment.class.getCanonicalName();
+            AbstractTestTaskFragment.class.getCanonicalName();
 
     /**
      * The AppCompatActivity that this Fragment is attached to.
@@ -84,9 +84,9 @@ public abstract class AbstractTestTaskFragment<TestFunc>
     @Override
     public void setData(@NonNull List<TaskTuple<TestFunc>> data) {
         Log.d(TAG,
-              "setData() : size: " + data.size());
+                "setData() : size: " + data.size());
         mRetainedState.mTasks
-                      .addAll(data);
+                .addAll(data);
         mListAdapter.notifyDataSetChanged();
     }
 
@@ -120,7 +120,7 @@ public abstract class AbstractTestTaskFragment<TestFunc>
     public void showToast(String stringValue) {
         // Forward to the UiUtils showToast() helper method.
         UiUtils.showToast(getActivity(),
-                          stringValue);
+                stringValue);
     }
 
     /**
@@ -140,7 +140,7 @@ public abstract class AbstractTestTaskFragment<TestFunc>
     public void onPause() {
         super.onPause();
         mRetainedState.mModelStateInterface
-                      .setTimeElapsed(getChronometer().getTimeElapsed());
+                .setTimeElapsed(getChronometer().getTimeElapsed());
     }
 
     /**
@@ -154,8 +154,8 @@ public abstract class AbstractTestTaskFragment<TestFunc>
             mActivity = (AppCompatActivity) context;
         else
             throw new ClassCastException
-                (context.toString()
-                 + " must implement MyListFragment.OnItemSelectedListener");
+                    (context.toString()
+                            + " must implement MyListFragment.OnItemSelectedListener");
     }
 
     /**
@@ -173,9 +173,20 @@ public abstract class AbstractTestTaskFragment<TestFunc>
      */
     public void setProgress(int uniqueID,
                             int progress) {
+
+        // if progress is 100% then store timestamp.
+        if (progress == 100) {
+            mRetainedState.mTasks
+                    .get(uniqueID)
+                    .setTimeCompletedString(
+                            mChronometerRef.get(0).get().getText().toString()
+                    );
+        }
+
         mRetainedState.mTasks
-                      .get(uniqueID)
-                      .setProgressStatus(progress);
+                .get(uniqueID)
+                .setProgressStatus(progress);
+
         mListAdapter.notifyDataSetChanged();
     }
 
@@ -194,8 +205,8 @@ public abstract class AbstractTestTaskFragment<TestFunc>
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View layout = inflater.inflate(R.layout.tester_task_fragment,
-                                       container,
-                                       false);
+                container,
+                false);
 
         // Initialize chronometer to use ChronometerUpdateInterface
         // default methods.
@@ -204,18 +215,18 @@ public abstract class AbstractTestTaskFragment<TestFunc>
         // Initialize count editText to use CountUpdateInterface
         // default methods.
         mCounterEditText = (EditText)
-            layout.findViewById(R.id.testerTaskCount);
+                layout.findViewById(R.id.testerTaskCount);
         initializeCounter(mCounterEditText, this);
 
         // Get the reference to the floating action button that sets
         // the count.
         FloatingActionButton setFab =
-            (FloatingActionButton) layout.findViewById(R.id.testerTaskSet_fab);
+                (FloatingActionButton) layout.findViewById(R.id.testerTaskSet_fab);
 
         // Set OnClickListener to notify Presenter Layer through
         // NotifyOfGUIActionsInterface of FAB press.
         setFab.setOnClickListener(view
-                                  -> mRetainedState.mPresenter.fabSetPressed(view));
+                -> mRetainedState.mPresenter.fabSetPressed(view));
 
         // Initialize fab with interface Defaults.
         initializeFABSet(setFab);
@@ -223,12 +234,12 @@ public abstract class AbstractTestTaskFragment<TestFunc>
         // Get the reference to the floating action button that
         // starts/stops processing.
         FloatingActionButton startOrStopFab =
-            (FloatingActionButton) layout.findViewById(R.id.testerTaskPlay_fab);
+                (FloatingActionButton) layout.findViewById(R.id.testerTaskPlay_fab);
 
         // Set OnClickListener to notify Presenter Layer through
         // NotifyOfGUIActionsInterface of FAB press.
         startOrStopFab.setOnClickListener(view
-                                          -> mRetainedState.mPresenter.fabStartStopPressed(view));
+                -> mRetainedState.mPresenter.fabStartStopPressed(view));
 
         // Initialize fab with interface Defaults
         initializeFABStartStop(startOrStopFab);
@@ -238,8 +249,8 @@ public abstract class AbstractTestTaskFragment<TestFunc>
 
         // Create an instance of the adapter (Adapts backend data & UI to work together)
         mListAdapter = new ListAdapter<>(getActivity(),
-                                         R.layout.tester_task_display_row,
-                                         (ArrayList<TaskTuple<TestFunc>>) mRetainedState.mTasks);
+                R.layout.tester_task_display_row,
+                (ArrayList<TaskTuple<TestFunc>>) mRetainedState.mTasks);
 
         // Set ListView to use Adapter
         mListView.setAdapter(mListAdapter);
@@ -247,11 +258,12 @@ public abstract class AbstractTestTaskFragment<TestFunc>
         return layout;
     }
 
+
     /**
      * This class stores app state that allows us to simplify handling
      * of runtime configuration changes.
      */
-    class RetainedState {
+    public class RetainedState {
         /**
          * This is the 'Model' in the MVP Pattern.  It stores the list
          * of 'tasks' to be operated upon and displayed.
@@ -276,34 +288,38 @@ public abstract class AbstractTestTaskFragment<TestFunc>
             // Create the Model layer.
             mModelStateInterface = new Model<>();
 
+
             // Create the task factory.
             final AbstractTestTaskFactory<TestFunc> testTaskFactory =
-                makeTaskFactory();
+                    makeTaskFactory();
 
             // Create the Presenter layer.
             mPresenter = new PresenterLogic<TestFunc>(view,
-                                                      mModelStateInterface) {
-                    /**
-                     * A factory method that returns an
-                     * AbstractTestTask to perform the tests.
-                     *
-                     * @param viewInterface         Reference to the View layer.
-                     * @param modelStateInterface   Reference to the Model layer.
-                     * @param presenterLogic        Reference to the Presenter layer.
-                     * @param numberOfTests         Number of tests to run.
-                     * @return A AbstractStateInterface to perform the tests.
-                     */
-                    @Override
-                    public AbstractTestTask<TestFunc> makeTestTask(ViewInterface<TestFunc> viewInterface,
-                                                                   ModelStateInterface<TestFunc> modelStateInterface,
-                                                                   PresenterLogic<TestFunc> presenterLogic,
-                                                                   int numberOfTests) {
-                        return testTaskFactory.makeTestTask(viewInterface,
-                                                            modelStateInterface,
-                                                            presenterLogic,
-                                                            numberOfTests);
-                    }
-                };
+                    mModelStateInterface) {
+                /**
+                 * A factory method that returns an
+                 * AbstractTestTask to perform the tests.
+                 *
+                 * @param viewInterface         Reference to the View layer.
+                 * @param modelStateInterface   Reference to the Model layer.
+                 * @param presenterLogic        Reference to the Presenter layer.
+                 * @param numberOfTests         Number of tests to run.
+                 * @return A AbstractStateInterface to perform the tests.
+                 */
+                @Override
+                public AbstractTestTask<TestFunc> makeTestTask(ViewInterface<TestFunc> viewInterface,
+                                                               ModelStateInterface<TestFunc> modelStateInterface,
+                                                               PresenterLogic<TestFunc> presenterLogic,
+                                                               int numberOfTests) {
+                    return testTaskFactory.makeTestTask(viewInterface,
+                            modelStateInterface,
+                            presenterLogic,
+                            numberOfTests);
+                }
+            };
+
+            // Set the number to use for Default Runs.
+            mModelStateInterface.setDefaultRuns(testTaskFactory.setDefaultRuns());
 
             // Initialize Model layer with reference to Presenter layer.
             mModelStateInterface.initializePresenterInterface(mPresenter);
@@ -317,6 +333,21 @@ public abstract class AbstractTestTaskFragment<TestFunc>
             // Set starting state of application.
             mModelStateInterface.setState(ProgramState.NEW);
         }
+
+        ViewState mViews = new ViewState();
+
+        class ViewState {
+
+            public boolean countVisible;
+            public boolean countEditable;
+            public boolean ChronoStarted;
+            public boolean ChronoVisible;
+            public long ChronoTime;
+            public long ChronoElapsed;
+
+
+        }
+
     }
 
     /**
@@ -327,7 +358,7 @@ public abstract class AbstractTestTaskFragment<TestFunc>
      */
     @Override
     public void onCreate(@Nullable
-                         Bundle savedInstanceState) {
+                                 Bundle savedInstanceState) {
         // Initialize super class.
         super.onCreate(savedInstanceState);
 
@@ -343,57 +374,48 @@ public abstract class AbstractTestTaskFragment<TestFunc>
      */
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        // Iniitalize the super class.
+        // Initialize the super class.
         super.onActivityCreated(savedInstanceState);
 
         if (savedInstanceState != null) {
             // If count EditText is visible, then set its settings.
-            if (savedInstanceState.getBoolean("countVisible")) {
+            if (mRetainedState.mViews.countVisible) {
                 mCounterEditText.setVisibility(View.VISIBLE);
-                mCounterEditText.setEnabled(savedInstanceState.getBoolean("countEditable"));
+                mCounterEditText.setEnabled(mRetainedState.mViews.countEditable);
             }
-
-            // Get all chronometer values from before hardware change.
-            boolean chronoStarted =
-                savedInstanceState.getBoolean("ChronoStarted", false);
-            boolean chronoVisible =
-                savedInstanceState.getBoolean("ChronoVisible", false);
-            long chronoTime =
-                savedInstanceState.getLong("ChronoTime");
-            long chronoElapsed =
-                savedInstanceState.getLong("ChronoElapsed");
 
             // If Chronometer is visible then determine its current
             // state and display that.
-            if (chronoVisible) {
+            if (mRetainedState.mViews.ChronoVisible) {
                 getChronometer().setVisibility(View.VISIBLE);
-                if (chronoStarted) {
+                if (mRetainedState.mViews.ChronoStarted) {
                     // Stop chronometer in case it is started, set
                     // base, and then restart.
                     chronometerStop();
-                    chronometerSetBase(chronoTime);
+                    chronometerSetBase(mRetainedState.mViews.ChronoTime);
                     chronometerStart();
                 } else {
                     // Make sure chronometer is stopped and then
-                    // display the result that was ] previously
+                    // display the result that was previously
                     // calculated.
                     chronometerStop();
-                    getChronometer().setBase(SystemClock.elapsedRealtime() - chronoElapsed);
+                    getChronometer().setBase(SystemClock.elapsedRealtime()
+                            - mRetainedState.mViews.ChronoElapsed);
                 }
             }
 
             // Set the Play/Stop FAB's appropriate image based on
             // application state.
             switch (mRetainedState.mModelStateInterface.getCurrentState()) {
-            case CANCELLED:
-                getFABStartOrStop().setImageResource(R.drawable.ic_autorenew_white_24dp);
-                break;
-            case RUNNING:
-                // change play fab to stop
-                getFABStartOrStop().setImageResource(android.R.drawable.ic_delete);
-                break;
-            default:
-                getFABStartOrStop().setImageResource(android.R.drawable.ic_media_play);
+                case CANCELLED:
+                    getFABStartOrStop().setImageResource(R.drawable.ic_autorenew_white_24dp);
+                    break;
+                case RUNNING:
+                    // change play fab to stop
+                    getFABStartOrStop().setImageResource(android.R.drawable.ic_delete);
+                    break;
+                default:
+                    getFABStartOrStop().setImageResource(android.R.drawable.ic_media_play);
             }
         }
     }
@@ -407,20 +429,21 @@ public abstract class AbstractTestTaskFragment<TestFunc>
     public void onSaveInstanceState(Bundle savedInstanceState) {
         // @@ Mike, can any of this code be moved into the RetainedState?
 
+
         // Save the current value of various GUI fields so they will be
         // available after a runtime configuration change.
-        savedInstanceState.putBoolean("countVisible",
-                                      mCounterEditText.getVisibility() == View.VISIBLE);
+        savedInstanceState.putBoolean("",
+                mCounterEditText.getVisibility() == View.VISIBLE);
         savedInstanceState.putBoolean("countEditable",
-                                      mCounterEditText.isEnabled());
+                mCounterEditText.isEnabled());
         savedInstanceState.putLong("ChronoTime",
-                                   getChronometer().getBase());
+                getChronometer().getBase());
         savedInstanceState.putBoolean("ChronoVisible",
-                                      getChronometer().getVisibility() == View.VISIBLE);
+                getChronometer().getVisibility() == View.VISIBLE);
         savedInstanceState.putBoolean("ChronoStarted",
-                                      getChronometer().getStarted());
+                getChronometer().getStarted());
         savedInstanceState.putLong("ChronoElapsed",
-                                   getChronometer().getTimeElapsed());
+                getChronometer().getTimeElapsed());
 
         // Call up to the super class.
         super.onSaveInstanceState(savedInstanceState);

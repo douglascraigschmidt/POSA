@@ -20,12 +20,6 @@ public class Model<TestFunc>
     private long mTimeElapsed;
 
     /**
-     * Default number of runs to fill EditText when button pressed if
-     * the user doesn't specify otherwise.
-     */
-    private long mDefaultRuns = 10000000;
-
-    /**
      * List of Task(s) stored as {@link TaskTuple}(s)
      */
     private List<TaskTuple<TestFunc>> mTasks;
@@ -68,27 +62,6 @@ public class Model<TestFunc>
     @Override
     public long getTimeElapsed() {
         return mTimeElapsed;
-    }
-
-    /**
-     * Get the number to use as a default number of test runs.
-     *
-     * @return long Default for the number of runs to test.
-     */
-    @Override
-    public long getDefaultRuns() {
-        return mDefaultRuns;
-    }
-
-    /**
-     * Set value to be used when filling UI with default number of
-     * tests to run.
-     *
-     * @param defaultRuns long value to use when requesting default
-     * test number.
-     */
-    public void setDefaultRuns(long defaultRuns) {
-        mDefaultRuns = defaultRuns;
     }
 
     /**

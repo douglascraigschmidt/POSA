@@ -87,8 +87,6 @@ public abstract class PresenterLogic<TestFunc>
                 enableConfigUI(view);
                 break;
             case ENABLED:
-                // @@ Mike, let's chat about how to fix this so that
-                // only one UI click is needed to add the default.
                 fillDefaultNumber(view);
                 break;
             case RUNNING:
@@ -137,6 +135,13 @@ public abstract class PresenterLogic<TestFunc>
 
         mViewInterface.getCountEditText()
                       .setVisibility(View.VISIBLE);
+        fillDefaultNumber(view);
+        // Reset the backend data for tracking of the Progress bars,
+        // and then update the UI.
+        PresenterLogicUtils.resetProgressBars(mViewInterface,
+                mModelStateInterface);
+        mViewInterface.notifyDataSetChanged();
+
         mViewInterface.chronometerSetBase(SystemClock.elapsedRealtime());
         mModelStateInterface.setState(ProgramState.ENABLED);
     }
@@ -335,9 +340,10 @@ public abstract class PresenterLogic<TestFunc>
      * Reset the UI to indicate that processing is complete.
      */
     private void processingFinished() {
-        mViewInterface.getFABStartOrStop()
-                      .setImageResource(android.R.drawable.ic_media_play);
-        mViewInterface.getCountEditText()
-                      .setEnabled(true);
+        Log.d("PRESENTER_LOGIC","processingFinished()");
+//        mViewInterface.getFABStartOrStop()
+//                      .setImageResource(android.R.drawable.ic_media_play);
+//        mViewInterface.getCountEditText()
+//                      .setEnabled(true);
     }
 }

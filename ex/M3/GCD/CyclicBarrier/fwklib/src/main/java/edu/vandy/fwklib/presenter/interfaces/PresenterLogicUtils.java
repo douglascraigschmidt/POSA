@@ -70,7 +70,9 @@ public class PresenterLogicUtils {
              counter++) {
             // Set the progress to 0.
             modelStateInterface.getTaskTuple(counter).setProgressStatus(0);
+            modelStateInterface.getTaskTuple(counter).setTimeCompletedString("");
         }
+
     }
 
     /**

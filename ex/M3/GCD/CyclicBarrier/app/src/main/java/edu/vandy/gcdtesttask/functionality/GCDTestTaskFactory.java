@@ -16,21 +16,21 @@ import edu.vandy.fwklib.view.interfaces.ViewInterface;
  * that actually runs them.
  */
 public class GCDTestTaskFactory
-       extends AbstractTestTaskFactory<GCDInterface> {
+        extends AbstractTestTaskFactory<GCDInterface> {
     @Override
     public List<SimpleImmutableEntry<String, GCDInterface>> getFuncsAndNames() {
         // Return an ArrayList containing the name and function to
         // test.
         return new ArrayList<SimpleImmutableEntry<String, GCDInterface>>() {
-            { 
+            {
                 add(new AbstractMap.SimpleImmutableEntry<>("BigInteger",
-                                               GCDImplementations::computeGCDBigInteger));
+                        GCDImplementations::computeGCDBigInteger));
                 add(new AbstractMap.SimpleImmutableEntry<>("Binary",
-                                               GCDImplementations::computeGCDBinary));
+                        GCDImplementations::computeGCDBinary));
                 add(new AbstractMap.SimpleImmutableEntry<>("IterativeEuclid",
-                                               GCDImplementations::computeGCDIterativeEuclid));
+                        GCDImplementations::computeGCDIterativeEuclid));
                 add(new AbstractMap.SimpleImmutableEntry<>("RecursiveEuclid",
-                                               GCDImplementations::computeGCDRecursiveEuclid));
+                        GCDImplementations::computeGCDRecursiveEuclid));
             }
         };
     }
@@ -50,8 +50,19 @@ public class GCDTestTaskFactory
                                                        PresenterLogic<GCDInterface> presenterLogic,
                                                        int numberOfTests) {
         return new GCDCyclicBarrierTestTask(viewInterface,
-                                            modelStateInterface,
-                                            presenterLogic,
-                                            numberOfTests);
+                modelStateInterface,
+                presenterLogic,
+                numberOfTests);
     }
+
+    /**
+     * Set the default number to fill the on-screen prompt with.
+     *
+     * @return long Default Number of Runs.
+     */
+    @Override
+    public long setDefaultRuns() {
+        return 1000000;
+    }
+
 }

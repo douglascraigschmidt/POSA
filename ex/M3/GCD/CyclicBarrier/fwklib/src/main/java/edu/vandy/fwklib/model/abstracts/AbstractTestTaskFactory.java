@@ -68,4 +68,6 @@ abstract public class AbstractTestTaskFactory<TestFunc> {
                                                             ModelStateInterface<TestFunc> modelStateInterface,
                                                             PresenterLogic<TestFunc> presenterLogic,
                                                             int numberOfTests);
+
+    abstract public long setDefaultRuns();
 }

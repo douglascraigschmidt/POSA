@@ -16,18 +16,27 @@
         android:id="@+id/TesterTaskProgressCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
+        android:layout_toLeftOf="@+id/completionTime"
+        android:layout_marginRight="5dp"
         android:layout_alignParentTop="true"
         android:text="count"/>
 
     <ProgressBar
         android:id="@+id/TesterTaskProgressBar"
         style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-        android:layout_width="400dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
 
         android:layout_alignParentStart="true"
         android:layout_below="@id/TesterTaskProgressCount"
         android:indeterminate="false"
-        android:max="100"/>
+        android:max="100" />
+
+    <TextView
+        android:id="@+id/completionTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:text="time" />
 </RelativeLayout>

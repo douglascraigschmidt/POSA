@@ -22,12 +22,12 @@ import java.util.ArrayList;
  * Custom adapter for list of TaskTuples.
  */
 public class ListAdapter<TestFunc>
-	extends ArrayAdapter<TaskTuple<TestFunc>> {
+        extends ArrayAdapter<TaskTuple<TestFunc>> {
     /**
      * TAG used for logging.
      */
     private final static String TAG =
-        ListAdapter.class.getCanonicalName();
+            ListAdapter.class.getCanonicalName();
 
     /**
      * Reference to the Layout File to be used for creating each row of the ListView
@@ -47,19 +47,16 @@ public class ListAdapter<TestFunc>
     /**
      * Constructor
      *
-     * @param context
-     * 	The {@link Context} used to create the UI components.
-     * @param layoutResourceID
-     * 	The Layout Resource used to create each ListView's rows.
-     * @param objects
-     * 	The underlying set of data to be tracked and displayed dynamically.
+     * @param context          The {@link Context} used to create the UI components.
+     * @param layoutResourceID The Layout Resource used to create each ListView's rows.
+     * @param objects          The underlying set of data to be tracked and displayed dynamically.
      */
     public ListAdapter(Context context,
                        int layoutResourceID,
                        ArrayList<TaskTuple<TestFunc>> objects) {
         super(context,
-              layoutResourceID,
-              objects);
+                layoutResourceID,
+                objects);
         Log.d(TAG,
                 "constructor() : size: " + "" + objects.size());
 
@@ -67,7 +64,7 @@ public class ListAdapter<TestFunc>
         mLayoutResourceID = layoutResourceID;
         mTaskList = objects;
         mInflater = (LayoutInflater) context
-            .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     /**
@@ -82,10 +79,10 @@ public class ListAdapter<TestFunc>
         final ViewHolder viewHolder;
         if (convertView == null) {
             convertView = mInflater.inflate(mLayoutResourceID,
-                                            parent,
-                                            false);
+                    parent,
+                    false);
             viewHolder =
-                new ViewHolder(convertView);
+                    new ViewHolder(convertView);
             convertView.setTag(viewHolder);
         } else
             //noinspection unchecked
@@ -106,7 +103,7 @@ public class ListAdapter<TestFunc>
     public void notifyDataSetChanged() {
         super.notifyDataSetChanged();
         Log.v("List Adapter",
-              "notify data set changed: " + mTaskList.size());
+                "notify data set changed: " + mTaskList.size());
     }
 
     /**
@@ -131,6 +128,11 @@ public class ListAdapter<TestFunc>
         ProgressBar mPbTask;
 
         /**
+         * Completion Time TextView
+         */
+        TextView mCompletionTime;
+
+        /**
          * Helper method to set the UI elements of this ListView row's
          * instance based on the {@link TaskTuple} being tested.
          */
@@ -139,21 +141,23 @@ public class ListAdapter<TestFunc>
             mTvTaskDesc.setText(String.format("%s", t.getTestName()));
             mPbTask.setProgress(t.getProgressStatus());
             mTvTaskCount.setText(String.format("%d%%", t.getProgressStatus()));
+            mCompletionTime.setText(String.format("%s", t.getTimeCompletedString()));
         }
 
         /**
          * Constructor
          *
-         * @param parentView
-         * 	The Parent View of each Row's UI Elements.
+         * @param parentView The Parent View of each Row's UI Elements.
          */
         ViewHolder(View parentView) {
             mTvTaskDesc = (TextView)
-                parentView.findViewById(R.id.TesterTaskTestName);
+                    parentView.findViewById(R.id.TesterTaskTestName);
             mTvTaskCount = (TextView)
-                parentView.findViewById(R.id.TesterTaskProgressCount);
+                    parentView.findViewById(R.id.TesterTaskProgressCount);
             mPbTask = (ProgressBar)
-                parentView.findViewById(R.id.TesterTaskProgressBar);
+                    parentView.findViewById(R.id.TesterTaskProgressBar);
+            mCompletionTime = (TextView)
+                    parentView.findViewById(R.id.completionTime);
         }
     }
 
@@ -170,9 +174,7 @@ public class ListAdapter<TestFunc>
     /**
      * Get the {@link TaskTuple} at the desired position.
      *
-     * @param position
-     * 	Determines which {@link TaskTuple} to return.
-     *
+     * @param position Determines which {@link TaskTuple} to return.
      * @return The target {@link TaskTuple}.
      */
     @Override
@@ -186,9 +188,7 @@ public class ListAdapter<TestFunc>
      * and or underlying data-store work. In this Adapter they are 1
      * to 1 though.)
      *
-     * @param position
-     * 	The position to get the Item ID of.
-     *
+     * @param position The position to get the Item ID of.
      * @return the Item ID of the value stored at 'position'.
      */
     @Override
@@ -199,9 +199,7 @@ public class ListAdapter<TestFunc>
     /**
      * Add a new {@link TaskTuple} to the adapter
      *
-     * @param newTask
-     * 	new {@link TaskTuple} to track & display.
-     *
+     * @param newTask new {@link TaskTuple} to track & display.
      * @return number of {@link TaskTuple} stored in adapter now.
      */
     public int addTask(TaskTuple<TestFunc> newTask) {

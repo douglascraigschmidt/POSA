@@ -32,6 +32,8 @@ public class TaskTuple<TestFunc> {
      */
     private ProgressBarInterface mProgressBar;
 
+    private String mTimeCompletedString = "";
+
     /**
      * Constructor initializes the fields.
      */
@@ -85,8 +87,8 @@ public class TaskTuple<TestFunc> {
      */
     private void incrementProgress(int increment) {
         mProgressBar.setProgress(mTaskUniqueId,
-                                 mProgressStatus
-                                 + increment);
+                mProgressStatus
+                        + increment);
     }
 
     /**
@@ -101,5 +103,23 @@ public class TaskTuple<TestFunc> {
      */
     public int getProgressStatus() {
         return mProgressStatus;
+    }
+
+    /**
+     * Get the time as a String that this task took to complete.
+     *
+     * @return TimeCompletedString String representation of Time Taken, null if not yet completed.
+     */
+    public String getTimeCompletedString() {
+        return mTimeCompletedString;
+    }
+
+    /**
+     * Store the time taken to complete this task.
+     *
+     * @param timeCompletedString String Time taken to complete this task.
+     */
+    public void setTimeCompletedString(String timeCompletedString) {
+        mTimeCompletedString = timeCompletedString;
     }
 }

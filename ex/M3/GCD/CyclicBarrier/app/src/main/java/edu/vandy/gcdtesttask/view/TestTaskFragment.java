@@ -1,5 +1,8 @@
 package edu.vandy.gcdtesttask.view;
 
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+
 import edu.vandy.gcdtesttask.functionality.GCDTestTaskFactory;
 import edu.vandy.fwklib.view.abstracts.AbstractTestTaskFragment;
 import edu.vandy.fwklib.model.abstracts.AbstractTestTaskFactory;
@@ -10,6 +13,13 @@ import edu.vandy.gcdtesttask.functionality.GCDInterface;
  */
 public class TestTaskFragment
        extends AbstractTestTaskFragment<GCDInterface> {
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+    }
+
     /**
      * Get the task factory used to create TaskTuple(s).
      *
