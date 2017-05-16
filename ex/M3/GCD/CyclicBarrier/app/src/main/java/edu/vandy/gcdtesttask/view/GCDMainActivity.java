@@ -2,7 +2,7 @@ package edu.vandy.gcdtesttask.view;
 
 import android.support.v4.app.Fragment;
 
-import edu.vandy.fwklib.view.AbstractMainFragmentActivity;
+import edu.vandy.visfwk.view.AbstractMainFragmentActivity;
 
 /**
  * The main (Fragment) Activity of the GCD app that showcases the

@@ -3,8 +3,8 @@ package edu.vandy.gcdtesttask.presenter;
 import java.util.Random;
 import java.util.concurrent.CyclicBarrier;
 
-import edu.vandy.fwklib.model.TaskTuple;
-import edu.vandy.fwklib.utils.ProgressReporter;
+import edu.vandy.visfwk.model.TaskTuple;
+import edu.vandy.visfwk.utils.ProgressReporter;
 
 /**
  * The class tests various GCDInterface implementations using CyclicBarriers.

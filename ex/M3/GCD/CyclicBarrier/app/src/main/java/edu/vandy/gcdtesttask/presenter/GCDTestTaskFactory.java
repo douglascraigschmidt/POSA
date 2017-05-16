@@ -5,11 +5,11 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.vandy.fwklib.model.abstracts.AbstractTestTask;
-import edu.vandy.fwklib.model.abstracts.AbstractTestTaskFactory;
-import edu.vandy.fwklib.model.interfaces.ModelStateInterface;
-import edu.vandy.fwklib.presenter.PresenterLogic;
-import edu.vandy.fwklib.view.interfaces.ViewInterface;
+import edu.vandy.visfwk.model.abstracts.AbstractTestTask;
+import edu.vandy.visfwk.model.abstracts.AbstractTestTaskFactory;
+import edu.vandy.visfwk.model.interfaces.ModelStateInterface;
+import edu.vandy.visfwk.presenter.PresenterLogic;
+import edu.vandy.visfwk.view.interfaces.ViewInterface;
 
 /**
  * Factory class that creates the list of tests to run and the task

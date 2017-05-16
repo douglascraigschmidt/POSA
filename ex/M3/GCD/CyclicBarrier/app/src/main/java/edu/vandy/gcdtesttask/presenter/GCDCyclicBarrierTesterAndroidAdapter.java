@@ -1,8 +1,8 @@
 package edu.vandy.gcdtesttask.presenter;
 
-import edu.vandy.fwklib.model.TaskTuple;
-import edu.vandy.fwklib.utils.ProgressReporter;
-import edu.vandy.fwklib.view.interfaces.ViewInterface;
+import edu.vandy.visfwk.model.TaskTuple;
+import edu.vandy.visfwk.utils.ProgressReporter;
+import edu.vandy.visfwk.view.interfaces.ViewInterface;
 
 import java.util.concurrent.CyclicBarrier;
 

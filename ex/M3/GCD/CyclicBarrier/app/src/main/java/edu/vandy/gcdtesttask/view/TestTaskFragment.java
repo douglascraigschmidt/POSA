@@ -1,11 +1,8 @@
 package edu.vandy.gcdtesttask.view;
 
-import android.os.Bundle;
-import android.support.annotation.Nullable;
-
 import edu.vandy.gcdtesttask.presenter.GCDTestTaskFactory;
-import edu.vandy.fwklib.view.abstracts.AbstractTestTaskFragment;
-import edu.vandy.fwklib.model.abstracts.AbstractTestTaskFactory;
+import edu.vandy.visfwk.view.abstracts.AbstractTestTaskFragment;
+import edu.vandy.visfwk.model.abstracts.AbstractTestTaskFactory;
 import edu.vandy.gcdtesttask.presenter.GCDInterface;
 
 /**

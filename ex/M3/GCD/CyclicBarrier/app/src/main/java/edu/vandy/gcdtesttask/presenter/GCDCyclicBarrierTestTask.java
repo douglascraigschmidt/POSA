@@ -3,12 +3,12 @@ package edu.vandy.gcdtesttask.presenter;
 import android.os.SystemClock;
 import android.util.Log;
 
-import edu.vandy.fwklib.model.TaskTuple;
-import edu.vandy.fwklib.model.abstracts.AbstractTestTask;
-import edu.vandy.fwklib.model.interfaces.ModelStateInterface;
-import edu.vandy.fwklib.presenter.interfaces.PresenterInterface;
-import edu.vandy.fwklib.utils.ProgressReporter;
-import edu.vandy.fwklib.view.interfaces.ViewInterface;
+import edu.vandy.visfwk.model.TaskTuple;
+import edu.vandy.visfwk.model.abstracts.AbstractTestTask;
+import edu.vandy.visfwk.model.interfaces.ModelStateInterface;
+import edu.vandy.visfwk.presenter.interfaces.PresenterInterface;
+import edu.vandy.visfwk.utils.ProgressReporter;
+import edu.vandy.visfwk.view.interfaces.ViewInterface;
 
 import java.util.List;
 import java.util.concurrent.CyclicBarrier;
