@@ -8,11 +8,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 
-import edu.vandy.fwklib.model.TaskTuple;
-import edu.vandy.fwklib.utils.ProgressReporter;
-import edu.vandy.gcdtesttask.functionality.GCDCyclicBarrierTester;
-import edu.vandy.gcdtesttask.functionality.GCDImplementations;
-import edu.vandy.gcdtesttask.functionality.GCDInterface;
+import edu.vandy.visfwk.model.TaskTuple;
+import edu.vandy.visfwk.utils.ProgressReporter;
+import edu.vandy.gcdtesttask.presenter.GCDCyclicBarrierTester;
+import edu.vandy.gcdtesttask.presenter.GCDImplementations;
+import edu.vandy.gcdtesttask.presenter.GCDInterface;
 
 /**
  * This JUnit test evaluates the GCDCyclicBarrierTest class.
