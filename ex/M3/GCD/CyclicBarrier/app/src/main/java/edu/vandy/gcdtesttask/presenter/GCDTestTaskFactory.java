@@ -29,14 +29,14 @@ public class GCDTestTaskFactory
         // test.
         return new ArrayList<SimpleImmutableEntry<String, GCDInterface>>() {
             {
-                add(new AbstractMap.SimpleImmutableEntry<>("BigInteger",
-                        GCDImplementations::computeGCDBigInteger));
-                add(new AbstractMap.SimpleImmutableEntry<>("Binary",
-                        GCDImplementations::computeGCDBinary));
                 add(new AbstractMap.SimpleImmutableEntry<>("IterativeEuclid",
-                        GCDImplementations::computeGCDIterativeEuclid));
+                                                           GCDImplementations::computeGCDIterativeEuclid));
                 add(new AbstractMap.SimpleImmutableEntry<>("RecursiveEuclid",
-                        GCDImplementations::computeGCDRecursiveEuclid));
+                                                           GCDImplementations::computeGCDRecursiveEuclid));
+                add(new AbstractMap.SimpleImmutableEntry<>("Binary",
+                                                           GCDImplementations::computeGCDBinary));
+                add(new AbstractMap.SimpleImmutableEntry<>("BigInteger",
+                                                           GCDImplementations::computeGCDBigInteger));
             }
         };
     }

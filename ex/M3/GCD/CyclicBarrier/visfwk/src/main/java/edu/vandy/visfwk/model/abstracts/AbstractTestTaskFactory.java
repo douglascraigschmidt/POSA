@@ -15,7 +15,7 @@ import static java.util.stream.Collectors.toList;
  * Super class for factory classes that create the list of tasks to
  * test and the actual AsyncTask to test them on Android.
  */
-abstract public class AbstractTestTaskFactory<TestFunc> {
+public abstract class AbstractTestTaskFactory<TestFunc> {
     /**
      * Return the list of TaskTuples to test.
      */
@@ -64,10 +64,15 @@ abstract public class AbstractTestTaskFactory<TestFunc> {
      * @param numberOfTests       Number of tests to run.
      * @return An AbstractTestTask to perform the tests.
      */
-    abstract public AbstractTestTask<TestFunc> makeTestTask(ViewInterface<TestFunc> viewInterface,
+    public abstract AbstractTestTask<TestFunc> makeTestTask(ViewInterface<TestFunc> viewInterface,
                                                             ModelStateInterface<TestFunc> modelStateInterface,
                                                             PresenterLogic<TestFunc> presenterLogic,
                                                             int numberOfTests);
 
-    abstract public long setDefaultRuns();
+    /**
+     * Set the default number to fill the on-screen prompt with.
+     *
+     * @return long Default Number of Runs.
+     */
+    public abstract long setDefaultRuns();
 }

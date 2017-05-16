@@ -74,7 +74,7 @@ public abstract class PresenterLogic<TestFunc>
                                                                int numberOfTests);
 
     /**
-     * Set Fab was pressed.
+     * Handle the situation where there fabSet button was pressed.
      *
      * @param view The View that was pressed.
      */
@@ -84,7 +84,6 @@ public abstract class PresenterLogic<TestFunc>
                 "fabSetPressed(...)" + mModelStateInterface.getCurrentState());
 
         switch (mModelStateInterface.getCurrentState()) {
-
             case ENABLED:
                 break;
             case RUNNING:
@@ -142,31 +141,31 @@ public abstract class PresenterLogic<TestFunc>
      */
     private void startTests(View view) {
         Log.d(TAG,
-                "startTests() Started");
+              "startTests() Started");
 
         int numberOfTests;
 
         // Try to get # from the EditText and handle any exceptions.
         try {
             numberOfTests =
-                    Integer.valueOf(mViewInterface
-                            .getCountEditText()
-                            .getText()
-                            .toString()
-                            .trim());
+                Integer.valueOf(mViewInterface
+                                .getCountEditText()
+                                .getText()
+                                .toString()
+                                .trim());
         } catch (Exception ex) {
             if (ex instanceof NullPointerException) {
                 Log.d(TAG,
-                        "The text input for numbers was null");
+                      "The text input for numbers was null");
                 mViewInterface.showToast("Set number of runs");
             } else if (ex instanceof NumberFormatException) {
                 Log.d(TAG,
-                        "The text input was not a number");
+                      "The text input was not a number");
                 mViewInterface.showToast("Value entered for number of runs is empty"
-                        + " or is not a number.");
+                                         + " or is not a number.");
             }
             Log.d(TAG,
-                    "unknown Exception occurred" + ex.getMessage());
+                  "unknown Exception occurred" + ex.getMessage());
             return;
         }
 
@@ -177,9 +176,9 @@ public abstract class PresenterLogic<TestFunc>
 
             // Create the test task.
             mTestTask = makeTestTask(mViewInterface,
-                    mModelStateInterface,
-                    this,
-                    numberOfTests);
+                                     mModelStateInterface,
+                                     this,
+                                     numberOfTests);
 
             // Execute the test task.
             mTestTask.execute(sCYCLES);
@@ -226,28 +225,28 @@ public abstract class PresenterLogic<TestFunc>
     @Override
     public void notifyOfStateChange() {
         ProgramState state =
-                mModelStateInterface.getCurrentState();
+            mModelStateInterface.getCurrentState();
         Log.d(TAG,
-                "notifyOfStateChange(...)" + state);
+              "notifyOfStateChange(...)" + state);
 
         switch (state) {
-            case NEW:
-                processingNew();
-                break;
-            case ENABLED:
-                processingEnabled();
-                break;
-            case RUNNING:
-                processingRunning();
-                break;
-            case CANCELLED:
-                processingCancelled();
-                break;
-            case FINISHED:
-                processingFinished();
-                break;
-            default:
-                break;
+        case NEW:
+            processingNew();
+            break;
+        case ENABLED:
+            processingEnabled();
+            break;
+        case RUNNING:
+            processingRunning();
+            break;
+        case CANCELLED:
+            processingCancelled();
+            break;
+        case FINISHED:
+            processingFinished();
+            break;
+        default:
+            break;
         }
     }
 
@@ -255,35 +254,35 @@ public abstract class PresenterLogic<TestFunc>
      * Update the UI to represent being in the New State.
      */
     private void processingNew() {
-
-        // Stop & Set the Chronometer to be invisible
+        // Stop and set the Chronometer to be invisible.
         mViewInterface.getChronometer()
-                .stop();
+                      .stop();
         mViewInterface.getChronometer()
-                .setVisibility(View.INVISIBLE);
+                      .setVisibility(View.INVISIBLE);
 
         // Reset the backend data for tracking of the Progress bars,
         // and then update the UI.
         PresenterLogicUtils.resetProgressBars(mViewInterface,
-                mModelStateInterface);
+                                              mModelStateInterface);
         // Notify the View Layer that the data(Model) has changed.
         mViewInterface.notifyDataSetChanged();
 
         // reset FABs, hide play/stop and show set.
         UiUtils.hideFab(mViewInterface.getFABStartOrStop());
         mViewInterface.getFABStartOrStop()
-                .setImageResource(android.R.drawable.ic_media_play);
+                      .setImageResource(android.R.drawable.ic_media_play);
         mViewInterface.getFABStartOrStop()
-                .setVisibility(View.INVISIBLE);
+                      .setVisibility(View.INVISIBLE);
         UiUtils.showFab(mViewInterface.getFABSet());
 
         // clear and make invisible the EditText for run count.
         mViewInterface.getCountEditText()
-                .getText()
-                .clear();
+                      .getText()
+                      .clear();
         mViewInterface.getCountEditText()
-                .setVisibility(View.INVISIBLE);
-        mViewInterface.getCountEditText().setEnabled(true);
+                      .setVisibility(View.INVISIBLE);
+        mViewInterface.getCountEditText()
+                      .setEnabled(true);
 
     }
 
@@ -294,41 +293,43 @@ public abstract class PresenterLogic<TestFunc>
 
         // Enable the EditText, clear the number of runs, and fill default.
         mViewInterface.getCountEditText()
-                .setEnabled(true);
+                      .setEnabled(true);
         mViewInterface.getCountEditText()
-                .getText()
-                .clear();
+                      .getText()
+                      .clear();
         mViewInterface.getCountEditText()
-                .setVisibility(View.VISIBLE);
+                     .setVisibility(View.VISIBLE);
 
         // Request focus to EditText and open onscreen keypad
         mViewInterface.getCountEditText().requestFocus();
-        InputMethodManager imm = (InputMethodManager) mViewInterface.getCountEditText().getContext()
-                .getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.showSoftInput(mViewInterface.getCountEditText(), InputMethodManager.SHOW_IMPLICIT);
+        InputMethodManager imm = (InputMethodManager)
+            mViewInterface.getCountEditText()
+                          .getContext()
+                          .getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInput(mViewInterface.getCountEditText(),
+                          InputMethodManager.SHOW_IMPLICIT);
 
         mViewInterface.getFABStartOrStop()
-                .setImageResource(android.R.drawable.ic_media_play);
+                      .setImageResource(android.R.drawable.ic_media_play);
     }
 
     /**
      * Update the UI to represent being in the Running State.
      */
     private void processingRunning() {
-
         // Disable edit text.
-        mViewInterface.getCountEditText().setEnabled(false);
+        mViewInterface.getCountEditText()
+                      .setEnabled(false);
 
         // Hide set FAB.
         UiUtils.hideFab(mViewInterface.getFABSet());
 
         // Change play fab to stop.
         mViewInterface.getFABStartOrStop()
-                .setImageResource(android.R.drawable.ic_delete);
+                      .setImageResource(android.R.drawable.ic_delete);
 
         // Start running the chronometer.
         PresenterLogicUtils.resetAndStartChronometer(mViewInterface);
-
     }
 
     /**
@@ -336,8 +337,9 @@ public abstract class PresenterLogic<TestFunc>
      */
     private void processingFinished() {
         mViewInterface.getFABStartOrStop()
-                .setImageResource(R.drawable.ic_autorenew_white_24dp);
-        mViewInterface.getChronometer().stop();
+                      .setImageResource(R.drawable.ic_autorenew_white_24dp);
+        mViewInterface.getChronometer()
+                      .stop();
     }
 
     /**
@@ -346,11 +348,10 @@ public abstract class PresenterLogic<TestFunc>
     private void processingCancelled() {
         // Set the start/stop FAB to have 'refresh' image.
         mViewInterface.getFABStartOrStop()
-                .setImageResource(R.drawable.ic_autorenew_white_24dp);
+                      .setImageResource(R.drawable.ic_autorenew_white_24dp);
 
         // Stop the Chronometer from continuing to count.
         mViewInterface.getChronometer()
-                .stop();
+                      .stop();
     }
-
 }

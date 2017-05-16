@@ -14,7 +14,7 @@ import edu.vandy.visfwk.view.interfaces.ViewInterface;
  */
 @SuppressWarnings("WeakerAccess")
 public abstract class AbstractTestTask<TestFunc>
-        extends AsyncTask<Integer, Runnable, Void> {
+       extends AsyncTask<Integer, Runnable, Void> {
     /**
      * TAG used for logging.
      */
@@ -88,7 +88,7 @@ public abstract class AbstractTestTask<TestFunc>
                 "onProgressUpdate(...)");
         for (Runnable runnable : values)
             mViewInterface.getFragmentActivity()
-                    .runOnUiThread(runnable);
+                          .runOnUiThread(runnable);
     }
 
     /**
@@ -108,6 +108,5 @@ public abstract class AbstractTestTask<TestFunc>
         Log.d(TAG,
                 "onCancelled(...)");
         mFlaggedToCancel = true;
-
     }
 }

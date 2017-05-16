@@ -12,7 +12,6 @@ import java.util.List;
  * Interface for getting the program's runtime state and values.
  */
 public interface ModelStateInterface<TestFunc> {
-
     /*
      * Local Storage to be inherited by class(s) implementing this Interface.
      */
@@ -21,7 +20,7 @@ public interface ModelStateInterface<TestFunc> {
      * Current State of the program.
      */
     ArrayList<ProgramState> mProgramState =
-            new ArrayList<>(1);
+        new ArrayList<>(1);
 
     /**
      * Default number of runs to fill EditText when button pressed if
@@ -36,7 +35,7 @@ public interface ModelStateInterface<TestFunc> {
      * with Defaults as a means to achieve multiple inheritance.
      */
     ArrayList<WeakReference<PresenterInterface>> mPresenterInterfaceRef =
-            new ArrayList<>(1);
+        new ArrayList<>(1);
 
     /*
      * Default Methods inherited by class(s) implementing this Interface.
@@ -67,7 +66,7 @@ public interface ModelStateInterface<TestFunc> {
 
         // Add the new state.
         mProgramState.add(0,
-                state);
+                          state);
 
         // notify the presenter layer that the state has changed.
         getPresenterInterface().notifyOfStateChange();
@@ -82,7 +81,7 @@ public interface ModelStateInterface<TestFunc> {
             mPresenterInterfaceRef.remove(0);
 
         mPresenterInterfaceRef.add(0,
-                new WeakReference<>(presenterInterface));
+                                   new WeakReference<>(presenterInterface));
         mProgramState.add(ProgramState.NEW);
     }
 
@@ -93,7 +92,7 @@ public interface ModelStateInterface<TestFunc> {
      */
     default PresenterInterface getPresenterInterface() {
         PresenterInterface presenter =
-                mPresenterInterfaceRef.get(0).get();
+            mPresenterInterfaceRef.get(0).get();
 
         if (presenter == null)
             throw new RuntimeException("PresenterInterface Uninitialized");
@@ -185,6 +184,5 @@ public interface ModelStateInterface<TestFunc> {
      * @return All of the {@link TaskTuple}(s).
      */
     List<TaskTuple<TestFunc>> getTestTasks();
-
 }
 

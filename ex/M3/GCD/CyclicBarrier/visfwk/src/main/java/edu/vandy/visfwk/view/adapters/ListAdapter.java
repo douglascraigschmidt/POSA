@@ -29,7 +29,8 @@ public class ListAdapter<TestFunc>
             ListAdapter.class.getCanonicalName();
 
     /**
-     * Reference to the Layout File to be used for creating each row of the ListView
+     * Reference to the Layout File to be used for creating each row
+     * of the ListView
      */
     private int mLayoutResourceID;
 

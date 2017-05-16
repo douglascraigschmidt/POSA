@@ -32,6 +32,9 @@ public class TaskTuple<TestFunc> {
      */
     private ProgressBarInterface mProgressBar;
 
+    /**
+     * String used to keep track of the time that's completed.
+     */
     private String mTimeCompletedString = "00:00:00";
 
     /**
@@ -108,7 +111,8 @@ public class TaskTuple<TestFunc> {
     /**
      * Get the time as a String that this task took to complete.
      *
-     * @return TimeCompletedString String representation of Time Taken, null if not yet completed.
+     * @return TimeCompletedString String representation of time
+     * taken, null if not yet completed.
      */
     public String getTimeCompletedString() {
         return mTimeCompletedString;
