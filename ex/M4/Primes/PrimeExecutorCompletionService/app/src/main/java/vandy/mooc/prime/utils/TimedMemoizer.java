@@ -222,47 +222,37 @@ public class TimedMemoizer<K, V>
      * not used within the timeout passed to the constructor.
      */
     public V apply(K key) {
-        // Try to find the key in the cache.
-        RefCountedValue<V> rcValue = mCache.get(key);
+        // Try to find the key in the cache.  If the key isn't present
+        // then atomically compute the value associated with the key
+        // and return a unique RefCountedValue associated with it.
+        RefCountedValue<V> rcValue = mCache.computeIfAbsent
+            (key,
+             (k) -> {
+                // Determine if this is the first entry added to the
+                // cache after it was empty and invoke the lambda
+                // expression if so.
+                mCacheCount.incrementAndCallAtN
+                (1,
+                 () -> {
+                    if (mScheduledExecutorService != null) {
+                        Log.d(TAG,
+                              "scheduling mPurgeEntries for key "
+                              + key);
 
-        // If the key isn't present then compute its value.
-        if (rcValue == null)
-            // If the key isn't present then atomically compute the
-            // value associated with the key and return a unique
-            // RefCountedValue associated with it.
-            rcValue = mCache.computeIfAbsent
-                (key,
-                 (k) -> {
-                    // Determine if this is the first entry added to
-                    // the cache after it was empty and invoke the
-                    // lambda expression if so.
-                    mCacheCount.incrementAndCallAtN
-                        (1,
-                         () -> {
-                            if (mScheduledExecutorService != null) {
-                                Log.d(TAG,
-                                      "scheduling mPurgeEntries for key "
-                                      + key);
+                        // Schedule a runnable to purge keys
+                        // not accessed recently.
+                        mScheduledFuture =
+                        mScheduledExecutorService.scheduleAtFixedRate
+                        (mPurgeEntries,
+                         mTimeoutInMillisecs, // Initial timeout
+                         mTimeoutInMillisecs, // Periodic timeout
+                         TimeUnit.MILLISECONDS);
+                    }});
 
-                                // Schedule a runnable to purge keys
-                                // not accessed recently.
-                                mScheduledFuture =
-                                mScheduledExecutorService.scheduleAtFixedRate
-                                    (mPurgeEntries,
-                                     mTimeoutInMillisecs, // Initial timeout
-                                     mTimeoutInMillisecs, // Periodic timeout
-                                     TimeUnit.MILLISECONDS);
-                            }});
-
-                    // Apply the function store/return the result.
-                    return new RefCountedValue<>(mFunction.apply(k),
-                                                 0);
-                });
-        else
-            Log.d(TAG,
-                  "key "
-                  + key
-                  + "'s value was retrieved from the cache");
+                // Apply the function store/return the result.
+                return new RefCountedValue<>(mFunction.apply(k),
+                                             0);
+             });
 
         // Return the value of the rcValue.
         return rcValue.get();

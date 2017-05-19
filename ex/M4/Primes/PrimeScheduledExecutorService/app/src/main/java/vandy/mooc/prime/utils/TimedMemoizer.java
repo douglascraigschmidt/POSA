@@ -267,31 +267,10 @@ public class TimedMemoizer<K, V>
      * not used within the timeout passed to the constructor.
      */
     public V apply(K key) {
-        // Try to find the key in the cache.
-        RefCountedValue<V> rcValue = mCache.get(key);
-
-        // If the key isn't present then compute its value.
-        if (rcValue == null)
-            rcValue = computeValue(key);
-        else
-            Log.d(TAG,
-                  "key "
-                  + key
-                  + "'s value was retrieved from the cache");
-
-        // Return the value of the rcValue.
-        return rcValue.get();
-    }
-
-    /**
-     * Compute the value associated with the key and return a
-     * unique RefCountedValue associated with it.
-     */
-    private RefCountedValue<V> computeValue(K key) {
-        // If the key isn't present then atomically compute the
-        // value associated with the key and return a unique
-        // RefCountedValue associated with it.
-        return mCache.computeIfAbsent
+        // Try to find the key in the cache.  If the key isn't present
+        // then atomically compute the value associated with the key
+        // and return a unique RefCountedValue associated with it.
+        RefCountedValue<V> rcValue = mCache.computeIfAbsent
             (key,
              (k) -> {
                 // Apply the function and store the result. 
@@ -311,6 +290,9 @@ public class TimedMemoizer<K, V>
                     rcv.schedule(key);
                     return rcv;
             });
+
+        // Return the value of the rcValue.
+        return rcValue.get();
     }
 
     /**
@@ -318,6 +300,9 @@ public class TimedMemoizer<K, V>
      * ScheduledExecutorService.
      */
     public void shutdown() {
+        // Reset the count.
+        mCacheCount.setInitialCount(0);
+
         // Shutdown the ScheduledExecutorService.
         mScheduledExecutorService.shutdownNow();
         mScheduledExecutorService = null;
