@@ -71,8 +71,12 @@ public class MainActivity
      */
     public void runThread(View v) {
         // Create the GCDThread.  Note the "fluent" interface style.
-        Thread thread =
-            new GCDThread().setActivity(this).setRandom(new Random());
+        Thread thread = new GCDThread()
+            // Set the activity.
+            .setActivity(this)
+
+            // Set the random number generator.
+            .setRandom(new Random());
 
         // Start the thread.
         thread.start();
@@ -86,8 +90,14 @@ public class MainActivity
         // Create a list of thread.
         final List<Thread> threadList = new ArrayList<>();
 
-        // Create and add the GCDThread using the "fluent" interface style.
-        threadList.add(new GCDThread().setActivity(this).setRandom(new Random()));
+        // Create and add the GCDThread using the "fluent" interface
+        // style.
+        threadList.add(new GCDThread()
+                       // Set the activity.
+                       .setActivity(this)
+
+                       // Set the random number generator.
+                       .setRandom(new Random()));
 
         // Create and add a new thread that's will run the GCDRunnable.
         threadList.add(new Thread(new GCDRunnable(this)));
