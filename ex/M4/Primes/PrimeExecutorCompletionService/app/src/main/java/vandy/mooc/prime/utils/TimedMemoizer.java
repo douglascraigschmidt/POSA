@@ -129,8 +129,8 @@ public class TimedMemoizer<K, V>
             // Store the current ref count.
             long oldCount = value.mRefCount.get();
 
-            // Remove the key only if it hasn't been
-            // accessed in mTimeoutInMillisecs.
+            // Remove the key only if it hasn't been accessed in
+            // mTimeoutInMillisecs.
             if (mCache.remove(key,
                               mNonAccessedValue)) {
                 Log.d(TAG,

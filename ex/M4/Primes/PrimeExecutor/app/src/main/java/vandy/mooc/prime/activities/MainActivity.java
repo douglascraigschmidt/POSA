@@ -233,7 +233,7 @@ public class MainActivity
 
             // Create and execute a new PrimeRunnable for each of the
             // "count" random numbers between 0 and MAX_VALUE.
-            new Random().longs(count, 0, Integer.MAX_VALUE)
+            new Random().longs(count, 0, Long.MAX_VALUE)
                         .forEach(randomNumber ->
                                  mExecutor.execute(new PrimeRunnable(this,
                                                                      randomNumber)));
