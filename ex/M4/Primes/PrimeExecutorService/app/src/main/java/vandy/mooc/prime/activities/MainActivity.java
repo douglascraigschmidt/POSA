@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import vandy.mooc.prime.R;
@@ -292,7 +293,7 @@ public class MainActivity
             // random numbers.
             final List<Future<PrimeCallable.PrimeResult>> futures = new Random()
                 // Generate "count" random between MAX_VALUE - count and MAX_VALUE.
-                .longs(count, Integer.MAX_VALUE - count, Integer.MAX_VALUE)
+                .longs(count, Long.MAX_VALUE - count, Long.MAX_VALUE)
 
                 // Convert each random number into a PrimeCallable.
                 .mapToObj(randomNumber -> new PrimeCallable(randomNumber, primeChecker))
@@ -303,7 +304,8 @@ public class MainActivity
                 // Collect the results into a list of futures.
                 .collect(toList());
 
-            // Store the FutureRunnable in a field so it can be updated during a runtime configuration change.
+            // Store the FutureRunnable in a field so it can be
+            // updated during a runtime configuration change.
             mRetainedState.mFutureRunnable = new FutureRunnable(this,
                                                                 futures);
 
@@ -401,6 +403,19 @@ public class MainActivity
 
         // Finish up and reset the UI.
         done();
+
+        try {
+            // Wait a half-second for threads in the executor service
+            // thread pool to terminate.
+            mRetainedState
+                .mExecutorService
+                .awaitTermination(500,
+                                  TimeUnit.MILLISECONDS);
+        } catch (InterruptedException exception) {
+            UiUtils.showToast(this,
+                              "Problem terminating ExecutorService "
+                              + exception.getMessage());
+        }
     }
 
     /**

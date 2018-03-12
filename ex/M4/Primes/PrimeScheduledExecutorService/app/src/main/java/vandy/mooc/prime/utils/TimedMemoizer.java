@@ -303,7 +303,7 @@ public class TimedMemoizer<K, V>
         // Reset the count.
         mCacheCount.setInitialCount(0);
 
-        // Shutdown the ScheduledExecutorService.
+        // Shutdown the ScheduledExecutorService immediately.
         mScheduledExecutorService.shutdownNow();
         mScheduledExecutorService = null;
 
