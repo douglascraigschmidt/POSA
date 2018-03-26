@@ -132,14 +132,14 @@ public class MainActivity
             }
             */
 
-            // Create a new "cached" ThreadPoolExecutor that's will
-            // execute the AsyncTasks concurrently.
+            // Create a new "fixed" ThreadPoolExecutor that's will
+            // execute sMAX_TASK_COUNT AsyncTasks concurrently.
             mExecutor =
-                new ThreadPoolExecutor(0,
-                                       Integer.MAX_VALUE,
-                                       60L,
-                                       TimeUnit.SECONDS,
-                                       new SynchronousQueue<Runnable>(),
+                new ThreadPoolExecutor(sMAX_TASK_COUNT,
+                                       sMAX_TASK_COUNT,
+                                       0L, // No timeout.
+                                       TimeUnit.MILLISECONDS,
+                                       new LinkedBlockingQueue<Runnable>(),
                                        mThreadFactory);
         }
     }
