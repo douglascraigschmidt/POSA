@@ -3,6 +3,7 @@ package vandy.mooc.gcd.activities;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import java.lang.ref.WeakReference;
 import java.util.Random;
 
 /**
@@ -13,19 +14,19 @@ import java.util.Random;
  * see if the task has been cancelled and exits gracefully if so.
  */
 public class GCDAsyncTask
-       extends AsyncTask<Integer, // Passed to doInBackground()
-                         String,  // Passed to onProgressUpdate()
+       extends AsyncTask<Integer,   // Passed to doInBackground()
+                         String,    // Passed to onProgressUpdate()
                          Boolean> { // Returned from doInBackground() and passed to onPostExecute()
     /**
      * Debugging tag used by the Android logger.
      */
-    protected final String TAG =
+    private final String TAG =
         getClass().getSimpleName();
 
     /**
      * A reference to the MainActivity. 
      */
-    private MainActivity mActivity;
+    private WeakReference<MainActivity> mActivity;
 
     /**
      * Random number generator.
@@ -43,7 +44,7 @@ public class GCDAsyncTask
     GCDAsyncTask(MainActivity activity,
                  int asyncTaskNumber,
                  Random random) {
-        mActivity = activity;
+        mActivity = new WeakReference<>(activity);
         mAsyncTaskNumber = asyncTaskNumber;
         mRandom = random;
     }
@@ -52,7 +53,7 @@ public class GCDAsyncTask
      * Sets the activity (used after a runtime configuration change).
      */
     void setActivity(MainActivity activity) {
-        mActivity = activity;
+        mActivity = new WeakReference<>(activity);
     }
 
     /**
@@ -76,8 +77,8 @@ public class GCDAsyncTask
     @Override
     protected void onPreExecute() {
         // Print the message in the UI thread.
-        mActivity.println("Starting new AsyncTask #"
-                          + mAsyncTaskNumber);
+        mActivity.get().println("Starting new AsyncTask #"
+                                + mAsyncTaskNumber);
     }
 
     /**
@@ -108,7 +109,7 @@ public class GCDAsyncTask
             // Print results periodically.
             else if ((i % maxPrintIterations) == 0)
                 // Publish this string in the UI thread.
-                publishProgress("In run() with thread id "
+                publishProgress("In doInBackground() with thread id "
                                 + Thread.currentThread()
                                 + " the GCD of "
                                 + number1
@@ -121,6 +122,7 @@ public class GCDAsyncTask
 
         // Returns true if this is the last task.
         return mActivity
+            .get()
             .mAsyncTaskRelatedState
             .mTaskCount
             .decrementAndGet() <= 0;
@@ -133,7 +135,7 @@ public class GCDAsyncTask
     @Override
     protected void onProgressUpdate(String... message) {
         // Print the message in the UI thread.
-        mActivity.println(message[0]);
+        mActivity.get().println(message[0]);
     }
 
     /**
@@ -143,13 +145,13 @@ public class GCDAsyncTask
     @Override
     protected void onPostExecute(Boolean lastTask) {
         // Print the message in the UI thread.
-        mActivity.println("Finishing AsyncTask #"
+        mActivity.get().println("Finishing AsyncTask #"
                           + mAsyncTaskNumber
                           + " successfully");
 
         // Tell the activity to finish up if we're the last task.
         if (lastTask)
-            mActivity.done();
+            mActivity.get().done();
     }
 
     /**
@@ -159,12 +161,12 @@ public class GCDAsyncTask
     @Override
     protected void onCancelled(Boolean lastTask) {
         // Print the message in the UI thread.
-        mActivity.println("Finishing AsyncTask #"
-                          + mAsyncTaskNumber
-                          + " after being cancelled");
+        mActivity.get().println("Finishing AsyncTask #"
+                                + mAsyncTaskNumber
+                                + " after being cancelled");
 
         // Tell the activity to finish up if we're the last task.
         if (lastTask)
-            mActivity.done();
+            mActivity.get().done();
     }
 }

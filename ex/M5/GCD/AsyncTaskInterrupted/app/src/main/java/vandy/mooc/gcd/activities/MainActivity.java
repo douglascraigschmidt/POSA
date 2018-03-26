@@ -17,14 +17,16 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import vandy.mooc.gcd.R;
 import vandy.mooc.gcd.utils.UiUtils;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Main activity for an app that shows how to start and cancel a pool
@@ -111,7 +113,7 @@ public class MainActivity
          * Constructor initializes the fields.
          */
         AsyncTaskRelatedState() {
-            // Create the GCDAsyncTask.
+            // Create an empty list.
             mTaskList = new ArrayList<>();
 
             // Initialize the task count.
@@ -139,7 +141,7 @@ public class MainActivity
                                        sMAX_TASK_COUNT,
                                        0L, // No timeout.
                                        TimeUnit.MILLISECONDS,
-                                       new LinkedBlockingQueue<Runnable>(),
+                                       new LinkedBlockingQueue<>(),
                                        mThreadFactory);
         }
     }
@@ -212,13 +214,13 @@ public class MainActivity
     private void initializeViews() {
         // Set the EditText that holds the count entered by the user
         // (if any).
-        mCountEditText = (EditText) findViewById(R.id.count);
+        mCountEditText = findViewById(R.id.count);
 
         // Store floating action button that sets the count.
-        mSetFab = (FloatingActionButton) findViewById(R.id.set_fab);
+        mSetFab = findViewById(R.id.set_fab);
 
         // Store floating action button that starts playing ping/pong.
-        mStartOrStopFab = (FloatingActionButton) findViewById(R.id.play_fab);
+        mStartOrStopFab = findViewById(R.id.play_fab);
 
         // Make the count button invisible for animation purposes.
         mStartOrStopFab.setVisibility(View.INVISIBLE);
@@ -229,9 +231,9 @@ public class MainActivity
 
         // Store and initialize the TextView and ScrollView.
         mTextViewLog =
-            (TextView) findViewById(R.id.text_output);
+                findViewById(R.id.text_output);
         mScrollView =
-            (ScrollView) findViewById(R.id.scrollview_text_output);
+                findViewById(R.id.scrollview_text_output);
 
         // Register a listener to help display "start playing" FAB
         // when the user hits enter.  This listener also sets a
@@ -305,6 +307,8 @@ public class MainActivity
      *            The view.
      */
     public void startOrStopComputations(View view) {
+        Log.d(TAG, "startOrStopComputations() entered");
+
         // See if there are AsyncTasks present (they only exist while
         // GCD computations are in progress).
         if (mAsyncTaskRelatedState.mTaskList.size() > 0)
@@ -313,6 +317,7 @@ public class MainActivity
         else 
             // Start running the computations specified by the user.
             startComputations(mCountEditText.getText().toString());
+        Log.d(TAG, "startOrStopComputations() exited");
     }
 
     /**
@@ -338,22 +343,28 @@ public class MainActivity
             UiUtils.showToast(this,
                               "Please specify a count value that's > 0");
         else {
-            // Create all the GCDAsyncTasks.
-            for (int id = 1; id <= asyncTaskCount; ++id)
-                mAsyncTaskRelatedState.mTaskList.add
-                    (new GCDAsyncTask(this,
-                                      id,
-                                      new Random()));
+            mAsyncTaskRelatedState.mTaskList = IntStream
+                // Generate values from 1 to asyncTaskCount
+                // (inclusive).
+                .rangeClosed(1, asyncTaskCount)
 
-            // Iterate through the list of GCDAsyncTasks and
-            // start executing them.
-            mAsyncTaskRelatedState.mTaskList.forEach
-                (asyncTask -> 
-                 // Execute the asyncTask on the ThreadPoolExecutor
-                 // (note use of a black-box framework "strategy".
-                 asyncTask.executeOnExecutor
-                     (mAsyncTaskRelatedState.mExecutor,
-                      count));
+                // Create a GCDAsyncTask for each id.
+                .mapToObj(id -> new GCDAsyncTask(this,
+                                                 id,
+                                                 new Random()))
+
+                // Start executing the GCDAsyncTask on the executor.
+                .map(asyncTask ->
+                         // Execute asyncTask on ThreadPoolExecutor
+                         // using a black-box framework "strategy".
+                        (GCDAsyncTask) asyncTask
+                             .executeOnExecutor
+                                 (mAsyncTaskRelatedState.mExecutor,
+                                  count))
+
+                // Trigger intermediate operations and store async
+                // tasks in a list.
+                .collect(toList());
 
             // Update the start/stop FAB to display a stop icon.
             mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);
@@ -364,14 +375,19 @@ public class MainActivity
      * Cancel all the AsyncTasks running GCD computations.
      */
     private void cancelComputations() {
-        // Cancel all the GCDAsyncTasks immediately.
-        mAsyncTaskRelatedState.mTaskList.forEach(asyncTask-> 
-                                                 asyncTask.cancel(true));
+        Log.d(TAG, "cancelComputations() entered");
+
+        mAsyncTaskRelatedState
+                .mTaskList
+                // Cancel all the GCDAsyncTasks immediately.
+                .forEach(asyncTask->
+                         asyncTask.cancel(true));
 
         UiUtils.showToast(this,
                           "Cancelling all "
                           + mAsyncTaskRelatedState.mTaskList.size()
                           + " async tasks ");
+        Log.d(TAG, "cancelComputations() exited");
     }
 
     /**
