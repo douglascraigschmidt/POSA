@@ -55,8 +55,11 @@ public class Memoizer<K, V>
      * it.
      */
     public V apply(final K key) {
+        // return mCache.computeIfAbsent(key, mFunction::apply);
+
         // Try to find the key in the cache.
         Future<V> future = mCache.get(key);
+
 
         // If the key isn't present we must compute its value.
         if (future == null) 
@@ -74,38 +77,40 @@ public class Memoizer<K, V>
 
     /**
      * Compute the value associated with the key and return a
-     * unique RefCountedFutureTask associated with it.
+     * FutureTask associated with it.
      */
     private Future<V> computeValue(K key) {
+        // return null;
         // Create a FutureTask whose run() method will compute the
         // value and store it in the cache.
         final FutureTask<V> futureTask =
             new FutureTask<>(() -> mFunction.apply(key));
 
         // Atomically try to add futureTask to the cache as the value
-        // associated with key.
+        // associated with key.  putIfAbsent() returns the previous
+        // value, which will be null the first time this method is
+        // called for a given key.
         Future<V> future = mCache.putIfAbsent(key, futureTask);
 
-        // If future != null the value was already in the cache, so
-        // just return it.
-        if (future != null) {
-            Log.d(TAG,
-                  "key "
-                  + key
-                  + "'s value was added to the cache");
-            return future;
-        }
-        // A value of null from put() indicates the key was just added
-        // (i.e., it's the "first time in"), which indicates the value
-        // hasn't been computed yet.
-        else {
-            // Run futureTask to compute the value, which is
-            // (implicitly) stored in the cache when the computation
-            // is finished.
+        // A value of null from putIfAbsent() indicates the key was
+        // just added (i.e., it's the "first time in"), which
+        // indicates the value hasn't been computed yet.
+        if (future == null) {
+            // Run futureTask to compute the value which is stored in
+            // the cache when the computation is finished.
             futureTask.run();
 
-            // Return the future.
+            // Return a future to the task that's completed.
             return futureTask;
+        }
+        // If future == null the value was already in the cache, so
+        // just return it.
+        else {
+            Log.d(TAG,
+                    "key "
+                            + key
+                            + "'s value was added to the cache");
+            return future;
         }
     }
 
