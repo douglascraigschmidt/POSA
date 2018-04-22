@@ -37,7 +37,12 @@ public class MainActivity
      * Number of times to iterate if the user doesn't specify
      * otherwise.
      */
-    private final static int sDEFAULT_COUNT = 50;
+    private final static int sDEFAULT_COUNT = 100;
+
+    /**
+     * Maximum value of  random numbers.
+     */
+    private static long sMAX_VALUE = 1000000000L;
 
     /**
      * An EditText field uesd to enter the desired number of iterations.
@@ -79,7 +84,7 @@ public class MainActivity
      * State that must be preserved across runtime configuration
      * changes.
      */
-    static class RetainedState {
+    private static class RetainedState {
         /**
          * Debugging tag used by the Android logger.
          */
@@ -106,7 +111,7 @@ public class MainActivity
          * Thread that waits for all the results to complete.
          */
         Thread mThread;
-
+        
         /**
          * Cache used to generate, store, and retrieve the results of
          * prime checking computations.
@@ -114,8 +119,8 @@ public class MainActivity
         TimedMemoizer<Long, Long> mTimedMemoizer;
 
         /**
-         * Constructor initializes the ExecutorService thread pool
-         * and the ExecutorCompletionService.
+         * Constructor initializes the state that's retained across
+         * runtime configuration changes.
          */
         RetainedState() {
             // Create a thread pool that matches the number of cores.
@@ -220,13 +225,13 @@ public class MainActivity
     private void initializeViews() {
         // Set the EditText that holds the count entered by the user
         // (if any).
-        mCountEditText = (EditText) findViewById(R.id.count);
+        mCountEditText = findViewById(R.id.count);
 
         // Cache floating action button that sets the count.
-        mSetFab = (FloatingActionButton) findViewById(R.id.set_fab);
+        mSetFab = findViewById(R.id.set_fab);
 
         // Cache floating action button that starts playing ping/pong.
-        mStartOrStopFab = (FloatingActionButton) findViewById(R.id.play_fab);
+        mStartOrStopFab = findViewById(R.id.play_fab);
 
         // Make the EditText invisible for animation purposes.
         mCountEditText.setVisibility(View.INVISIBLE);
@@ -235,10 +240,8 @@ public class MainActivity
         mStartOrStopFab.setVisibility(View.INVISIBLE);
 
         // Store and initialize the TextView and ScrollView.
-        mTextViewLog =
-            (TextView) findViewById(R.id.text_output);
-        mScrollView =
-            (ScrollView) findViewById(R.id.scrollview_text_output);
+        mTextViewLog = findViewById(R.id.text_output);
+        mScrollView = findViewById(R.id.scrollview_text_output);
 
         // Register a listener to help display "start playing" FAB
         // when the user hits enter.  This listener also sets a
@@ -349,12 +352,12 @@ public class MainActivity
             new Random()
                 // Generate "count" random between (MAX_VALUE - count)
                 // and MAX_VALUE.
-                .longs(count, Integer.MAX_VALUE - count, Integer.MAX_VALUE)
+                .longs(count, sMAX_VALUE - count, sMAX_VALUE)
 
                 // Convert each random number into a PrimeCallable.
-                .mapToObj(randomNumber ->
-                          new PrimeCallable(randomNumber, 
-                                            mRetainedState.mTimedMemoizer))
+                .mapToObj(randomNumber 
+                          -> new PrimeCallable(randomNumber,
+                                               mRetainedState.mTimedMemoizer))
 
                 // Submit each PrimeCallable to the ExecutorService.
                 .forEach(mRetainedState.mExecutorCompletionService::submit);
@@ -385,7 +388,7 @@ public class MainActivity
         /**
          * Debugging tag used by the Android logger.
          */
-        protected final String TAG =
+        final String TAG =
                 getClass().getSimpleName();
 
         /**
@@ -401,7 +404,7 @@ public class MainActivity
         /**
          * Constructor initializes the field.
          */
-        public CompletionRunnable(MainActivity activity,
+        CompletionRunnable(MainActivity activity,
                                   int count) {
             mActivity = activity;
             mCount = count;
@@ -410,7 +413,7 @@ public class MainActivity
         /**
          * Reset the activity after a runtime configuration change.
          */
-        public void setActivity(MainActivity activity) {
+        void setActivity(MainActivity activity) {
             mActivity = activity;
         }
 
@@ -420,17 +423,19 @@ public class MainActivity
          */
         @Override
         public void run() {
-            // Iterate through all the futures to get the results.
-            for (int i = 0; i < mCount; ++i) {
-                try {
-                    // This call will block until the future is triggered.
+            try {
+                // Iterate through all the futures to get the results.
+                for (int i = 0; i < mCount; ++i) {
+                    // This call will block until the future is
+                    // triggered.
                     Future<PrimeCallable.PrimeResult> resultFuture = 
                         mActivity.mRetainedState.mExecutorCompletionService.take();
 
                     // The get() call will not block since the results
                     // should be ready before they are added to the
                     // completion queue.
-                    PrimeCallable.PrimeResult result = resultFuture.get();
+                    PrimeCallable.PrimeResult result =
+                        resultFuture.get();
 
                     // Check the results and display the appropriate message.
                     if (result.mSmallestFactor != 0)
@@ -442,14 +447,11 @@ public class MainActivity
                         mActivity.println(""
                                           + result.mPrimeCandidate
                                           + " is prime");
-                } catch (InterruptedException e) {
+                }
+            } catch (Exception e) {
                     Log.d(TAG,
                           "Prime waiter thread interrupted "
                           + Thread.currentThread());
-                    return;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
             }
 
             // Finish up and reset the UI.
@@ -465,10 +467,7 @@ public class MainActivity
         UiUtils.showToast(this,
                           "Interrupting the computations");
 
-        // Shutdown the thread pool.
-        mRetainedState.mExecutorService.shutdownNow();
-
-        // Shutdown the retained state.
+        // Shutdown all the retained state.
         mRetainedState.shutdown();
 
         // Trigger a reset of the retained state on cancellation.

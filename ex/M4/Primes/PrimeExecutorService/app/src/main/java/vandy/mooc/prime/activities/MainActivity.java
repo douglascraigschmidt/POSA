@@ -14,7 +14,6 @@ import android.widget.TextView;
 
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -26,6 +25,7 @@ import vandy.mooc.prime.utils.Memoizer;
 import vandy.mooc.prime.utils.PrimeCheckers;
 import vandy.mooc.prime.utils.UiUtils;
 
+import static vandy.mooc.prime.utils.ExceptionUtils.rethrowSupplier;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -42,7 +42,12 @@ public class MainActivity
      * Number of times to iterate if the user doesn't specify
      * otherwise.
      */
-    private final static int sDEFAULT_COUNT = 50;
+    private final static int sDEFAULT_COUNT = 100;
+
+    /**
+     * Maximum value of  random numbers.
+     */
+    private static long sMAX_VALUE = 1000000000L;
 
     /**
      * An EditText field uesd to enter the desired number of iterations.
@@ -86,9 +91,15 @@ public class MainActivity
      */
     static class RetainedState {
         /**
+         * Debugging tag used by the Android logger.
+         */
+        private final String TAG =
+                getClass().getSimpleName();
+
+        /**
          * This object manages a thread pool.
          */
-        final ExecutorService mExecutorService;
+        ExecutorService mExecutorService;
 
         /**
          * This runnable executes in a background thread to get the
@@ -109,6 +120,26 @@ public class MainActivity
             mExecutorService =
                 Executors.newFixedThreadPool(Runtime.getRuntime()
                                              .availableProcessors());
+        }
+
+        /**
+         * Shutdown the retained state.
+         */
+        void shutdown() {
+            Log.d(TAG,
+                  "The retained state is being shutdown");
+
+            // Shutdown the ExecutorService.
+            if (mExecutorService != null) {
+                mExecutorService.shutdownNow();
+                mExecutorService = null;
+            }
+
+            // Interrupt the prime waiter thread.
+            if (mThread != null) {
+                mThread.interrupt();
+                mThread = null;
+            }
         }
     }
 
@@ -172,13 +203,13 @@ public class MainActivity
     private void initializeViews() {
         // Set the EditText that holds the count entered by the user
         // (if any).
-        mCountEditText = (EditText) findViewById(R.id.count);
+        mCountEditText = findViewById(R.id.count);
 
         // Cache floating action button that sets the count.
-        mSetFab = (FloatingActionButton) findViewById(R.id.set_fab);
+        mSetFab = findViewById(R.id.set_fab);
 
         // Cache floating action button that starts playing ping/pong.
-        mStartOrStopFab = (FloatingActionButton) findViewById(R.id.play_fab);
+        mStartOrStopFab = findViewById(R.id.play_fab);
 
         // Make the EditText invisible for animation purposes.
         mCountEditText.setVisibility(View.INVISIBLE);
@@ -188,9 +219,9 @@ public class MainActivity
 
         // Store and initialize the TextView and ScrollView.
         mTextViewLog =
-            (TextView) findViewById(R.id.text_output);
+                findViewById(R.id.text_output);
         mScrollView =
-            (ScrollView) findViewById(R.id.scrollview_text_output);
+                findViewById(R.id.scrollview_text_output);
 
         // Register a listener to help display "start playing" FAB
         // when the user hits enter.  This listener also sets a
@@ -292,11 +323,14 @@ public class MainActivity
             // of concurrently checking the primality of "count"
             // random numbers.
             final List<Future<PrimeCallable.PrimeResult>> futures = new Random()
-                // Generate "count" random between MAX_VALUE - count and MAX_VALUE.
-                .longs(count, Long.MAX_VALUE - count, Long.MAX_VALUE)
+                // Generate "count" random between sMAX_VALUE - count
+                // and sMAX_VALUE.
+                .longs(count, sMAX_VALUE - count, sMAX_VALUE)
 
                 // Convert each random number into a PrimeCallable.
-                .mapToObj(randomNumber -> new PrimeCallable(randomNumber, primeChecker))
+                .mapToObj(randomNumber -> 
+                          new PrimeCallable(randomNumber,
+                                            primeChecker))
 
                 // Submit each PrimeCallable to the ExecutorService.
                 .map(mRetainedState.mExecutorService::submit)
@@ -328,6 +362,12 @@ public class MainActivity
     static private class FutureRunnable 
                    implements Runnable {
         /**
+         * Debugging tag used by the Android logger.
+         */
+        private final String TAG =
+                getClass().getSimpleName();
+
+        /**
          * List of futures to the results of the PrimeCallable computations.
          */
         final List<Future<PrimeCallable.PrimeResult>> mFutures;
@@ -349,7 +389,7 @@ public class MainActivity
         /**
          * Reset the activity after a runtime configuration change.
          */
-        public void setActivity(MainActivity activity) {
+        void setActivity(MainActivity activity) {
             mActivity = activity;
         }
 
@@ -358,26 +398,29 @@ public class MainActivity
          */
         @Override
         public void run() {
-            // Iterate through all the futures to get the results.
-            for (Future<PrimeCallable.PrimeResult> f : mFutures) {
-                try {
-                    // This call will block until the future is triggered.
-                    PrimeCallable.PrimeResult result = f.get();
+            try {
+                mFutures
+                    // Iterate through all the futures to get the results.
+                    .forEach(future -> {
+                            // This call will block until the future is
+                            // triggered.
+                            PrimeCallable.PrimeResult result =
+                                rethrowSupplier(future::get).get();
 
-                    if (result.mSmallestFactor != 0)
-                        mActivity.println(""
-                                          + result.mPrimeCandidate
-                                          + " is not prime with smallest factor "
-                                          + result.mSmallestFactor);
-                    else
-                        mActivity.println(""
-                                          + result.mPrimeCandidate
-                                          + " is prime");
-                } catch (InterruptedException e) {
-                    return;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                            if (result.mSmallestFactor != 0)
+                                mActivity.println(""
+                                                  + result.mPrimeCandidate
+                                                  + " is not prime with smallest factor "
+                                                  + result.mSmallestFactor);
+                            else
+                                mActivity.println(""
+                                                  + result.mPrimeCandidate
+                                                  + " is prime");
+                        });
+            } catch (Exception ex) {
+                Log.d(TAG,
+                      "Prime waiter thread interrupted "
+                      + Thread.currentThread());
             }
 
             // Finish up and reset the UI.
@@ -468,15 +511,9 @@ public class MainActivity
 
         if (mRetainedState != null
             && !isChangingConfigurations()) {
-            // Interrupt the ExecutorService since the activity is
-            // being destroyed.
-            mRetainedState.mExecutorService.shutdownNow();
-
-            // Interrupt the background thread.
-            mRetainedState.mThread.interrupt();
-
-            Log.d(TAG,
-                  "interrupting ExecutorService");
+            // Shutdown the retained state since the activity is being
+            // destroyed.
+            mRetainedState.shutdown();
         }
     }
 }

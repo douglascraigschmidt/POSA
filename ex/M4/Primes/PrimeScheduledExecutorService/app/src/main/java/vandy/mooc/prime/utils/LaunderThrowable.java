@@ -1,7 +1,7 @@
 package vandy.mooc.prime.utils;
 
 /**
- *
+ * Coerce an unchecked Throwable to a RuntimeException.
  */
 public class LaunderThrowable {
     /**

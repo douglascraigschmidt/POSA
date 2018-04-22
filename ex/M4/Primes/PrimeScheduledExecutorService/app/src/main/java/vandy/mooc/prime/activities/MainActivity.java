@@ -12,17 +12,19 @@ import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.function.Function;
 
 import vandy.mooc.prime.R;
-import vandy.mooc.prime.utils.PrimeCheckers;
 import vandy.mooc.prime.utils.TimedMemoizer;
+import vandy.mooc.prime.utils.PrimeCheckers;
 import vandy.mooc.prime.utils.UiUtils;
+
+import static vandy.mooc.prime.utils.ExceptionUtils.rethrowSupplier;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Main activity for an app that shows how to use the Java
@@ -38,7 +40,12 @@ public class MainActivity
      * Number of times to iterate if the user doesn't specify
      * otherwise.
      */
-    private final static int sDEFAULT_COUNT = 50;
+    private final static int sDEFAULT_COUNT = 100;
+
+    /**
+     * Maximum value of  random numbers.
+     */
+    private static long sMAX_VALUE = 1000000000L;
 
     /**
      * An EditText field uesd to enter the desired number of iterations.
@@ -80,17 +87,12 @@ public class MainActivity
      * State that must be preserved across runtime configuration
      * changes.
      */
-    private static class RetainedState {
+    static class RetainedState {
         /**
          * Debugging tag used by the Android logger.
          */
         private final String TAG =
                 getClass().getSimpleName();
-
-        /**
-         * This object runs the prime computations.
-         */
-        final ExecutorCompletionService<PrimeCallable.PrimeResult> mExecutorCompletionService;
 
         /**
          * This object manages a thread pool.
@@ -101,13 +103,13 @@ public class MainActivity
          * This runnable executes in a background thread to get the
          * results of the futures.
          */
-        CompletionRunnable mCompletionRunnable;
+        FutureRunnable mFutureRunnable;
 
         /**
          * Thread that waits for all the results to complete.
          */
         Thread mThread;
-        
+
         /**
          * Cache used to generate, store, and retrieve the results of
          * prime checking computations.
@@ -115,20 +117,13 @@ public class MainActivity
         TimedMemoizer<Long, Long> mTimedMemoizer;
 
         /**
-         * Constructor initializes the state that's retained across
-         * runtime configuration changes.
+         * Constructor initializes the ExecutorService thread pool.
          */
         RetainedState() {
             // Create a thread pool that matches the number of cores.
             mExecutorService =
                 Executors.newFixedThreadPool(Runtime.getRuntime()
                                              .availableProcessors());
-
-            // Associate the ExecutorCompletionService with the
-            // ExecutorService.
-            mExecutorCompletionService =
-                new ExecutorCompletionService<>
-                (mExecutorService);
         }
 
         /**
@@ -155,9 +150,6 @@ public class MainActivity
                 mThread.interrupt();
                 mThread = null;
             }
-
-            // Help the GC.
-            mCompletionRunnable = null;
         }
     }
 
@@ -186,7 +178,7 @@ public class MainActivity
             (RetainedState) getLastNonConfigurationInstance();
 
         if (mRetainedState != null) {
-            mRetainedState.mCompletionRunnable.setActivity(this);
+            mRetainedState.mFutureRunnable.setActivity(this);
 
             // Update the start/stop FAB to display a stop icon.
             mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);
@@ -221,13 +213,13 @@ public class MainActivity
     private void initializeViews() {
         // Set the EditText that holds the count entered by the user
         // (if any).
-        mCountEditText = (EditText) findViewById(R.id.count);
+        mCountEditText = findViewById(R.id.count);
 
         // Cache floating action button that sets the count.
-        mSetFab = (FloatingActionButton) findViewById(R.id.set_fab);
+        mSetFab = findViewById(R.id.set_fab);
 
         // Cache floating action button that starts playing ping/pong.
-        mStartOrStopFab = (FloatingActionButton) findViewById(R.id.play_fab);
+        mStartOrStopFab = findViewById(R.id.play_fab);
 
         // Make the EditText invisible for animation purposes.
         mCountEditText.setVisibility(View.INVISIBLE);
@@ -237,9 +229,9 @@ public class MainActivity
 
         // Store and initialize the TextView and ScrollView.
         mTextViewLog =
-            (TextView) findViewById(R.id.text_output);
+                findViewById(R.id.text_output);
         mScrollView =
-            (ScrollView) findViewById(R.id.scrollview_text_output);
+                findViewById(R.id.scrollview_text_output);
 
         // Register a listener to help display "start playing" FAB
         // when the user hits enter.  This listener also sets a
@@ -345,29 +337,33 @@ public class MainActivity
                                     // 0.5 seconds.
                                     count * 500);
 
-            // Submit "count" PrimeCallable objects that concurrently check
-            // the primality of "count" random numbers.
-            new Random()
-                // Generate "count" random between (MAX_VALUE - count)
-                // and MAX_VALUE.
-                .longs(count, Integer.MAX_VALUE - count, Integer.MAX_VALUE)
+            // Create a list of futures that will contain the results
+            // of concurrently checking the primality of "count"
+            // random numbers.
+            final List<Future<PrimeCallable.PrimeResult>> futures = new Random()
+                // Generate "count" random between sMAX_VALUE - count
+                // and sMAX_VALUE.
+                .longs(count, sMAX_VALUE - count, sMAX_VALUE)
 
                 // Convert each random number into a PrimeCallable.
-                .mapToObj(randomNumber 
-                          -> new PrimeCallable(randomNumber,
-                                               mRetainedState.mTimedMemoizer))
+                .mapToObj(randomNumber -> 
+                          new PrimeCallable(randomNumber,
+                                            mRetainedState.mTimedMemoizer))
 
                 // Submit each PrimeCallable to the ExecutorService.
-                .forEach(mRetainedState.mExecutorCompletionService::submit);
+                .map(mRetainedState.mExecutorService::submit)
 
-            // Store the CompletionRunnable in a field so it can be
+                // Collect the results into a list of futures.
+                .collect(toList());
+
+            // Store the FutureRunnable in a field so it can be
             // updated during a runtime configuration change.
-            mRetainedState.mCompletionRunnable = new CompletionRunnable(this,
-                                                                        count);
+            mRetainedState.mFutureRunnable = new FutureRunnable(this,
+                                                                futures);
 
             // Create/start a thread that waits for all the results in
             // the background so it doesn't block the UI thread.
-            mRetainedState.mThread = new Thread(mRetainedState.mCompletionRunnable);
+            mRetainedState.mThread = new Thread(mRetainedState.mFutureRunnable);
             mRetainedState.mThread.start();
         }
 
@@ -378,21 +374,21 @@ public class MainActivity
     }
 
     /**
-     * The class runs in a background thread in the ExecutorService
-     * and gets the results of all the completed futures.
+     * The class runs in a background thread in the ExecutorService and gets the
+     * results of all the futures.
      */
-    static private class CompletionRunnable 
+    static private class FutureRunnable 
                    implements Runnable {
         /**
          * Debugging tag used by the Android logger.
          */
-        final String TAG =
+        private final String TAG =
                 getClass().getSimpleName();
 
         /**
-         * Count of the number of prime checker computations.
+         * List of futures to the results of the PrimeCallable computations.
          */
-        final int mCount;
+        final List<Future<PrimeCallable.PrimeResult>> mFutures;
 
         /**
          * Reference back to the enclosing activity.
@@ -402,10 +398,10 @@ public class MainActivity
         /**
          * Constructor initializes the field.
          */
-        CompletionRunnable(MainActivity activity,
-                                  int count) {
+        FutureRunnable(MainActivity activity,
+                       List<Future<PrimeCallable.PrimeResult>> futures) {
             mActivity = activity;
-            mCount = count;
+            mFutures = futures;
         }
 
         /**
@@ -416,41 +412,33 @@ public class MainActivity
         }
 
         /**
-         * Run in a background thread to get the results of all the
-         * completed futures.
+         * Run in a background thread to get the results of all the futures.
          */
         @Override
         public void run() {
-            // Iterate through all the futures to get the results.
-            for (int i = 0; i < mCount; ++i) {
-                try {
-                    // This call will block until the future is triggered.
-                    Future<PrimeCallable.PrimeResult> resultFuture = 
-                        mActivity.mRetainedState.mExecutorCompletionService.take();
+            try {
+                mFutures
+                    // Iterate through all the futures to get the results.
+                    .forEach(future -> {
+                            // This call will block until the future is
+                            // triggered.
+                            PrimeCallable.PrimeResult result =
+                                rethrowSupplier(future::get).get();
 
-                    // The get() call will not block since the results
-                    // should be ready before they are added to the
-                    // completion queue.
-                    PrimeCallable.PrimeResult result = resultFuture.get();
-
-                    // Check the results and display the appropriate message.
-                    if (result.mSmallestFactor != 0)
-                        mActivity.println(""
-                                          + result.mPrimeCandidate
-                                          + " is not prime with smallest factor "
-                                          + result.mSmallestFactor);
-                    else
-                        mActivity.println(""
-                                          + result.mPrimeCandidate
-                                          + " is prime");
-                } catch (InterruptedException e) {
-                    Log.d(TAG,
-                          "Prime waiter thread interrupted "
-                          + Thread.currentThread());
-                    return;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                            if (result.mSmallestFactor != 0)
+                                mActivity.println(""
+                                                  + result.mPrimeCandidate
+                                                  + " is not prime with smallest factor "
+                                                  + result.mSmallestFactor);
+                            else
+                                mActivity.println(""
+                                                  + result.mPrimeCandidate
+                                                  + " is prime");
+                        });
+            } catch (Exception ex) {
+                Log.d(TAG,
+                      "Prime waiter thread interrupted "
+                      + Thread.currentThread());
             }
 
             // Finish up and reset the UI.
@@ -462,12 +450,11 @@ public class MainActivity
      * Stop the prime computations.
      */
     private void interruptComputations() {
-        // Inform user an interrupt occurred.
-        UiUtils.showToast(this,
-                          "Interrupting the computations");
-
-        // Shutdown the retained state.
+        // Shutdown the retained stated.
         mRetainedState.shutdown();
+
+        UiUtils.showToast(this,
+                          "Interrupting ExecutorService and waiter thread");
 
         // Trigger a reset of the retained state on cancellation.
         mRetainedState = new RetainedState();
