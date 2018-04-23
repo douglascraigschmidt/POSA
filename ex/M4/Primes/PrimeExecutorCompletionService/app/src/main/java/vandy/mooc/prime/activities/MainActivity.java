@@ -20,7 +20,7 @@ import java.util.concurrent.Future;
 
 import vandy.mooc.prime.R;
 import vandy.mooc.prime.utils.PrimeCheckers;
-import vandy.mooc.prime.utils.TimedMemoizer;
+import vandy.mooc.prime.utils.TimedMemoizerEx;
 import vandy.mooc.prime.utils.UiUtils;
 
 /**
@@ -116,7 +116,7 @@ public class MainActivity
          * Cache used to generate, store, and retrieve the results of
          * prime checking computations.
          */
-        TimedMemoizer<Long, Long> mTimedMemoizer;
+        TimedMemoizerEx<Long, Long> mTimedMemoizer;
 
         /**
          * Constructor initializes the state that's retained across
@@ -342,10 +342,10 @@ public class MainActivity
             // Create the cache used to generate, store, and retrieve
             // the results of prime checking computations.
             mRetainedState.mTimedMemoizer =
-                new TimedMemoizer<>(PrimeCheckers::bruteForceChecker,
-                                    // Timeout cache entries after count *
-                                    // 0.5 seconds.
-                                    count * 500);
+                new TimedMemoizerEx<>(PrimeCheckers::bruteForceChecker,
+                                      // Timeout cache entries after count *
+                                      // 0.5 seconds.
+                                      count * 500);
 
             // Submit "count" PrimeCallable objects that concurrently check
             // the primality of "count" random numbers.

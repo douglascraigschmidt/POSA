@@ -23,7 +23,7 @@ import java.util.function.Function;
  * Practice" by Brian Goetz et al.  More information on memoization is
  * available at https://en.wikipedia.org/wiki/Memoization.
  */
-public class TimedMemoizer<K, V>
+public class TimedMemoizerEx<K, V>
        implements Function<K, V> {
     /**
      * Debugging tag used by the Android logger.
@@ -203,8 +203,8 @@ public class TimedMemoizer<K, V>
     /**
      * Constructor initializes the fields.
      */
-    public TimedMemoizer(Function<K, V> function,
-                         long timeoutInMillisecs) {
+    public TimedMemoizerEx(Function<K, V> function,
+                           long timeoutInMillisecs) {
         // Store the function for subsequent use.
         mFunction = function; 
 
