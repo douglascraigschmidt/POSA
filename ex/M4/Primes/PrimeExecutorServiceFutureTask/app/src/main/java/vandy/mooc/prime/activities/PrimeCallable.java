@@ -23,6 +23,11 @@ public class PrimeCallable
     private final long mPrimeCandidate;
 
     /**
+     * This function checks if a number if prime.
+     */
+    private Function<Long, Long> mPrimeChecker;
+
+    /**
      * The result returned via the future.
      */
     public static class PrimeResult {
@@ -46,26 +51,12 @@ public class PrimeCallable
     }
 
     /**
-     * This method provides a brute-force determination of whether
-     * number {@code n} is prime.  Returns 0 if it is prime, or the
-     * smallest factor if it is not prime.
+     * Constructor initializes the fields.
      */
-    private long isPrime(long n) {
-        if (n > 3)
-            for (long factor = 2;
-                 factor <= n / 2;
-                 ++factor) 
-                if (n / factor * factor == n)
-                    return factor;
-
-        return 0;
-    }
-
-    /**
-     * Constructor initializes the field.
-     */
-    PrimeCallable(long primeCandidate) {
+    PrimeCallable(long primeCandidate,
+                  Function<Long, Long> primeChecker) {
         mPrimeCandidate = primeCandidate;
+        mPrimeChecker = primeChecker;
     }
     
     /**
@@ -79,6 +70,6 @@ public class PrimeCallable
         return new PrimeResult(mPrimeCandidate,
                                // Determine if mPrimeCandidate is
                                // prime or not.
-                               isPrime(mPrimeCandidate));
+                               mPrimeChecker.apply(mPrimeCandidate));
     }
 }

@@ -38,7 +38,12 @@ public class MainActivity
      * Number of primes to evaluate if the user doesn't specify
      * otherwise.
      */
-    private final static int sDEFAULT_COUNT = 50;
+    private final static int sDEFAULT_COUNT = 100;
+
+    /**
+     * Maximum value of  random numbers.
+     */
+    private static long sMAX_VALUE = 1000000000L;
 
     /**
      * Keeps track of whether the edit text is visible for the user to
@@ -72,7 +77,9 @@ public class MainActivity
      * since determining primaility is a CPU-bound computation.
      */
     private Executor mExecutor =
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        Executors.newFixedThreadPool(Runtime
+                                     .getRuntime()
+                                     .availableProcessors());
 
     /**
      * Keeps track of whether the orientation of the phone has been
@@ -231,15 +238,20 @@ public class MainActivity
             // Set the number of running tasks to the count.
             mRunningTasks.set(count);
 
-            // Create and execute a new PrimeRunnable for each of the
-            // "count" random numbers between 0 and MAX_VALUE.
-            new Random().longs(count, 0, Long.MAX_VALUE)
-                        .forEach(randomNumber ->
-                                 mExecutor.execute(new PrimeRunnable(this,
-                                                                     randomNumber)));
+            // Create "count" random values and check to see if they
+            // are prime.
+            new Random()
+                // Generate "count" random between sMAX_VALUE - count
+                // and sMAX_VALUE.
+                .longs(count, sMAX_VALUE - count, sMAX_VALUE)
 
-            // Only print this message the first time the activity
-            // runs.
+                // Convert each random number into a PrimeRunnable and
+                // execute it.
+                .forEach(randomNumber ->
+                         mExecutor.execute(new PrimeRunnable(this,
+                                                             randomNumber)));
+
+            // Print this message the first time the activity runs.
             if (!mOrientationChange)
                 println("Starting primality computations");
         }

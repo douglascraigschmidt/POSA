@@ -55,8 +55,6 @@ public class Memoizer<K, V>
      * it.
      */
     public V apply(final K key) {
-        // return mCache.computeIfAbsent(key, mFunction::apply);
-
         // Try to find the key in the cache.
         Future<V> future = mCache.get(key);
 
@@ -80,7 +78,6 @@ public class Memoizer<K, V>
      * FutureTask associated with it.
      */
     private Future<V> computeValue(K key) {
-        // return null;
         // Create a FutureTask whose run() method will compute the
         // value and store it in the cache.
         final FutureTask<V> futureTask =

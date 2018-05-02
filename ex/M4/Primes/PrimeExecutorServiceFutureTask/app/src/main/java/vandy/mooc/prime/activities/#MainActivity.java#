@@ -18,8 +18,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import vandy.mooc.prime.R;
+import vandy.mooc.prime.utils.Memoizer;
+import vandy.mooc.prime.utils.PrimeCheckers;
 import vandy.mooc.prime.utils.UiUtils;
 
 import static vandy.mooc.prime.utils.ExceptionUtils.rethrowSupplier;
@@ -312,6 +315,10 @@ public class MainActivity
         else {
             mIsRunning = true;
 
+            // Setup a function.
+            final Function<Long, Long> primeChecker =
+                new Memoizer<>(PrimeCheckers::bruteForceChecker);
+
             // Create a list of futures that will contain the results
             // of concurrently checking the primality of "count"
             // random numbers.
@@ -321,7 +328,9 @@ public class MainActivity
                 .longs(count, sMAX_VALUE - count, sMAX_VALUE)
 
                 // Convert each random number into a PrimeCallable.
-                .mapToObj(PrimeCallable::new)
+                .mapToObj(randomNumber -> 
+                          new PrimeCallable(randomNumber,
+                                            primeChecker))
 
                 // Submit each PrimeCallable to the ExecutorService.
                 .map(mRetainedState.mExecutorService::submit)
