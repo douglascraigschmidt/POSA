@@ -55,9 +55,11 @@ public class PrimeCallable
             for (long factor = 2;
                  factor <= n / 2;
                  ++factor) 
-                if (n / factor * factor == n)
+                if (Thread.interrupted()) 
+                    break;
+                else if (n / factor * factor == n)
                     return factor;
-
+        
         return 0;
     }
 

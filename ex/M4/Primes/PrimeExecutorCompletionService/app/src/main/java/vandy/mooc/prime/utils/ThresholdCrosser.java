@@ -2,7 +2,7 @@ package vandy.mooc.prime.utils;
 
 /**
  * Atomically increments and decrements an internal count, calling an
- * action when the internal count equals a givne parameter.
+ * action when the internal count equals a given parameter.
  */
 public class ThresholdCrosser {
     /**

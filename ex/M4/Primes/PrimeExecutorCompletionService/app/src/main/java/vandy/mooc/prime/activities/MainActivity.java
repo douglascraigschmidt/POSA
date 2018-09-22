@@ -347,11 +347,11 @@ public class MainActivity
                                       // 0.5 seconds.
                                       count * 500);
 
-            // Submit "count" PrimeCallable objects that concurrently check
-            // the primality of "count" random numbers.
+            // Submit "count" PrimeCallable objects that concurrently
+            // check the primality of "count" random numbers.
             new Random()
-                // Generate "count" random between (MAX_VALUE - count)
-                // and MAX_VALUE.
+                // Generate "count" random between (sMAX_VALUE -
+                // count) and sMAX_VALUE.
                 .longs(count, sMAX_VALUE - count, sMAX_VALUE)
 
                 // Convert each random number into a PrimeCallable.
@@ -369,7 +369,8 @@ public class MainActivity
 
             // Create/start a thread that waits for all the results in
             // the background so it doesn't block the UI thread.
-            mRetainedState.mThread = new Thread(mRetainedState.mCompletionRunnable);
+            mRetainedState.mThread =
+                new Thread(mRetainedState.mCompletionRunnable);
             mRetainedState.mThread.start();
         }
 
@@ -426,18 +427,18 @@ public class MainActivity
             try {
                 // Iterate through all the futures to get the results.
                 for (int i = 0; i < mCount; ++i) {
-                    // This call will block until the future is
-                    // triggered.
-                    Future<PrimeCallable.PrimeResult> resultFuture = 
-                        mActivity.mRetainedState.mExecutorCompletionService.take();
+                    // This call blocks until future is triggered.
+                    Future<PrimeCallable.PrimeResult> resultFuture = mActivity
+                        .mRetainedState
+                        .mExecutorCompletionService
+                        .take();
 
-                    // The get() call will not block since the results
-                    // should be ready before they are added to the
-                    // completion queue.
+                    // get() won't block since results must be done
+                    // before they're added to completion queue.
                     PrimeCallable.PrimeResult result =
                         resultFuture.get();
 
-                    // Check the results and display the appropriate message.
+                    // Check results and display appropriate message.
                     if (result.mSmallestFactor != 0)
                         mActivity.println(""
                                           + result.mPrimeCandidate

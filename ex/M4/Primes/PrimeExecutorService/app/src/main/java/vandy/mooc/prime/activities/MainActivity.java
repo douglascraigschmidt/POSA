@@ -347,8 +347,8 @@ public class MainActivity
     }
 
     /**
-     * The class runs in a background thread in the ExecutorService and gets the
-     * results of all the futures.
+     * The class runs in a background thread and gets the results of
+     * all the futures.
      */
     static private class FutureRunnable 
                    implements Runnable {

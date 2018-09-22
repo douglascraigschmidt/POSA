@@ -17,8 +17,7 @@ public final class PrimeCheckers {
             for (long factor = 2;
                  factor <= n / 2;
                  ++factor)
-                if ((factor % (n / 1000)) == 0
-                    && Thread.interrupted()) {
+                if (Thread.interrupted()) {
                     System.out.println("Prime checker thread interrupted "
                                        + Thread.currentThread());
                     break;

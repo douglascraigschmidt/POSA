@@ -39,36 +39,36 @@ public class TimedMemoizer<K, V>
         new ConcurrentHashMap<>();
 
     /**
-     * This function produces a value based on the key.
-     */
-    private final Function<K, V> mFunction;
-
-    /**
      * The amount of time to retain a value in the cache.
      */
     private final long mTimeoutInMillisecs;
 
     /**
-     * ScheduledExecutorService that executes a runnable after a given
-     * timeout to remove expired keys.
+     * This function produces a value based on the key.
+     */
+    private final Function<K, V> mFunction;
+
+    /**
+     * Executes a runnable after a given timeout to remove expired
+     * keys.
      */
     private ScheduledExecutorService mScheduledExecutorService;
 
     /**
-     * An object with ref count of 1 indicates its key hasn't been
-     * accessed in mTimeoutInMillisecs.
+     * A ref count of 1 is used to check if a key's not been accessed
+     * in mTimeoutInMillisecs.
      */
     private final RefCountedValue mNonAccessedValue =
         new RefCountedValue(null, 1);
 
     /**
-     * Keeps track of the number of times a key/value is referenced
-     * within mTimeoutInMillisecs.
+     * Track # of times a key is referenced within
+     * mTimeoutInMillisecs.
      */
     private class RefCountedValue {
         /**
-         * Keeps track of the number of times a key is referenced
-         * within mTimeoutInMillisecs.
+         * Track # of times a key is referenced within
+         * mTimeoutInMillisecs.
          */
         final AtomicLong mRefCount;
 
@@ -86,7 +86,18 @@ public class TimedMemoizer<K, V>
         }
 
         /**
-         * Returns true if the ref counts are equal, else false.
+         * Increment the ref count atomically and return the value.
+         */
+        V get() {
+            // Increment ref count atomically.
+            mRefCount.getAndIncrement();
+
+            // Return the value;
+            return mValue;
+        }
+
+        /**
+         * @return true if the ref counts are equal, else false.
          */
         @Override
         public boolean equals(Object obj) {
@@ -100,26 +111,15 @@ public class TimedMemoizer<K, V>
         }
 
         /**
-         * Increments the ref count atomically and returns the value.
-         */
-        V get() {
-            // Increment ref count atomically.
-            mRefCount.getAndIncrement();
-
-            // Return the value;
-            return mValue;
-        }
-
-        /**
          * Use the ScheduledExecutorService to schedule a runnable
          * that removes {@code key} from the cache if its timeout
          * expires and it hasn't been accessed in mTimeoutInMillisecs.
          */
         void schedule(K key) {
-            // Create a runnable that will check if the cached entry
-            // has become stale (i.e., not accessed within
-            // mTimeoutInMillisecs) and if so will remove that entry.
-            final Runnable removeIfStale = new Runnable() {
+            // Runnable that checks if the cached entry became "stale"
+            // (i.e., not accessed within mTimeoutInMillisecs) and if
+            // so will remove that entry.
+            Runnable removeIfStale = new Runnable() {
                     @Override
                     public void run() {
                         // Store the current ref count.
@@ -169,7 +169,8 @@ public class TimedMemoizer<K, V>
                     }
                 };
 
-            // Schedule runnable to execute after mTimeoutInMillisecs.
+            // Initially schedule runnable to execute after
+            // mTimeoutInMillisecs.
             mScheduledExecutorService.schedule
                 (removeIfStale,
                  mTimeoutInMillisecs,
@@ -185,14 +186,15 @@ public class TimedMemoizer<K, V>
         // Store the function for subsequent use.
         mFunction = function; 
 
-        // Create a ScheduledThreadPoolExecutor with a single thread.
-        mScheduledExecutorService = 
-            new ScheduledThreadPoolExecutor(1);
-
         // Store the timeout for subsequent use.
         mTimeoutInMillisecs = timeoutInMillisecs;
 
-        // Set the policies to clean everything up on shutdown.
+        // Create a ScheduledThreadPoolExecutor with one thread.
+        mScheduledExecutorService = 
+            new ScheduledThreadPoolExecutor(1);
+
+        // Get an object to set policies that clean everything up on
+        // shutdown.
         ScheduledThreadPoolExecutor exec =
             (ScheduledThreadPoolExecutor) mScheduledExecutorService;
 
