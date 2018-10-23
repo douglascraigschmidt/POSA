@@ -385,7 +385,8 @@ public class MainActivity
         }
 
         /**
-         * Run in a background thread to get the results of all the futures.
+         * Runs in a background thread and loops through all the
+         * futures to get their results.
          */
         @Override
         public void run() {

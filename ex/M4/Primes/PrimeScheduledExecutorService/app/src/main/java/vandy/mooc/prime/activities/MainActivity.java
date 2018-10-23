@@ -120,10 +120,10 @@ public class MainActivity
          * Constructor initializes the ExecutorService thread pool.
          */
         RetainedState() {
-            // Create a thread pool that matches the number of cores.
+            // Create a "work-stealing" fork-join thread pool that
+            // internally matches the number of cores.
             mExecutorService =
-                Executors.newFixedThreadPool(Runtime.getRuntime()
-                                             .availableProcessors());
+                Executors.newWorkStealingPool();
         }
 
         /**
