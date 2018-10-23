@@ -28,11 +28,12 @@ import static java.util.stream.Collectors.toList;
 
 /**
  * Main activity for an app that shows how to use the Java
- * ExecutorCompletionService interface and a fixed-size thread pool to
- * determine if n random numbers are prime or not.  The user can
- * interrupt the thread performing this computation at any point and
- * the thread will also be interrupted when the activity is destroyed.
- * In addition, runtime configuration changes are handled gracefully.
+ * ExecutorCompletionService interface and a work-stealing fork-join
+ * thread pool to determine if n random numbers are prime or not.  The
+ * user can interrupt the thread performing this computation at any
+ * point and the thread will also be interrupted when the activity is
+ * destroyed.  In addition, runtime configuration changes are handled
+ * gracefully.
  */
 public class MainActivity 
        extends LifecycleLoggingActivity {
