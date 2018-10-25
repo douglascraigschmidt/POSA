@@ -25,7 +25,7 @@ import vandy.mooc.prime.utils.UiUtils;
 
 /**
  * Main activity for an app that shows how to use the Java
- * ExecutorCompletionService interface and a fixed-size thread pool to
+ * ExecutorCompletionService interface and a cached thread pool to
  * determine if n random numbers are prime or not.  The user can
  * interrupt the thread performing this computation at any point and
  * the thread will also be interrupted when the activity is destroyed.
@@ -94,7 +94,8 @@ public class MainActivity
         /**
          * This object runs the prime computations.
          */
-        final ExecutorCompletionService<PrimeCallable.PrimeResult> mExecutorCompletionService;
+        final ExecutorCompletionService<PrimeCallable.PrimeResult> 
+            mExecutorCompletionService;
 
         /**
          * This object manages a thread pool.
@@ -123,10 +124,9 @@ public class MainActivity
          * runtime configuration changes.
          */
         RetainedState() {
-            // Create a thread pool that matches the number of cores.
+            // Create a cached thread pool.
             mExecutorService =
-                Executors.newFixedThreadPool(Runtime.getRuntime()
-                                             .availableProcessors());
+                Executors.newCachedThreadPool();
 
             // Associate the ExecutorCompletionService with the
             // ExecutorService.

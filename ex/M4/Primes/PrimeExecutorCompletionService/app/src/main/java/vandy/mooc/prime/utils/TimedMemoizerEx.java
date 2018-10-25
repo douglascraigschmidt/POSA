@@ -125,8 +125,9 @@ public class TimedMemoizerEx<K, V>
     private ScheduledFuture<?> mScheduledFuture;
 
     /** 
-     * This runnable is scheduled to run periodically to purge entries
-     * in the map that haven't been accessed in mTimeoutInMillisecs.
+     * This runnable is scheduled to run periodically by the
+     * ScheduledExecutorService to purge entries in the map that
+     * haven't been accessed in mTimeoutInMillisecs.
      */
     private final Runnable mPurgeEntries = () -> {
         Log.d(TAG,
