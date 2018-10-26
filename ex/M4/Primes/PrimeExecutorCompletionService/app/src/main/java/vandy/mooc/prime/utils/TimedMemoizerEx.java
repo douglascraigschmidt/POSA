@@ -136,60 +136,55 @@ public class TimedMemoizerEx<K, V>
         // Iterate over all the keys in the map and purge those not
         // accessed recently.  This iterator is only called by the one
         // thread running ScheduledThreadPoolExecutor.
-        for (ConcurrentMap.Entry<K, RefCountedValue> e : mCache.entrySet()) {
-            final K key = e.getKey();
-            final RefCountedValue value = e.getValue();
+        mCache.forEach((key, value) -> {
+                // Store the current ref count.
+                long oldCount = value.mRefCount.get();
 
-            // Store the current ref count.
-            long oldCount = value.mRefCount.get();
+                // If the entry has not been accessed within
+                // mTimeoutInMillisecs then atomically remove it.
+                if (mCache.remove(key, mNonAccessedValue)) {
+                    Log.d(TAG,
+                          "key "
+                          + key
+                          + " removed from cache ("
+                          + mCache.size()
+                          + ") since it wasn't accessed recently");
 
-            // If the entry has not been accessed within
-            // mTimeoutInMillisecs then atomically remove it.
-            if (mCache.remove(key,
-                              mNonAccessedValue)) {
-                Log.d(TAG,
-                      "key "
-                      + key
-                      + " removed from cache (" 
-                      + mCache.size()
-                      + ") since it wasn't accessed recently");
+                    // Decrement the count of cached entries by one, which
+                    // will invoke the lambda when the count drops to 0.
+                    mCacheCount.decrementAndCallAtN
+                        (0, () -> {
+                            // If there are no entries in the cache cancel
+                            // mPurgeEntries from being called henceforth.
+                            mScheduledFuture.cancel(true);
+                            Log.d(TAG,
+                                  "cancelling mPurgeEntries");
+                        });
+                } else {
+                    // Entry was accessed within mTimeoutInMillisecs,
+                    // so update its reference count.
 
-                // Decrement the count of cached entries by one, which
-                // will invoke the lambda when the count drops to 0.
-                mCacheCount.decrementAndCallAtN
-                    (0,
-                     () -> {
-                        // If there are no entries in the cache cancel
-                        // mPurgeEntries from being called henceforth.
-                        mScheduledFuture.cancel(true);
-                        Log.d(TAG,
-                              "cancelling mPurgeEntries");
-                    });
-            } 
-            // The entry HAS been accessed within mTimeoutInMillisecs,
-            // so update its reference count.
-            else {
-                Log.d(TAG,
-                      "key "
-                      + key
-                      + " NOT removed from cache ("
-                      + mCache.size() + ") since it was accessed recently ("
-                      + value.mRefCount.get()
-                      + ") and ("
-                      + mNonAccessedValue.mRefCount.get()
-                      + ")");
-                assert(mCache.get(key) != null);
+                    Log.d(TAG,
+                          "key "
+                          + key
+                          + " NOT removed from cache ("
+                          + mCache.size() + ") since it was accessed recently ("
+                          + value.mRefCount.get()
+                          + ") and ("
+                          + mNonAccessedValue.mRefCount.get()
+                          + ")");
+                    assert(mCache.get(key) != null);
 
-                // Try to reset ref count to 1 so it won't be
-                // considered as accessed (yet).  Do NOT reset it to
-                // 1, however, if ref count has currently increased
-                // between remove() above and here.
-                value
-                    .mRefCount
-                    .getAndUpdate(curCount ->
-                                  curCount > oldCount ? curCount : 1);
-            }
-        }
+                    // Try to reset ref count to 1 so it won't be
+                    // considered as accessed (yet).  Do NOT reset it
+                    // to 1, however, if ref count has currently
+                    // increased between remove() above and here.
+                    value
+                        .mRefCount
+                        .getAndUpdate(curCount ->
+                                      curCount > oldCount ? curCount : 1);
+                }
+            });
 
         Log.d(TAG,
               "ending the purge of keys not accessed recently");
@@ -256,8 +251,8 @@ public class TimedMemoizerEx<K, V>
                               "scheduling mPurgeEntries for key "
                               + k);
 
-                        // Schedule mPurgeEntries to purge keys that
-                        // weren't accessed in mTimeoutInMillisecs.
+                        // Schedule mPurgeEntries to purge keys not
+                        // accessed within mTimeoutInMillisecs.
                         mScheduledFuture = mScheduledExecutorService
                         .scheduleAtFixedRate
                         (mPurgeEntries,
