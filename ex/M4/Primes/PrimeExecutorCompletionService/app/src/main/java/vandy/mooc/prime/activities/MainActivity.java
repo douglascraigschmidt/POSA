@@ -406,7 +406,7 @@ public class MainActivity
          * Constructor initializes the field.
          */
         CompletionRunnable(MainActivity activity,
-                                  int count) {
+                           int count) {
             mActivity = activity;
             mCount = count;
         }
