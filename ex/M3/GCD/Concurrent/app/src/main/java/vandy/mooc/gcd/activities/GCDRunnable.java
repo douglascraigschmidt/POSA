@@ -29,37 +29,13 @@ public class GCDRunnable
     private final int MAX_PRINT_ITERATIONS = 10000000;
 
     /**
-     * Constructor initializes the field.
-     */
-    public GCDRunnable(MainActivity activity) {
-        mActivity = activity;
-    }
-    
-    /**
-     * Provides a recursive implementation of Euclid's algorithm to
-     * compute the "greatest common divisor" (GCD).
-     */
-    private int computeGCD(int number1,
-                           int number2) {
-        // Basis case.
-        if (number2 == 0)
-            return number1;
-        // Recursive call.
-        return computeGCD(number2,
-                          number1 % number2);
-    }
-
-    /**
      * Hook method that runs for MAX_ITERATIONs computing the GCD of
      * randomly generated numbers.
      */
     public void run() {
-        final String threadString = 
-            " with thread id " 
-            + Thread.currentThread();
+        final String threadString = " with thread id " + Thread.currentThread();
 
-        mActivity.println("Entering run()"
-                          + threadString);
+        mActivity.println("Entering run()" + threadString);
 
         // Generate random numbers and compute their GCDs.
 
@@ -81,7 +57,27 @@ public class GCDRunnable
                                                number2));
         }
 
-        mActivity.println("Leaving run() "
-                          + threadString);
+        mActivity.println("Leaving run() " + threadString);
+    }
+
+    /**
+     * Constructor initializes the field.
+     */
+    public GCDRunnable(MainActivity activity) {
+        mActivity = activity;
+    }
+    
+    /**
+     * Provides a recursive implementation of Euclid's algorithm to
+     * compute the "greatest common divisor" (GCD).
+     */
+    private int computeGCD(int number1,
+                           int number2) {
+        // Basis case.
+        if (number2 == 0)
+            return number1;
+        // Recursive call.
+        return computeGCD(number2,
+                          number1 % number2);
     }
 }

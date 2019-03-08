@@ -33,21 +33,31 @@ public class GCDThread
     private final int MAX_PRINT_ITERATIONS = 10000000;
 
     /**
-     * Set the random value and return "this" (i.e., a "Fluent
-     * interface").
+     * Hook method that runs for MAX_ITERATIONs computing the GCD of
+     * randomly generated numbers.
      */
-    public GCDThread setRandom(Random random) {
-        mRandom = random;
-        return this;
-    }
+    public void run() {
+        final String threadString = " with thread id " + Thread.currentThread();
 
-    /**
-     * Set the activity value and return "this" (i.e., a "Fluent
-     * interface").
-     */
-    public GCDThread setActivity(MainActivity activity) {
-        mActivity = activity;
-        return this;
+        mActivity.println("Entering run()" + threadString);
+
+        // Generate random numbers and compute their GCDs.
+
+        for (int i = 0; i < MAX_ITERATIONS; ++i) {
+            // Generate two random numbers.
+            int number1 = mRandom.nextInt(); 
+            int number2 = mRandom.nextInt();
+                
+            // Print results every 10 million iterations.
+            if ((i % MAX_PRINT_ITERATIONS) == 0)
+                mActivity.println("In run()"
+                                  + threadString + " the GCD of " 
+                                  + number1 + " and " + number2 + " is "
+                                  + computeGCD(number1,
+                                               number2));
+        }
+
+        mActivity.println("Leaving run() " + threadString);
     }
 
     /**
@@ -67,38 +77,20 @@ public class GCDThread
     }
 
     /**
-     * Hook method that runs for MAX_ITERATIONs computing the GCD of
-     * randomly generated numbers.
+     * Set the random value and return "this" (i.e., a "Fluent
+     * interface").
      */
-    public void run() {
-        final String threadString = 
-            " with thread id " 
-            + Thread.currentThread();
+    public GCDThread setRandom(Random random) {
+        mRandom = random;
+        return this;
+    }
 
-        mActivity.println("Entering run()"
-                          + threadString);
-
-        // Generate random numbers and compute their GCDs.
-
-        for (int i = 0; i < MAX_ITERATIONS; ++i) {
-            // Generate two random numbers.
-            int number1 = mRandom.nextInt(); 
-            int number2 = mRandom.nextInt();
-                
-            // Print results every 10 million iterations.
-            if ((i % MAX_PRINT_ITERATIONS) == 0)
-                mActivity.println("In run()"
-                                  + threadString 
-                                  + " the GCD of " 
-                                  + number1
-                                  + " and "
-                                  + number2
-                                  + " is "
-                                  + computeGCD(number1,
-                                               number2));
-        }
-
-        mActivity.println("Leaving run() "
-                          + threadString);
+    /**
+     * Set the activity value and return "this" (i.e., a "Fluent
+     * interface").
+     */
+    public GCDThread setActivity(MainActivity activity) {
+        mActivity = activity;
+        return this;
     }
 }

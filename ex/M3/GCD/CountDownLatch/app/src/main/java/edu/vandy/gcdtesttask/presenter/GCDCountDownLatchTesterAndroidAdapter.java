@@ -11,7 +11,7 @@ import java.util.concurrent.CountDownLatch;
  * tests of various GCDInterface implementations using CountDownLatchs.
  */
 public class GCDCountDownLatchTesterAndroidAdapter
-       extends GCDCountDownLatchTester {
+       extends GCDCountDownLatchWorker {
     /**
      * Interface for interacting with View layer.
      */

@@ -7,9 +7,10 @@ import edu.vandy.visfwk.model.TaskTuple;
 import edu.vandy.visfwk.utils.ProgressReporter;
 
 /**
- * The class tests various GCDInterface implementations using CountDownLatchs.
+ * Each instance of this class runs in a thread and tests various GCDInterface
+ * implementations using CountDownLatch objects.
  */
-public class GCDCountDownLatchTester
+public class GCDCountDownLatchWorker
        implements Runnable {
     /**
      * String Tag for logging.
@@ -59,7 +60,7 @@ public class GCDCountDownLatchTester
     /**
      * Constructor initializes the fields.
      */
-    public GCDCountDownLatchTester(CountDownLatch entryBarrier,
+    public GCDCountDownLatchWorker(CountDownLatch entryBarrier,
                                    CountDownLatch exitBarrier,
                                    TaskTuple<GCDInterface> gcdTuple,
                                    ProgressReporter progressReporter) {

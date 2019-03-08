@@ -133,7 +133,7 @@ public class GCDCountDownLatchTestTask
              cycle++) {
             try {
                 // Initialize the input arrays.
-                GCDCountDownLatchTester.initializeInputs(mIterations);
+                GCDCountDownLatchWorker.initializeInputs(mIterations);
 
                 // Execute each GCDInterface tester in the ExecutorService.
                 mGcdTesters.forEach(mExecutor::execute);

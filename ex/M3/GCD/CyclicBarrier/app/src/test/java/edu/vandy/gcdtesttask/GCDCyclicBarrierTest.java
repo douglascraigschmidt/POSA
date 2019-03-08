@@ -15,7 +15,7 @@ import edu.vandy.gcdtesttask.presenter.GCDImplementations;
 import edu.vandy.gcdtesttask.presenter.GCDInterface;
 
 /**
- * This JUnit test evaluates the GCDCyclicBarrierTest class.
+ * This JUnit test evaluates the GCDCyclicBarrierWorker class.
  */
 public class GCDCyclicBarrierTest 
        implements ProgressReporter {
