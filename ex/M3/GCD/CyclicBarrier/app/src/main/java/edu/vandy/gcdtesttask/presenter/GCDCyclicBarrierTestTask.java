@@ -96,7 +96,7 @@ public class GCDCyclicBarrierTestTask
             new CyclicBarrier(gcdTaskTuples.size() + 1,
                               // Barrier action (re)initializes the
                               // test data.
-                              () -> GCDCyclicBarrierTester.initializeInputs(mIterations));
+                              () -> GCDCyclicBarrierWorker.initializeInputs(mIterations));
 
         // Create an exit barrier that ensures all threads end at the
         // same time.  We add a "+ 1" for the thread that waits for

@@ -8,9 +8,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 
+import edu.vandy.gcdtesttask.presenter.GCDCyclicBarrierWorker;
 import edu.vandy.visfwk.model.TaskTuple;
 import edu.vandy.visfwk.utils.ProgressReporter;
-import edu.vandy.gcdtesttask.presenter.GCDCyclicBarrierTester;
 import edu.vandy.gcdtesttask.presenter.GCDImplementations;
 import edu.vandy.gcdtesttask.presenter.GCDInterface;
 
@@ -60,7 +60,7 @@ public class GCDCyclicBarrierTest
     }
 
     /**
-     * Main entry point that tests the GCDCyclicBarrierTester class.
+     * Main entry point that tests the GCDCyclicBarrierWorker class.
      */
     @Test
     public void testGCDCyclicBarrierTester()
@@ -74,7 +74,7 @@ public class GCDCyclicBarrierTest
         CyclicBarrier entryBarrier =
             new CyclicBarrier(gcdTests.size() + 1,
                               // Barrier action (re)initializes the test data.
-                              () -> GCDCyclicBarrierTester.initializeInputs(sITERATIONS));
+                              () -> GCDCyclicBarrierWorker.initializeInputs(sITERATIONS));
 
         // Create an exit barrier that ensures all threads end at the
         // same time.  We add a "+ 1" for the thread that waits for
@@ -88,7 +88,7 @@ public class GCDCyclicBarrierTest
             // Iterate through all the GCD tuples and start a new
             // thread to run GCDCyclicBarrierTest for each one.
             gcdTests.forEach(gcdTuple
-                             -> new Thread(new GCDCyclicBarrierTester
+                             -> new Thread(new GCDCyclicBarrierWorker
                                            // All threads share the
                                            // entry and exit barriers.
                                            (entryBarrier,

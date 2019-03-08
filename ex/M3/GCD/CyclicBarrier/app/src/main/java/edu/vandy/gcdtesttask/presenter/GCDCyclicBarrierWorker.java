@@ -9,7 +9,7 @@ import edu.vandy.visfwk.utils.ProgressReporter;
 /**
  * The class tests various GCDInterface implementations using CyclicBarriers.
  */
-public class GCDCyclicBarrierTester
+public class GCDCyclicBarrierWorker
        implements Runnable {
     /**
      * String Tag for logging.
@@ -59,7 +59,7 @@ public class GCDCyclicBarrierTester
     /**
      * Constructor initializes the fields.
      */
-    public GCDCyclicBarrierTester(CyclicBarrier entryBarrier,
+    public GCDCyclicBarrierWorker(CyclicBarrier entryBarrier,
                                   CyclicBarrier exitBarrier,
                                   TaskTuple<GCDInterface> gcdTuple,
                                   ProgressReporter progressReporter) {

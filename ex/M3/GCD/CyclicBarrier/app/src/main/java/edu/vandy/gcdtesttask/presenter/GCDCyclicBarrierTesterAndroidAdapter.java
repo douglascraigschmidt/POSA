@@ -11,7 +11,7 @@ import java.util.concurrent.CyclicBarrier;
  * tests of various GCDInterface implementations using CyclicBarriers.
  */
 public class GCDCyclicBarrierTesterAndroidAdapter
-       extends GCDCyclicBarrierTester {
+       extends GCDCyclicBarrierWorker {
     /**
      * Interface for interacting with View layer.
      */
