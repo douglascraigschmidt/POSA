@@ -3,7 +3,7 @@ package edu.vandy.simpleblockingboundedqueue.model;
 import java.util.LinkedList;
 
 /*
- * Defines an implementation of the BoundedQueue interface that works
+ * Defines an implementation of the SimpleBlockingQueue interface that works
  * properly when accessed via multiple threads since it's synchronized
  * properly.
  */

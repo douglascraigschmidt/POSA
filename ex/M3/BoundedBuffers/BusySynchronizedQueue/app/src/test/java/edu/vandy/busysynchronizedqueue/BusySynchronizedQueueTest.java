@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 
-import edu.vandy.busysynchronizedqueue.model.BoundedQueue;
+import edu.vandy.busysynchronizedqueue.model.SimpleBlockingQueue;
 import edu.vandy.busysynchronizedqueue.model.BusySynchronizedQueue;
 
 /**

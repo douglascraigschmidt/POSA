@@ -33,7 +33,7 @@ public class SimpleBlockingBoundedQueueTest {
 
     /**
      * This producer runs in a separate Java thread and passes integers
-     * to a consumer thread via a shared BoundedQueue.
+     * to a consumer thread via a shared SimpleBlockingQueue.
      */
     private static class Producer<BQ extends BoundedQueue<Integer>>
            implements Runnable {
@@ -43,7 +43,7 @@ public class SimpleBlockingBoundedQueueTest {
         private final BQ mQueue;
         
         /**
-         * Constructor initializes the BoundedQueue data
+         * Constructor initializes the SimpleBlockingQueue data
          * member.
          */
         Producer(BQ blockingQueue) {
@@ -52,7 +52,7 @@ public class SimpleBlockingBoundedQueueTest {
 
         /**
          * This method runs in a separate Java thread and passes
-         * integers to a consumer thread via a shared BoundedQueue.
+         * integers to a consumer thread via a shared SimpleBlockingQueue.
          */
         public void run(){ 
             try {
@@ -70,7 +70,7 @@ public class SimpleBlockingBoundedQueueTest {
 
     /**
      * This consumer runs in a separate Java thread and receives
-     * integers from a producer thread via a shared BoundedQueue.
+     * integers from a producer thread via a shared SimpleBlockingQueue.
      */
     private static class Consumer<BQ extends BoundedQueue<Integer>>
            implements Runnable {
@@ -80,7 +80,7 @@ public class SimpleBlockingBoundedQueueTest {
         private final BQ mQueue;
         
         /**
-         * Constructor initializes the BoundedQueue data member.
+         * Constructor initializes the SimpleBlockingQueue data member.
          */
         Consumer(BQ blockingQueue) {
             mQueue = blockingQueue;
@@ -88,7 +88,7 @@ public class SimpleBlockingBoundedQueueTest {
 
         /**
          * This method runs in a separate Java thread and receives
-         * integers from a producer thread[q via a shared BoundedQueue.
+         * integers from a producer thread[q via a shared SimpleBlockingQueue.
          */
         public void run() {
             Integer integer = null;

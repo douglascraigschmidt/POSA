@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  * is inefficient since due to its "busy waiting".
  */
 public class BusySynchronizedQueue<E>
-      implements BoundedQueue<E> {
+      implements SimpleBlockingQueue<E> {
     /**
      * The queue consists of a LinkedList of E's.
      */

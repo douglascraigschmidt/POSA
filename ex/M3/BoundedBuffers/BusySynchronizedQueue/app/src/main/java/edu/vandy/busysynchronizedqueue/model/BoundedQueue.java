@@ -1,9 +1,9 @@
 package edu.vandy.busysynchronizedqueue.model;
 
 /**
- * Defines an interface for a bounded queue.
+ * Defines an interface for a bounded queue, which is a lightweight variant of the Java BlockingQueue interface.
  */
-public interface BoundedQueue<E> {
+public interface SimpleBlockingQueue<E> {
     /**
      * Inserts the specified element into this queue, waiting if
      * necessary for space to become available.

@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 /*
- * Defines an implementation of the BoundedQueue interface that
+ * Defines an implementation of the SimpleBlockingQueue interface that
  * (intentially) doesn't work properly when accessed via multiple
  * threads since it's not synchronized properly.
  */

@@ -32,7 +32,7 @@ public class BuggyQueueTest {
 
     /**
      * This producer runs in a separate Java thread and passes strings
-     * to a consumer thread via a shared BoundedQueue.
+     * to a consumer thread via a shared SimpleBlockingQueue.
      */
     private static class Producer<BQ extends BoundedQueue<Integer>>
                    implements Runnable {
@@ -42,7 +42,7 @@ public class BuggyQueueTest {
         private final BQ mQueue;
         
         /**
-         * Constructor initializes the BoundedQueue data member.
+         * Constructor initializes the SimpleBlockingQueue data member.
          */
         Producer(BQ blockingQueue) {
             mQueue = blockingQueue;
@@ -50,7 +50,7 @@ public class BuggyQueueTest {
 
         /**
          * This method runs in a separate Java thread and passes
-         * strings to a consumer thread via a shared BoundedQueue.
+         * strings to a consumer thread via a shared SimpleBlockingQueue.
          */
         public void run() {
             for (int i = 0; i < mMaxIterations; ) {
@@ -66,7 +66,7 @@ public class BuggyQueueTest {
 
     /**
      * This consumer runs in a separate Java thread and receives
-     * strings from a producer thread via a shared BoundedQueue.
+     * strings from a producer thread via a shared SimpleBlockingQueue.
      */
     private static class Consumer<BQ extends BoundedQueue<Integer>>
                    implements Runnable {
@@ -76,7 +76,7 @@ public class BuggyQueueTest {
         private final BQ mQueue;
         
         /**
-         * Constructor initializes the BoundedQueue data member.
+         * Constructor initializes the SimpleBlockingQueue data member.
          */
         Consumer(BQ blockingQueue) {
             mQueue = blockingQueue;
@@ -84,7 +84,7 @@ public class BuggyQueueTest {
 
         /**
          * This method runs in a separate Java thread and receives
-         * strings from a producer thread via a shared BoundedQueue.
+         * strings from a producer thread via a shared SimpleBlockingQueue.
          */
         public void run() {
             Integer integer = null;
