@@ -19,7 +19,7 @@ import edu.vandy.simpleblockingboundedqueue.presenter.ProducerTask;
 import edu.vandy.simpleblockingboundedqueue.utils.UiUtils;
 
 /**
- * Main activity that shows how the SimpleBlockingBoundedQueue can be
+ * Main activity that shows how the SimpleBoundedBlockingQueue can be
  * used to produce and consumer integers via AsyncTasks.  The user can
  * cancel the AsyncTasks performing these computations at any point
  * and the AsyncTasks will also be cancelled when the activity is

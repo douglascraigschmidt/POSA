@@ -10,7 +10,7 @@ import edu.vandy.simpleblockingboundedqueue.model.BoundedQueue;
 import edu.vandy.simpleblockingboundedqueue.model.SimpleBlockingBoundedQueue;
 
 /**
- * Test program for the SimpleBlockingBoundedQueue that fixes race conditions
+ * Test program for the SimpleBoundedBlockingQueue that fixes race conditions
  * by having proper synchronization (i.e., mutual exclusion and
  * coordination).
  */

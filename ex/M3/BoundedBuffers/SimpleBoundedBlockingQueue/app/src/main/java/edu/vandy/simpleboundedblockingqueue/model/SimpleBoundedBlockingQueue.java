@@ -7,7 +7,7 @@ import java.util.LinkedList;
  * properly when accessed via multiple threads since it's synchronized
  * properly.
  */
-public class SimpleBlockingBoundedQueue<E>
+public class SimpleBoundedBlockingQueue<E>
       implements BoundedQueue<E> {
     /**
      * The queue consists of a LinkedList of E's.
@@ -23,14 +23,14 @@ public class SimpleBlockingBoundedQueue<E>
      * Create a SimpleBlocking queue with a capacity of
      * Integer.MAX_VALUE.
      */
-    public SimpleBlockingBoundedQueue() {
+    public SimpleBoundedBlockingQueue() {
         this(Integer.MAX_VALUE);
     }
 
     /**
      * Create a SimpleBlocking queue with the given capacity.
      */
-    public SimpleBlockingBoundedQueue(int capacity) {
+    public SimpleBoundedBlockingQueue(int capacity) {
         if (capacity <= 0) 
             throw new IllegalArgumentException();
         mCapacity = capacity;
