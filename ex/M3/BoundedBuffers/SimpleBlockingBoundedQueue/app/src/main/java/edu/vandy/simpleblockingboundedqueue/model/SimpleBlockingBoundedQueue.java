@@ -75,7 +75,7 @@ public class SimpleBlockingBoundedQueue<E>
     public E take() throws InterruptedException {
         synchronized(this) {
             // Wait until the queue is not empty.
-            while (mList.isEmpty()) 
+            while (isEmpty())
                 wait();
 
             // Notify that the queue may have changed state, e.g., "no
@@ -103,7 +103,9 @@ public class SimpleBlockingBoundedQueue<E>
      */
     @Override
     public boolean isFull() {
-        return mList.size() == mCapacity;
+        synchronized(this) {
+            return mList.size() == mCapacity;
+        }
     }
 
     /**
