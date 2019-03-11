@@ -1,7 +1,8 @@
 package edu.vandy.simpleblockingboundedqueue.model;
 
 /**
- * Defines an interface for a bounded queue.
+ * Defines an interface for a bounded queue.  It's similar to the Java
+ * BlockingQueue, but much "leaner" (i.e., fewer methods).
  */
 public interface SimpleBlockingQueue<E> {
     /**
