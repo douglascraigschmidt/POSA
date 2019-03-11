@@ -3,7 +3,7 @@ package edu.vandy.simpleblockingboundedqueue.model;
 /**
  * Defines an interface for a bounded queue.
  */
-public interface BoundedQueue<E> {
+public interface SimpleBlockingQueue<E> {
     /**
      * Inserts the specified element into this queue, waiting if
      * necessary for space to become available.

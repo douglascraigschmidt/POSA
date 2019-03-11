@@ -9,7 +9,7 @@ import edu.vandy.simpleblockingboundedqueue.view.MainActivity;
 
 /**
  * The consumer runs in a background thread and receives integers from
- * the ProducerTask via a shared BoundedQueue.
+ * the ProducerTask via a shared SimpleBlockingQueue.
  */
 public class ConsumerTask
       extends ProducerConsumerTaskBase {
@@ -41,7 +41,7 @@ public class ConsumerTask
     
     /**
      * This method runs in a background thread and receives integers
-     * sent by the ProducerTask via a shared BoundedQueue.
+     * sent by the ProducerTask via a shared SimpleBlockingQueue.
      */
     @Override
     protected Void doInBackground(Void... v) {
