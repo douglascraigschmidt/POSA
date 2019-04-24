@@ -5,7 +5,7 @@ android {
     buildToolsVersion '26.0.2'
 
     defaultConfig {
-        applicationId "livelessons.imagestreamgang"
+        applicationId "gcd.concurrent"
         minSdkVersion 25
         targetSdkVersion 25
         versionCode 1

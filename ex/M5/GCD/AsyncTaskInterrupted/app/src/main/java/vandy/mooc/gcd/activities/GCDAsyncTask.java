@@ -14,9 +14,13 @@ import java.util.Random;
  * see if the task has been cancelled and exits gracefully if so.
  */
 public class GCDAsyncTask
-       extends AsyncTask<Integer,   // Passed to doInBackground()
-                         String,    // Passed to onProgressUpdate()
-                         Boolean> { // Returned from doInBackground() and passed to onPostExecute()
+       extends AsyncTask<// Passed to doInBackground()
+                         Integer,   
+			 // Passed to onProgressUpdate()			 
+                         String,    
+                         // Returned from doInBackground()
+                         // and passed to onPostExecute()
+                         Boolean> { 
     /**
      * Debugging tag used by the Android logger.
      */
@@ -146,8 +150,8 @@ public class GCDAsyncTask
     protected void onPostExecute(Boolean lastTask) {
         // Print the message in the UI thread.
         mActivity.get().println("Finishing AsyncTask #"
-                          + mAsyncTaskNumber
-                          + " successfully");
+                                + mAsyncTaskNumber
+                                + " successfully");
 
         // Tell the activity to finish up if we're the last task.
         if (lastTask)

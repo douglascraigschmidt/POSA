@@ -121,7 +121,7 @@ public class MainActivity
                 // Print a diagnostic message.
                 println("All threads are joined by thread "
                         + Thread.currentThread());
-        }).start();
+        }).start()
     }
 
     /**

@@ -57,8 +57,8 @@ public class MainActivity
     private final static int sMAX_TASK_COUNT = 2;
 
     /**
-     * Keeps track of whether the edit text is visible for the user to
-     * enter a count.
+     * Keeps track of whether the edit text is visible for the 
+     * user to enter a count.
      */
     private boolean mIsEditTextVisible = false;
 

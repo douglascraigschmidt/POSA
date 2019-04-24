@@ -21,16 +21,16 @@ public class GCDThread
     private Random mRandom;
 
     /** 
-     * Number of times to iterate, which is 100 million to ensure the
+     * Number of times to iterate, which is 10 million to ensure the
      * program runs for a while.
      */
-    private final int MAX_ITERATIONS = 100000000;
+    private final int MAX_ITERATIONS = 10000000;
 
     /** 
-     * Number of times to iterate before calling print, which is 10
+     * Number of times to iterate before calling print, which is 1
      * million to ensure the program runs for a while.
      */
-    private final int MAX_PRINT_ITERATIONS = 10000000;
+    private final int MAX_PRINT_ITERATIONS = 1000000;
 
     /**
      * Hook method that runs for MAX_ITERATIONs computing the GCD of
@@ -48,7 +48,7 @@ public class GCDThread
             int number1 = mRandom.nextInt(); 
             int number2 = mRandom.nextInt();
                 
-            // Print results every 10 million iterations.
+            // Print results every 1 million iterations.
             if ((i % MAX_PRINT_ITERATIONS) == 0)
                 mActivity.println("In run()"
                                   + threadString + " the GCD of " 

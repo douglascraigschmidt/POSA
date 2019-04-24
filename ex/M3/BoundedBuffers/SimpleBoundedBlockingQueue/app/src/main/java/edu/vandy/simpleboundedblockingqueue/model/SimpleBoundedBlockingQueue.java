@@ -8,7 +8,7 @@ import java.util.LinkedList;
  * properly.
  */
 public class SimpleBoundedBlockingQueue<E>
-      implements BoundedQueue<E> {
+      implements SimpleBlockingQueue<E> {
     /**
      * The queue consists of a LinkedList of E's.
      */
