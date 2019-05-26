@@ -18,7 +18,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 import vandy.mooc.prime.R;
 import vandy.mooc.prime.utils.Memoizer;
@@ -111,6 +110,12 @@ public class MainActivity
          * Thread that waits for all the results to complete.
          */
         Thread mThread;
+
+        /**
+         * Cache used to generate, store, and retrieve the results of
+         * prime checking computations.
+         */
+        Memoizer<Long, Long> mMemoizer;
 
         /**
          * Constructor initializes the ExecutorService thread pool.
@@ -315,8 +320,9 @@ public class MainActivity
         else {
             mIsRunning = true;
 
-            // Setup a function.
-            final Function<Long, Long> primeChecker =
+            // Create the cache used to generate, store, and retrieve
+            // the results of prime checking computations.
+            mRetainedState.mMemoizer =
                 new Memoizer<>(PrimeCheckers::bruteForceChecker);
 
             // Create a list of futures that will contain the results
@@ -330,7 +336,7 @@ public class MainActivity
                 // Convert each random number into a PrimeCallable.
                 .mapToObj(randomNumber -> 
                           new PrimeCallable(randomNumber,
-                                            primeChecker))
+                                            mRetainedState.mMemoizer))
 
                 // Submit each PrimeCallable to the ExecutorService.
                 .map(mRetainedState.mExecutorService::submit)
@@ -360,12 +366,12 @@ public class MainActivity
      * results of all the futures.
      */
     static private class FutureRunnable 
-                   implements Runnable {
+        implements Runnable {
         /**
          * Debugging tag used by the Android logger.
          */
         private final String TAG =
-                getClass().getSimpleName();
+            getClass().getSimpleName();
 
         /**
          * List of futures to the results of the PrimeCallable computations.

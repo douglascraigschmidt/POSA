@@ -25,7 +25,7 @@ public class Memoizer<K, V>
     /**
      * Debugging tag used by the Android logger.
      */
-    protected final String TAG =
+    private final String TAG =
         getClass().getSimpleName();
 
     /**

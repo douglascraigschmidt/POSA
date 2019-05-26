@@ -13,6 +13,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,7 +21,7 @@ import java.util.concurrent.Future;
 
 import vandy.mooc.prime.R;
 import vandy.mooc.prime.utils.PrimeCheckers;
-import vandy.mooc.prime.utils.TimedMemoizerEx;
+import vandy.mooc.prime.utils.Memoizer;
 import vandy.mooc.prime.utils.UiUtils;
 
 /**
@@ -117,7 +118,7 @@ public class MainActivity
          * Cache used to generate, store, and retrieve the results of
          * prime checking computations.
          */
-        TimedMemoizerEx<Long, Long> mTimedMemoizer;
+        Memoizer<Long, Long> mMemoizer;
 
         /**
          * Constructor initializes the state that's retained across
@@ -146,12 +147,6 @@ public class MainActivity
             if (mExecutorService != null) {
                 mExecutorService.shutdownNow();
                 mExecutorService = null;
-            }
-
-            // Shutdown the memoizer if it already exists.
-            if (mTimedMemoizer != null) {
-                mTimedMemoizer.shutdown();
-                mTimedMemoizer = null;
             }
 
             // Interrupt the prime waiter thread.
@@ -335,17 +330,11 @@ public class MainActivity
         else {
             mIsRunning = true;
 
-            // Shutdown the memoizer if it already exists.
-            if (mRetainedState.mTimedMemoizer != null) 
-                mRetainedState.mTimedMemoizer.shutdown();
-
             // Create the cache used to generate, store, and retrieve
             // the results of prime checking computations.
-            mRetainedState.mTimedMemoizer =
-                new TimedMemoizerEx<>(PrimeCheckers::bruteForceChecker,
-                                      // Timeout cache entries after count *
-                                      // 0.5 seconds.
-                                      count * 500);
+            mRetainedState.mMemoizer =
+                new Memoizer<>(PrimeCheckers::bruteForceChecker,
+                               new ConcurrentHashMap<>());
 
             // Submit "count" PrimeCallable objects that concurrently
             // check the primality of "count" random numbers.
@@ -357,7 +346,7 @@ public class MainActivity
                 // Convert each random number into a PrimeCallable.
                 .mapToObj(randomNumber 
                           -> new PrimeCallable(randomNumber,
-                                               mRetainedState.mTimedMemoizer))
+                                               mRetainedState.mMemoizer))
 
                 // Submit each PrimeCallable to the ExecutorService.
                 .forEach(mRetainedState.mExecutorCompletionService::submit);

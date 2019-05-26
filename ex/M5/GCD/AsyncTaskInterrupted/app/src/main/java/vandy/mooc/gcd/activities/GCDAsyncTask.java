@@ -16,7 +16,7 @@ import java.util.Random;
 public class GCDAsyncTask
        extends AsyncTask<// Passed to doInBackground()
                          Integer,   
-			 // Passed to onProgressUpdate()			 
+			             // Passed to onProgressUpdate()
                          String,    
                          // Returned from doInBackground()
                          // and passed to onPostExecute()

@@ -315,7 +315,7 @@ public class MainActivity
             // Create a list of futures that will contain the results
             // of concurrently checking the primality of "count"
             // random numbers.
-            final List<Future<PrimeCallable.PrimeResult>> futures = new Random()
+            List<Future<PrimeCallable.PrimeResult>> futures = new Random()
                 // Generate "count" random between sMAX_VALUE - count
                 // and sMAX_VALUE.
                 .longs(count, sMAX_VALUE - count, sMAX_VALUE)
