@@ -12,19 +12,16 @@ import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import vandy.mooc.prime.R;
-import vandy.mooc.prime.utils.TimedMemoizer;
 import vandy.mooc.prime.utils.PrimeCheckers;
+import vandy.mooc.prime.utils.TimedMemoizerEx;
 import vandy.mooc.prime.utils.UiUtils;
-
-import static vandy.mooc.prime.utils.ExceptionUtils.rethrowSupplier;
-import static java.util.stream.Collectors.toList;
 
 /**
  * Main activity for an app that shows how to use the Java
@@ -96,6 +93,12 @@ public class MainActivity
                 getClass().getSimpleName();
 
         /**
+         * This object runs the prime computations.
+         */
+        final ExecutorCompletionService<PrimeCallable.PrimeResult>
+            mExecutorCompletionService;
+
+        /**
          * This object manages a thread pool.
          */
         ExecutorService mExecutorService;
@@ -104,7 +107,7 @@ public class MainActivity
          * This runnable executes in a background thread to get the
          * results of the futures.
          */
-        FutureRunnable mFutureRunnable;
+        CompletionRunnable mCompletionRunnable;
 
         /**
          * Thread that waits for all the results to complete.
@@ -115,7 +118,7 @@ public class MainActivity
          * Cache used to generate, store, and retrieve the results of
          * prime checking computations.
          */
-        TimedMemoizer<Long, Long> mTimedMemoizer;
+        TimedMemoizerEx<Long, Long> mTimedMemoizer;
 
         /**
          * Constructor initializes the ExecutorService thread pool.
@@ -125,6 +128,12 @@ public class MainActivity
             // internally matches the number of cores.
             mExecutorService =
                 Executors.newWorkStealingPool();
+
+            // Associate the ExecutorCompletionService with the
+            // ExecutorService.
+            mExecutorCompletionService =
+                new ExecutorCompletionService<>
+                (mExecutorService);
         }
 
         /**
@@ -151,6 +160,9 @@ public class MainActivity
                 mThread.interrupt();
                 mThread = null;
             }
+
+            // Help the GC.
+            mCompletionRunnable = null;
         }
     }
 
@@ -179,7 +191,7 @@ public class MainActivity
             (RetainedState) getLastNonConfigurationInstance();
 
         if (mRetainedState != null) {
-            mRetainedState.mFutureRunnable.setActivity(this);
+            mRetainedState.mCompletionRunnable.setActivity(this);
 
             // Update the start/stop FAB to display a stop icon.
             mStartOrStopFab.setImageResource(R.drawable.ic_media_stop);
@@ -333,38 +345,35 @@ public class MainActivity
             // Create the cache used to generate, store, and retrieve
             // the results of prime checking computations.
             mRetainedState.mTimedMemoizer =
-                new TimedMemoizer<>(PrimeCheckers::bruteForceChecker,
-                                    // Timeout cache entries after count *
-                                    // 0.5 seconds.
-                                    count * 500);
+                new TimedMemoizerEx<>(PrimeCheckers::bruteForceChecker,
+                                      // Timeout cache entries after
+                                      // count * 0.5 seconds.
+                                      count * 500);
 
-            // Create a list of futures that will contain the results
-            // of concurrently checking the primality of "count"
-            // random numbers.
-            final List<Future<PrimeCallable.PrimeResult>> futures = new Random()
-                // Generate "count" random between sMAX_VALUE - count
-                // and sMAX_VALUE.
+            // Submit "count" PrimeCallable objects that concurrently
+            // check the primality of "count" random numbers.
+            new Random()
+                // Generate "count" random between (sMAX_VALUE -
+                // count) and sMAX_VALUE.
                 .longs(count, sMAX_VALUE - count, sMAX_VALUE)
 
                 // Convert each random number into a PrimeCallable.
-                .mapToObj(randomNumber -> 
-                          new PrimeCallable(randomNumber,
-                                            mRetainedState.mTimedMemoizer))
+                .mapToObj(randomNumber 
+                          -> new PrimeCallable(randomNumber,
+                                               mRetainedState.mTimedMemoizer))
 
                 // Submit each PrimeCallable to the ExecutorService.
-                .map(mRetainedState.mExecutorService::submit)
+                .forEach(mRetainedState.mExecutorCompletionService::submit);
 
-                // Collect the results into a list of futures.
-                .collect(toList());
-
-            // Store the FutureRunnable in a field so it can be
+            // Store the CompletionRunnable in a field so it can be
             // updated during a runtime configuration change.
-            mRetainedState.mFutureRunnable = new FutureRunnable(this,
-                                                                futures);
+            mRetainedState.mCompletionRunnable = new CompletionRunnable(this,
+                                                                        count);
 
             // Create/start a thread that waits for all the results in
             // the background so it doesn't block the UI thread.
-            mRetainedState.mThread = new Thread(mRetainedState.mFutureRunnable);
+            mRetainedState.mThread =
+                new Thread(mRetainedState.mCompletionRunnable);
             mRetainedState.mThread.start();
         }
 
@@ -375,21 +384,21 @@ public class MainActivity
     }
 
     /**
-     * The class runs in a background thread in the ExecutorService and gets the
-     * results of all the futures.
+     * The class runs in a background thread in the ExecutorService
+     * and gets the results of all the completed futures.
      */
-    static private class FutureRunnable 
+    static private class CompletionRunnable 
                    implements Runnable {
         /**
          * Debugging tag used by the Android logger.
          */
-        private final String TAG =
+        final String TAG =
                 getClass().getSimpleName();
 
         /**
-         * List of futures to the results of the PrimeCallable computations.
+         * Count of the number of prime checker computations.
          */
-        final List<Future<PrimeCallable.PrimeResult>> mFutures;
+        final int mCount;
 
         /**
          * Reference back to the enclosing activity.
@@ -399,10 +408,10 @@ public class MainActivity
         /**
          * Constructor initializes the field.
          */
-        FutureRunnable(MainActivity activity,
-                       List<Future<PrimeCallable.PrimeResult>> futures) {
+        CompletionRunnable(MainActivity activity,
+                           int count) {
             mActivity = activity;
-            mFutures = futures;
+            mCount = count;
         }
 
         /**
@@ -413,33 +422,40 @@ public class MainActivity
         }
 
         /**
-         * Run in a background thread to get the results of all the futures.
+         * Run in a background thread to get the results of all the
+         * completed futures.
          */
         @Override
         public void run() {
             try {
-                mFutures
-                    // Iterate through all the futures to get the results.
-                    .forEach(future -> {
-                            // This call will block until the future is
-                            // triggered.
-                            PrimeCallable.PrimeResult result =
-                                rethrowSupplier(future::get).get();
+                // Iterate through all the futures to get the results.
+                for (int i = 0; i < mCount; ++i) {
+                    // This call blocks until future is triggered.
+                    Future<PrimeCallable.PrimeResult> resultFuture = mActivity
+                        .mRetainedState
+                        .mExecutorCompletionService
+                        .take();
 
-                            if (result.mSmallestFactor != 0)
-                                mActivity.println(""
-                                                  + result.mPrimeCandidate
-                                                  + " is not prime with smallest factor "
-                                                  + result.mSmallestFactor);
-                            else
-                                mActivity.println(""
-                                                  + result.mPrimeCandidate
-                                                  + " is prime");
-                        });
-            } catch (Exception ex) {
-                Log.d(TAG,
-                      "Prime waiter thread interrupted "
-                      + Thread.currentThread());
+                    // get() won't block since results must be done
+                    // before they're added to completion queue.
+                    PrimeCallable.PrimeResult result =
+                        resultFuture.get();
+
+                    // Check results and display appropriate message.
+                    if (result.mSmallestFactor != 0)
+                        mActivity.println(""
+                                          + result.mPrimeCandidate
+                                          + " is not prime with smallest factor "
+                                          + result.mSmallestFactor);
+                    else
+                        mActivity.println(""
+                                          + result.mPrimeCandidate
+                                          + " is prime");
+                }
+            } catch (Exception e) {
+                    Log.d(TAG,
+                          "Prime waiter thread interrupted "
+                          + Thread.currentThread());
             }
 
             // Finish up and reset the UI.

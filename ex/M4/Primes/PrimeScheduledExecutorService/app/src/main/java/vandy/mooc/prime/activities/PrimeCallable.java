@@ -1,7 +1,5 @@
 package vandy.mooc.prime.activities;
 
-import android.util.Log;
-
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 

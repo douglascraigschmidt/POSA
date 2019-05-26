@@ -4,7 +4,7 @@ package vandy.mooc.prime.utils;
  * Atomically increments and decrements an internal count, calling an
  * action when the internal count equals a given parameter.
  */
-public class ThresholdCrosser {
+class ThresholdCrosser {
     /**
      * The internal count that incremented or decremented atomically
      * by the methods below.
@@ -14,7 +14,7 @@ public class ThresholdCrosser {
     /**
      * Constructor sets the field.
      */
-    public ThresholdCrosser(int initialCount) {
+    ThresholdCrosser(int initialCount) {
         mCount = initialCount;
     }
     
@@ -29,8 +29,8 @@ public class ThresholdCrosser {
      * Invoke {@code action} iff the internal count equals {@code n}
      * after being incremented.
      */
-    public void incrementAndCallAtN(int n,
-                                    Runnable action) {
+    void incrementAndCallAtN(int n,
+                             Runnable action) {
         synchronized(this) {
             // Atomically run action iff preincrementing mCount == n.
             if (++mCount == n)
@@ -42,8 +42,8 @@ public class ThresholdCrosser {
      * Invoke {@code action} iff the internal count equals {@code n}
      * after being decremented.
      */
-    public void decrementAndCallAtN(int n,
-                                    Runnable action) {
+    void decrementAndCallAtN(int n,
+                             Runnable action) {
         synchronized(this) {
             // Atomically run action iff predecrementing mCount == n.
             if (--mCount == n)
