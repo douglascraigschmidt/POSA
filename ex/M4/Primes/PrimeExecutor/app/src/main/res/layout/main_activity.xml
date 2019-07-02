@@ -32,6 +32,7 @@
             android:id="@+id/count"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
+            android:inputType="number"
             android:hint="@string/enter_count"
             android:singleLine="true"/>
 
@@ -39,7 +40,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <android.support.design.widget.FloatingActionButton
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/play_fab"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -49,7 +50,7 @@
                 android:src="@android:drawable/ic_media_play"
                 android:tint="@android:color/white"/>
 
-            <android.support.design.widget.FloatingActionButton
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/set_fab"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

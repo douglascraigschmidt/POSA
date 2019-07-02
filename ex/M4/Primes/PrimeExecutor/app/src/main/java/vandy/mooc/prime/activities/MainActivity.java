@@ -1,7 +1,9 @@
 package vandy.mooc.prime.activities;
 
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -11,12 +13,12 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 
 import vandy.mooc.prime.R;
 import vandy.mooc.prime.utils.UiUtils;
@@ -27,24 +29,21 @@ import vandy.mooc.prime.utils.UiUtils;
  * numbers are prime or not.  In addition, runtime configuration
  * changes are handled relatively gracefully.
  */
-public class MainActivity 
-       extends LifecycleLoggingActivity {
-   /**
-     * EditText field for entering the desired number of iterations.
-     */
-    private EditText mCountEditText;
-
+public class MainActivity
+        extends LifecycleLoggingActivity {
     /**
      * Number of primes to evaluate if the user doesn't specify
      * otherwise.
      */
     private final static int sDEFAULT_COUNT = 100;
-
     /**
      * Maximum value of  random numbers.
      */
     private static long sMAX_VALUE = 1000000000L;
-
+    /**
+     * EditText field for entering the desired number of iterations.
+     */
+    private EditText mCountEditText;
     /**
      * Keeps track of whether the edit text is visible for the user to
      * enter a count.
@@ -61,12 +60,12 @@ public class MainActivity
      */
     private FloatingActionButton mStartFab;
 
-    /** 
+    /**
      * A TextView used to display the output.
      */
     private TextView mTextViewLog;
 
-    /** 
+    /**
      * A ScrollView that contains the results of the TextView.
      */
     private ScrollView mScrollView;
@@ -74,23 +73,18 @@ public class MainActivity
     /**
      * Reference to the Executor that runs the primality computations.
      * Only allocate as many threads as their are processor cores
-     * since determining primaility is a CPU-bound computation.
+     * since determining primality is a CPU-bound computation.
      */
     private Executor mExecutor =
-        Executors.newFixedThreadPool(Runtime
-                                     .getRuntime()
-                                     .availableProcessors());
+            Executors.newFixedThreadPool(Runtime
+                    .getRuntime()
+                    .availableProcessors());
 
     /**
      * Keeps track of whether the orientation of the phone has been
      * changed.
      */
     private boolean mOrientationChange = false;
-
-    /**
-     * Keeps track of whether we're debugging or not.
-     */
-    private boolean mDebugging;
 
     /**
      * Keeps track of the number of running tasks.
@@ -118,16 +112,16 @@ public class MainActivity
     private void initializeViews(Bundle savedInstanceState) {
         // Set the EditText that holds the count entered by the user
         // (if any).
-        mCountEditText = (EditText) findViewById(R.id.count);
+        mCountEditText = findViewById(R.id.count);
 
         // Store floating action button that sets the count.
-        mSetFab = (FloatingActionButton) findViewById(R.id.set_fab);
+        mSetFab = findViewById(R.id.set_fab);
 
         // Store floating action button that starts playing ping/pong.
-        mStartFab = (FloatingActionButton) findViewById(R.id.play_fab);
+        mStartFab = findViewById(R.id.play_fab);
 
         // Make the count button invisible for animation purposes.
-        mStartFab.setVisibility(View.INVISIBLE);
+        mStartFab.hide();
 
         if (TextUtils.isEmpty(mCountEditText.getText().toString().trim()))
             // Make the EditText invisible for animation purposes.
@@ -135,14 +129,12 @@ public class MainActivity
 
         // The activity is being restarted after an orientation
         // change.
-        if (savedInstanceState != null) 
+        if (savedInstanceState != null)
             mOrientationChange = true;
 
         // Store and initialize the TextView and ScrollView.
-        mTextViewLog =
-            (TextView) findViewById(R.id.text_output);
-        mScrollView =
-            (ScrollView) findViewById(R.id.scrollview_text_output);
+        mTextViewLog = findViewById(R.id.text_output);
+        mScrollView = findViewById(R.id.scrollview_text_output);
 
         // Register a listener to help display "start playing" FAB
         // when the user hits enter.  This listener also sets a
@@ -154,9 +146,9 @@ public class MainActivity
                             || event.getAction() == KeyEvent.ACTION_DOWN
                             && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
                         UiUtils.hideKeyboard(MainActivity.this,
-                                             mCountEditText.getWindowToken());
+                                mCountEditText.getWindowToken());
                         if (TextUtils.isEmpty
-                            (mCountEditText.getText().toString().trim())) 
+                                (mCountEditText.getText().toString().trim()))
                             mCountEditText.setText(String.valueOf(sDEFAULT_COUNT));
 
                         // Show the "start" FAB.
@@ -188,8 +180,8 @@ public class MainActivity
 
             // Load and start the animation.
             mSetFab.startAnimation
-                (AnimationUtils.loadAnimation(this,
-                                              animRedId));
+                    (AnimationUtils.loadAnimation(this,
+                            animRedId));
             // Hides the start FAB.
             UiUtils.hideFab(mStartFab);
         } else {
@@ -204,7 +196,7 @@ public class MainActivity
 
             // Load and start the animation.
             mSetFab.startAnimation(AnimationUtils.loadAnimation(this,
-                                                                animRedId));
+                    animRedId));
         }
     }
 
@@ -212,12 +204,16 @@ public class MainActivity
      * Called by the Android Activity framework when the user clicks
      * the "startComputations" button.
      *
-     * @param view
-     *            The view.
+     * @param view The view.
      */
     public void handleStartButton(View view) {
         // Start running the primality computations.
-        startComputations(Integer.valueOf(mCountEditText.getText().toString()));
+        try {
+            startComputations(Integer.valueOf(mCountEditText.getText().toString()));
+        } catch (Exception e) {
+            UiUtils.showToast(this,
+                    "Please specify a count value that's > 0");
+        }
     }
 
     /**
@@ -227,10 +223,10 @@ public class MainActivity
      */
     public void startComputations(int count) {
         // Make sure there's a non-0 count.
-        if (count <= 0) 
+        if (count <= 0)
             // Inform the user there's a problem with the input.
             UiUtils.showToast(this,
-                              "Please specify a count value that's > 0");
+                    "Please specify a count value that's > 0");
         else {
             // Hides the start FAB.
             UiUtils.hideFab(mStartFab);
@@ -241,15 +237,15 @@ public class MainActivity
             // Create "count" random values and check to see if they
             // are prime.
             new Random()
-                // Generate "count" random between sMAX_VALUE - count
-                // and sMAX_VALUE.
-                .longs(count, sMAX_VALUE - count, sMAX_VALUE)
+                    // Generate "count" random between sMAX_VALUE - count
+                    // and sMAX_VALUE.
+                    .longs(count, sMAX_VALUE - count, sMAX_VALUE)
 
-                // Convert each random number into a PrimeRunnable and
-                // execute it.
-                .forEach(randomNumber ->
-                         mExecutor.execute(new PrimeRunnable(this,
-                                                             randomNumber)));
+                    // Convert each random number into a PrimeRunnable and
+                    // execute it.
+                    .forEach(randomNumber ->
+                            mExecutor.execute(new PrimeRunnable(this,
+                                    randomNumber)));
 
             // Print this message the first time the activity runs.
             if (!mOrientationChange)
@@ -262,8 +258,8 @@ public class MainActivity
      */
     public void done() {
         Log.d(TAG,
-              "Finished in thread " 
-              + Thread.currentThread());
+                "Finished in thread "
+                        + Thread.currentThread());
 
         if (mRunningTasks.decrementAndGet() == 0) {
             // Create a command to reset the UI.
