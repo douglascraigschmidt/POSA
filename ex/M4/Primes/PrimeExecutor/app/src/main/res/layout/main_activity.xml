@@ -14,27 +14,36 @@
 
         <ScrollView
             android:id="@+id/scrollview_text_output"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1">
 
             <EditText
                 android:id="@+id/text_output"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:maxLines="10000"
-                android:focusable="false"
                 android:background="@android:color/transparent"
-                android:textSize="15sp"/>
+                android:focusable="false"
+                android:maxLines="10000"
+                android:textSize="15sp" />
         </ScrollView>
 
-        <EditText
-            android:id="@+id/count"
-            android:layout_width="fill_parent"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/text_input_layout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="number"
-            android:hint="@string/enter_count"
-            android:singleLine="true"/>
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp">
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/count"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawableEnd="@drawable/ic_cancel_black_24dp"
+                android:hint="@string/enter_count"
+                android:inputType="number"
+                android:singleLine="true" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -44,24 +53,24 @@
                 android:id="@+id/play_fab"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
                 android:layout_margin="@dimen/fab_margin"
                 android:onClick="handleStartButton"
                 android:src="@android:drawable/ic_media_play"
-                android:tint="@android:color/white"/>
+                android:tint="@android:color/white" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/set_fab"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
                 android:layout_alignTop="@+id/play_fab"
-                android:layout_marginBottom="20dp"
+                android:layout_alignParentEnd="true"
                 android:layout_marginLeft="@dimen/fab_margin"
                 android:layout_marginRight="@dimen/fab_margin"
+                android:layout_marginBottom="20dp"
                 android:onClick="setCount"
                 android:src="@android:drawable/ic_input_add"
-                android:tint="@android:color/white"/>
+                android:tint="@android:color/white" />
         </RelativeLayout>
 
     </LinearLayout>

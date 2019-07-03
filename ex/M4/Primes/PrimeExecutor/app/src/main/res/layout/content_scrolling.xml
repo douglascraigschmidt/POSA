@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scrollview_text_output"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fadeScrollbars="false"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="vandy.mooc.prime.activities.ScrollingActivity"
+    tools:showIn="@layout/activity_scrolling">
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/text_output"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:focusable="false"
+        android:maxLines="10000"
+        android:textSize="15sp" />
+</ScrollView>
