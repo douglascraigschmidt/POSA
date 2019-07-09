@@ -51,11 +51,6 @@ public class MainActivity extends LifecycleLoggingActivity {
     private final static int DEFAULT_COUNT = 100;
 
     /**
-     * Bundle key used during configuration changes.
-     */
-    private static final String KEY_RESTART = "RESTART";
-
-    /**
      * Maximum random number value.
      */
     private static long MAX_VALUE = 1000000000L;
