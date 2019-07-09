@@ -1,5 +1,7 @@
 package vandy.mooc.prime.activities;
 
+import android.util.Log;
+
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 
@@ -26,9 +28,9 @@ public class PrimeCallable
     private Function<Long, Long> mPrimeChecker;
 
     /**
-     * The immutable result returned via the future.
+     * The result returned via the future.
      */
-    static class PrimeResult {
+    public static class PrimeResult {
         /**
          * Value that was evaluated for primality.
          */
@@ -56,7 +58,7 @@ public class PrimeCallable
         mPrimeCandidate = primeCandidate;
         mPrimeChecker = primeChecker;
     }
-
+    
     /**
      * Hook method that determines if a given number is prime.
      * Returns 0 if it is prime or the smallest factor if it is not
