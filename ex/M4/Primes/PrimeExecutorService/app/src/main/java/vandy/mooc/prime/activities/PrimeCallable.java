@@ -1,9 +1,6 @@
 package vandy.mooc.prime.activities;
 
-import android.util.Log;
-
 import java.util.concurrent.Callable;
-import java.util.function.Function;
 
 /**
  * Uses a supplied function to determine if a given number is prime or
@@ -55,7 +52,7 @@ public class PrimeCallable
             for (long factor = 2;
                  factor <= n / 2;
                  ++factor) 
-                if (Thread.interrupted()) 
+                if (Thread.interrupted())
                     break;
                 else if (n / factor * factor == n)
                     return factor;
