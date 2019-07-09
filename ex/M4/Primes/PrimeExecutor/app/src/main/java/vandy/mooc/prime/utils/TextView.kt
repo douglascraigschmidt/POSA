@@ -10,9 +10,10 @@ import android.widget.ScrollView
 import android.widget.TextView
 
 /**
- * TextView receiver extension that installs a text change listener that
- * will automatically scroll the TextView's ScrollView parent window so that
- * the last line of text is always visible in the parent view.
+ * TextView receiver extension that installs a text change listener
+ * that will automatically scroll the TextView's ScrollView parent
+ * window so that the last line of text is always visible in the
+ * parent view.
  */
 fun TextView.autoScroll() {
     check(parent is ScrollView) {
@@ -31,8 +32,8 @@ fun TextView.autoScroll() {
 }
 
 /**
- * Add EditText extension that enables the widget to clear
- * input with right button
+ * Add EditText extension that enables the widget to clear input with
+ * right button
  *
  * @param onIsNotEmpty callback invoked when input is completed and and is not empty
  * @param onCanceled callback which invoked when cancel button is clicked.
