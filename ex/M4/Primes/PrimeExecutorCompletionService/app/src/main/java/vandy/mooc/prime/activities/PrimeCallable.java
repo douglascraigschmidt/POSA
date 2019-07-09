@@ -58,7 +58,7 @@ public class PrimeCallable
         mPrimeCandidate = primeCandidate;
         mPrimeChecker = primeChecker;
     }
-
+    
     /**
      * Hook method that determines if a given number is prime.
      * Returns 0 if it is prime or the smallest factor if it is not

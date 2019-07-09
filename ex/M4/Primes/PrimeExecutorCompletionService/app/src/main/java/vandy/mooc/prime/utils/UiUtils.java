@@ -2,11 +2,9 @@ package vandy.mooc.prime.utils;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.app.Activity;
 import android.content.Context;
 import android.os.IBinder;
 import android.os.Looper;
-import android.support.design.widget.FloatingActionButton;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.animation.AccelerateInterpolator;
@@ -15,7 +13,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import java.util.Locale;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 /**
  * This utility class defines static methods shared by various Activities.
@@ -48,10 +46,10 @@ public class UiUtils {
      * This method is used to hide a keyboard after a user has
      * finished typing the url.
      */
-    public static void hideKeyboard(Activity activity,
+    public static void hideKeyboard(Context context,
                                     IBinder windowToken) {
         InputMethodManager mgr =
-            (InputMethodManager) activity.getSystemService
+            (InputMethodManager) context.getSystemService
             (Context.INPUT_METHOD_SERVICE);
         mgr.hideSoftInputFromWindow(windowToken, 0);
     }
