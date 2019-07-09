@@ -1,0 +1,13 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="vandy.mooc.prime.activities.CancellableMainActivity">
+    <item
+        android:id="@+id/action_run"
+        android:title="@string/action_run" />
+    <item
+        android:id="@+id/action_cancel"
+        android:title="@string/action_cancel" />
+    <item
+        android:id="@+id/action_clear"
+        android:title="@string/action_clear" />
+</menu>

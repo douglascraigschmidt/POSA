@@ -1,15 +1,16 @@
 package vandy.mooc.prime.activities;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 /**
  * This abstract class extends the Activity class and overrides
  * lifecycle callbacks for logging various lifecycle events.
  */
 public abstract class LifecycleLoggingActivity 
-       extends Activity {
+       extends AppCompatActivity {
     /**
      * Debugging tag used by the Android logger.
      */
