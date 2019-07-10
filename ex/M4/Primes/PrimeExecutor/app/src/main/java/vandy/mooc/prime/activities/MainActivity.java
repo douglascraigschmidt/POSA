@@ -95,15 +95,15 @@ public class MainActivity extends AppCompatActivity {
      * since determining primes is a CPU-bound computation.
      */
     private Executor mExecutor =
-            Executors.newFixedThreadPool(Runtime
-                    .getRuntime()
-                    .availableProcessors());
+        Executors.newFixedThreadPool(Runtime
+                                     .getRuntime()
+                                     .availableProcessors());
 
     /**
      * Keeps track of the number of running tasks.
      */
     private AtomicInteger mRunningTasks =
-            new AtomicInteger(0);
+        new AtomicInteger(0);
 
     /**
      * Keeps track of the number of primes found.
@@ -126,8 +126,10 @@ public class MainActivity extends AppCompatActivity {
         // Initialize the views.
         initializeViews();
 
-        // Restore possible restart state in case calculation needs a restart.
-        mRestart = savedInstanceState != null && savedInstanceState.getBoolean(KEY_RESTART);
+        // Restore possible restart state in case calculation needs a
+        // restart.
+        mRestart = savedInstanceState != null 
+            && savedInstanceState.getBoolean(KEY_RESTART);
     }
 
     /**
@@ -137,7 +139,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        // Check if the activity was restarted from a configuration change.
+        // Check if the activity was restarted from a configuration
+        // change.
         if (mRestart) {
             // Clear logging view and restart the computations.
             mLogTextView.setText(null);
@@ -165,7 +168,8 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // Setup user input EditText widget to support a clear icon on the right.
+        // Setup user input EditText widget to support a clear icon on
+        // the right.
         mCountEditText = findViewById(R.id.input_view);
         TextViewKt.makeClearEditText(mCountEditText, null, null);
 
@@ -182,23 +186,23 @@ public class MainActivity extends AppCompatActivity {
         registerForContextMenu(mLogTextView);
 
         // Register a listener to help display "start playing" FAB
-        // when the user hits enter. This listener also sets a
-        // default count value if the user enters no value.
+        // when the user hits enter. This listener also sets a default
+        // count value if the user enters no value.
         mCountEditText.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                if (actionId == EditorInfo.IME_ACTION_SEARCH ||
                     event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
-                UiUtils.hideKeyboard(MainActivity.this, mCountEditText.getWindowToken());
-                if (TextUtils.isEmpty(mCountEditText.getText().toString().trim())) {
-                    mCountEditText.setText(String.valueOf(DEFAULT_COUNT));
+                    UiUtils.hideKeyboard(MainActivity.this, mCountEditText.getWindowToken());
+                    if (TextUtils.isEmpty(mCountEditText.getText().toString().trim())) {
+                        mCountEditText.setText(String.valueOf(DEFAULT_COUNT));
+                    }
+
+                    startComputations();
+
+                    return true;
+                } else {
+                    return false;
                 }
-
-                startComputations();
-
-                return true;
-            } else {
-                return false;
-            }
-        });
+            });
     }
 
     /**
@@ -231,12 +235,12 @@ public class MainActivity extends AppCompatActivity {
      */
     private boolean onMenuItemSelected(@NotNull MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_clear:
-                mLogTextView.setText(null);
-                return true;
-            case R.id.action_run:
-                startComputations();
-                return true;
+        case R.id.action_clear:
+            mLogTextView.setText(null);
+            return true;
+        case R.id.action_run:
+            startComputations();
+            return true;
         }
 
         return false;
@@ -251,8 +255,9 @@ public class MainActivity extends AppCompatActivity {
      * @param menuInfo (unused)
      */
     @Override
-    public void onCreateContextMenu(
-            ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+    public void onCreateContextMenu(ContextMenu menu,
+                                    View v,
+                                    ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_popup, menu);
@@ -266,14 +271,15 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
+        // Inflate the menu; this adds items to the action bar if it
+        // is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
     /**
-     * Called each time a menu is about to be displayed.
-     * Here we show and hide menu items based on the current app state.
+     * Called each time a menu is about to be displayed.  Here we show
+     * and hide menu items based on the current app state.
      *
      * @param menu menu to be displayed
      * @return true if this menu has been modified
@@ -296,9 +302,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Helper that extracts the user entered count value from the
-     * edit text widget and calls startComputations to find prime
-     * factors.
+     * Helper that extracts the user entered count value from the edit
+     * text widget and calls startComputations to find prime factors.
      */
     public void startComputations() {
         // Start running the primality computations.
@@ -311,7 +316,9 @@ public class MainActivity extends AppCompatActivity {
                 count = Integer.valueOf(text);
             } catch (Exception e) {
                 UiUtils.showToast(this,
-                        "Please specify a count in the range [1 .. " + MAX_COUNT + "]");
+                                  "Please specify a count in the range [1 .. " 
+                                  + MAX_COUNT 
+                                  + "]");
                 return;
             }
         }
@@ -319,7 +326,9 @@ public class MainActivity extends AppCompatActivity {
         if (count > MAX_COUNT) {
             count = MAX_COUNT;
             UiUtils.showToast(this,
-                    "The maximum count value is " + MAX_COUNT + ".");
+                              "The maximum count value is " 
+                              + MAX_COUNT 
+                              + ".");
         }
 
         mCountEditText.setText(String.valueOf(count));
@@ -339,7 +348,7 @@ public class MainActivity extends AppCompatActivity {
         if (count <= 0) {
             // Inform the user there's a problem with the input.
             UiUtils.showToast(this,
-                    "Please specify a count value that's > 0");
+                              "Please specify a count value that's > 0");
         } else {
             // Set the number of running tasks to the count.
             mRunningTasks.set(count);
@@ -350,15 +359,15 @@ public class MainActivity extends AppCompatActivity {
             // Create "count" random values and check to see if they
             // are prime.
             new Random()
-                    // Generate "count" random between sMAX_VALUE - count
-                    // and sMAX_VALUE.
-                    .longs(count, MAX_VALUE - count, MAX_VALUE)
+                // Generate "count" random between sMAX_VALUE - count
+                // and sMAX_VALUE.
+                .longs(count, MAX_VALUE - count, MAX_VALUE)
 
-                    // Convert each random number into a PrimeRunnable and
-                    // execute it.
-                    .forEach(randomNumber ->
-                            mExecutor.execute(
-                                    new PrimeRunnable(this, randomNumber)));
+                // Convert each random number into a PrimeRunnable and
+                // execute it.
+                .forEach(randomNumber ->
+                         mExecutor.execute(new PrimeRunnable(this,
+                                                             randomNumber)));
             if (mRestart) {
                 println("Restarting primality computations");
                 mRestart = false;
@@ -373,26 +382,30 @@ public class MainActivity extends AppCompatActivity {
      */
     public void done() {
         Log.d(TAG,
-                "Finished in thread "
-                        + Thread.currentThread());
+              "Finished in thread "
+              + Thread.currentThread());
 
         if (mRunningTasks.decrementAndGet() == 0) {
             // Create a command to reset the UI.
             Runnable command = () -> {
-                println("Finished computations (" + mPrimeFactors + " found)\n");
+                println("Finished computations ("
+                        + mPrimeFactors 
+                        + " found)\n");
 
                 // Show progress bar.
                 mProgressBar.setVisibility(View.INVISIBLE);
             };
 
-            // Run the command on the UI thread.  This all is optimized
-            // for the case where println() is called from the UI thread.
+            // Run the command on the UI thread.  This all is
+            // optimized for the case where println() is called from
+            // the UI thread.
             runOnUiThread(command);
         }
     }
 
     /**
-     * Called from each PrimeRunnable instance when their calculations complete.
+     * Called from each PrimeRunnable instance when their calculations
+     * complete.
      *
      * @param primeCandidate the prime candidate being investigated
      * @param smallestFactor the smallest factor of the candidate or 0 if prime.
@@ -431,8 +444,9 @@ public class MainActivity extends AppCompatActivity {
      * Output string to log view.
      */
     public void println(String string) {
-        // In case this was originally called from an AsyncTask or some other off-UI thread,
-        // make sure the update occurs within the UI thread.
+        // In case this was originally called from an AsyncTask or
+        // some other off-UI thread, make sure the update occurs
+        // within the UI thread.
         runOnUiThread(new Thread(() -> mLogTextView.append(string + "\n")));
     }
 }
