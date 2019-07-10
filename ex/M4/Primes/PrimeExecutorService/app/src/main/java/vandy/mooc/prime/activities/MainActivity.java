@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -26,6 +27,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import kotlin.Unit;
 import vandy.mooc.prime.R;
 import vandy.mooc.prime.utils.ExceptionUtils;
 import vandy.mooc.prime.utils.TextViewKt;
@@ -81,6 +83,10 @@ public class MainActivity extends LifecycleLoggingActivity {
      */
     private TextView mCandidatesTextView;
     /**
+     * Start stop image view in tool bar.
+     */
+    private ImageView mStartStopView;
+    /**
      * Keeps track of whether the app is running or not.
      */
     private boolean mIsRunning;
@@ -110,6 +116,7 @@ public class MainActivity extends LifecycleLoggingActivity {
             // Activity is being restored so reset reference to this
             // class in future runnable and update UI to reflect
             // currently running state.
+            mIsRunning = true;
             mRetainedState.mFutureRunnable.setActivity(this);
             mProgressBar.setVisibility(VISIBLE);
             updateToolbar();
@@ -134,7 +141,6 @@ public class MainActivity extends LifecycleLoggingActivity {
     }
 
     /**
-     *
      * Lifecycle hook method called when this activity is destroyed.
      */
     @Override
@@ -245,7 +251,7 @@ public class MainActivity extends LifecycleLoggingActivity {
                 startComputations();
                 return true;
             case R.id.action_cancel:
-                interruptComputations();
+                stopComputations();
                 return true;
         }
 
@@ -262,7 +268,15 @@ public class MainActivity extends LifecycleLoggingActivity {
 
         // Setup user input EditText widget to support a clear icon on the right.
         mCountEditText = findViewById(R.id.input_view);
-        TextViewKt.makeClearEditText(mCountEditText, null, null);
+        TextViewKt.makeClearEditText(mCountEditText,
+                () -> {
+                    findViewById(R.id.searchStopView).setVisibility(VISIBLE);
+                    return Unit.INSTANCE;
+                },
+                () -> {
+                    findViewById(R.id.searchStopView).setVisibility(INVISIBLE);
+                    return Unit.INSTANCE;
+                });
 
         // Store references to layout views.
         mProgressBar = findViewById(R.id.progress);
@@ -294,6 +308,18 @@ public class MainActivity extends LifecycleLoggingActivity {
                 return false;
             }
         });
+
+        // Get reference to start stop view and set it's click handler.
+        mStartStopView = findViewById(R.id.searchStopView);
+        mStartStopView.setOnClickListener(view -> startStopComputations());
+    }
+
+    public void startStopComputations() {
+        if (mIsRunning) {
+            stopComputations();
+        } else {
+            startComputations();
+        }
     }
 
     /**
@@ -325,6 +351,7 @@ public class MainActivity extends LifecycleLoggingActivity {
         }
 
         mCountEditText.setText(String.valueOf(count));
+        mStartStopView.setImageResource(R.drawable.ic_stop_white_24dp);
         startComputations(count);
     }
 
@@ -382,7 +409,7 @@ public class MainActivity extends LifecycleLoggingActivity {
     /**
      * Stop the prime computations.
      */
-    private void interruptComputations() {
+    private void stopComputations() {
         // Shutdown the thread pool.
         mRetainedState.mExecutorService.shutdownNow();
 
@@ -455,6 +482,9 @@ public class MainActivity extends LifecycleLoggingActivity {
             // newline.
             println("Finished computations ("
                     + mRetainedState.mPrimeFactors + " found)\n");
+
+            // Update the toolbar widgets.
+            updateToolbar();
         };
 
         // Run the command on the UI thread.  This all is optimized
@@ -470,6 +500,17 @@ public class MainActivity extends LifecycleLoggingActivity {
         mCandidatesTextView.setText(String.valueOf(mRetainedState.mProcessed));
         if (mIsRunning != (mProgressBar.getVisibility() == VISIBLE)) {
             mProgressBar.setVisibility(mIsRunning ? VISIBLE : INVISIBLE);
+        }
+
+        if (mIsRunning) {
+            mStartStopView.setImageResource(R.drawable.ic_stop_white_24dp);
+        } else {
+            mStartStopView.setImageResource(R.drawable.ic_search_white_24dp);
+            if (TextUtils.isEmpty(mCountEditText.getText().toString().trim())) {
+                mStartStopView.setVisibility(INVISIBLE);
+            } else {
+                mStartStopView.setVisibility(VISIBLE);
+            }
         }
     }
 
