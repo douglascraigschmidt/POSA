@@ -87,10 +87,6 @@ public class MainActivity extends LifecycleLoggingActivity {
      */
     private ImageView mStartStopView;
     /**
-     * Keeps track of whether the app is running or not.
-     */
-    private boolean mIsRunning;
-    /**
      * Store all the state that must be preserved across runtime
      * configuration changes.
      */
@@ -110,15 +106,13 @@ public class MainActivity extends LifecycleLoggingActivity {
         // Set mRetainedState to the object that was stored by
         // onRetainCustomNonConfigurationInstance().
         mRetainedState =
-            (RetainedState) getLastCustomNonConfigurationInstance();
+                (RetainedState) getLastCustomNonConfigurationInstance();
 
         if (mRetainedState != null) {
             // Activity is being restored so reset reference to this
             // class in future runnable and update UI to reflect
             // currently running state.
-            mIsRunning = true;
             mRetainedState.mFutureRunnable.setActivity(this);
-            mProgressBar.setVisibility(VISIBLE);
             updateToolbar();
         } else {
             // Allocate the state that's retained across runtime
@@ -148,7 +142,7 @@ public class MainActivity extends LifecycleLoggingActivity {
         super.onDestroy();
 
         if (mRetainedState != null
-            && !isChangingConfigurations()) {
+                && !isChangingConfigurations()) {
             // Shutdown the retained state since the activity is being
             // destroyed.
             mRetainedState.shutdown();
@@ -200,12 +194,12 @@ public class MainActivity extends LifecycleLoggingActivity {
 
         item = menu.findItem(R.id.action_run);
         if (item != null) {
-            item.setVisible(!mIsRunning);
+            item.setVisible(!isRunning());
         }
 
         item = menu.findItem(R.id.action_cancel);
         if (item != null) {
-            item.setVisible(mIsRunning);
+            item.setVisible(isRunning());
         }
 
         item = menu.findItem(R.id.action_clear);
@@ -247,15 +241,15 @@ public class MainActivity extends LifecycleLoggingActivity {
      */
     private boolean onMenuItemSelected(@NotNull MenuItem item) {
         switch (item.getItemId()) {
-        case R.id.action_clear:
-            mLogTextView.setText(null);
-            return true;
-        case R.id.action_run:
-            startComputations();
-            return true;
-        case R.id.action_cancel:
-            interruptComputations();
-            return true;
+            case R.id.action_clear:
+                mLogTextView.setText(null);
+                return true;
+            case R.id.action_run:
+                startComputations();
+                return true;
+            case R.id.action_cancel:
+                interruptComputations();
+                return true;
         }
 
         return false;
@@ -298,20 +292,20 @@ public class MainActivity extends LifecycleLoggingActivity {
         // when the user hits enter. This listener also sets a default
         // count value if the user enters no value.
         mCountEditText.setOnEditorActionListener((v, actionId, event) -> {
-                if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+            if (actionId == EditorInfo.IME_ACTION_SEARCH ||
                     event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
-                    UiUtils.hideKeyboard(MainActivity.this, mCountEditText.getWindowToken());
-                    if (TextUtils.isEmpty(mCountEditText.getText().toString().trim())) {
-                        mCountEditText.setText(String.valueOf(DEFAULT_COUNT));
-                    }
-
-                    startComputations();
-
-                    return true;
-                } else {
-                    return false;
+                UiUtils.hideKeyboard(MainActivity.this, mCountEditText.getWindowToken());
+                if (TextUtils.isEmpty(mCountEditText.getText().toString().trim())) {
+                    mCountEditText.setText(String.valueOf(DEFAULT_COUNT));
                 }
-            });
+
+                startComputations();
+
+                return true;
+            } else {
+                return false;
+            }
+        });
 
         // Get reference to start stop view and set it's click handler.
         mStartStopView = findViewById(R.id.searchStopView);
@@ -319,7 +313,7 @@ public class MainActivity extends LifecycleLoggingActivity {
     }
 
     public void startStopComputations() {
-        if (mIsRunning) {
+        if (isRunning()) {
             interruptComputations();
         } else {
             startComputations();
@@ -341,8 +335,8 @@ public class MainActivity extends LifecycleLoggingActivity {
                 count = Integer.valueOf(text);
             } catch (Exception e) {
                 UiUtils.showToast(this,
-                                  "Please specify a count in the " +
-                                  "range [1 .. " + MAX_COUNT + "]");
+                        "Please specify a count in the " +
+                                "range [1 .. " + MAX_COUNT + "]");
                 return;
             }
         }
@@ -350,7 +344,7 @@ public class MainActivity extends LifecycleLoggingActivity {
         if (count > MAX_COUNT) {
             count = MAX_COUNT;
             UiUtils.showToast(this,
-                              "The maximum count value is " + MAX_COUNT + ".");
+                    "The maximum count value is " + MAX_COUNT + ".");
         }
 
         mCountEditText.setText(String.valueOf(count));
@@ -371,31 +365,30 @@ public class MainActivity extends LifecycleLoggingActivity {
         if (count <= 0) {
             // Inform the user there's a problem with the input.
             UiUtils.showToast(this,
-                              "Please specify a count value that's > 0");
+                    "Please specify a count value that's > 0");
         } else {
-            mIsRunning = true;
+            setRunning(true);
 
             // Create a list of futures that will contain the results
             // of concurrently checking the primality of "count"
             // random numbers.
             List<Future<PrimeCallable.PrimeResult>> futures = new Random()
-                // Generate "count" random between sMAX_VALUE - count
-                // and sMAX_VALUE.
-                .longs(count, MAX_VALUE - count, MAX_VALUE)
+                    // Generate "count" random between the min and max values.
+                    .longs(count, MAX_VALUE - count, MAX_VALUE)
 
-                // Convert each random number into a PrimeCallable.
-                .mapToObj(PrimeCallable::new)
+                    // Convert each random number into a PrimeCallable.
+                    .mapToObj(PrimeCallable::new)
 
-                // Submit each PrimeCallable to the ExecutorService.
-                .map(mRetainedState.mExecutorService::submit)
+                    // Submit each PrimeCallable to the ExecutorService.
+                    .map(mRetainedState.mExecutorService::submit)
 
-                // Collect the results into a list of futures.
-                .collect(toList());
+                    // Collect the results into a list of futures.
+                    .collect(toList());
 
             // Store the FutureRunnable in a field so it can be
             // updated during a runtime configuration change.
             mRetainedState.mFutureRunnable = new FutureRunnable(this,
-                                                                futures);
+                    futures);
 
             // Create/start a thread that waits for all the results in
             // the background so it doesn't block the UI thread.
@@ -421,7 +414,7 @@ public class MainActivity extends LifecycleLoggingActivity {
             mRetainedState.mThread.interrupt();
 
             UiUtils.showToast(this,
-                              "Interrupting ExecutorService and waiter thread");
+                    "Interrupting ExecutorService and waiter thread");
         }
 
         // Trigger a reset of the retained state on cancellation.
@@ -434,13 +427,13 @@ public class MainActivity extends LifecycleLoggingActivity {
             // Wait a half-second for threads in the executor service
             // thread pool to terminate.
             mRetainedState
-                .mExecutorService
-                .awaitTermination(500,
-                                  TimeUnit.MILLISECONDS);
+                    .mExecutorService
+                    .awaitTermination(500,
+                            TimeUnit.MILLISECONDS);
         } catch (InterruptedException exception) {
             UiUtils.showToast(this,
-                              "Problem terminating ExecutorService "
-                              + exception.getMessage());
+                    "Problem terminating ExecutorService "
+                            + exception.getMessage());
         }
     }
 
@@ -480,7 +473,7 @@ public class MainActivity extends LifecycleLoggingActivity {
         // Build command to run on the UI thread.
         Runnable command = () -> {
             // Indicate the app is not longer running.
-            mIsRunning = false;
+            setRunning(false);
 
             // Append the stringToPrint and terminate it with a
             // newline.
@@ -502,11 +495,11 @@ public class MainActivity extends LifecycleLoggingActivity {
     private void updateToolbar() {
         mPrimesTextView.setText(String.valueOf(mRetainedState.mPrimeFactors));
         mCandidatesTextView.setText(String.valueOf(mRetainedState.mProcessed));
-        if (mIsRunning != (mProgressBar.getVisibility() == VISIBLE)) {
-            mProgressBar.setVisibility(mIsRunning ? VISIBLE : INVISIBLE);
+        if (isRunning() != (mProgressBar.getVisibility() == VISIBLE)) {
+            mProgressBar.setVisibility(isRunning() ? VISIBLE : INVISIBLE);
         }
 
-        if (mIsRunning) {
+        if (isRunning()) {
             mStartStopView.setImageResource(R.drawable.ic_stop_white_24dp);
         } else {
             mStartStopView.setImageResource(R.drawable.ic_search_white_24dp);
@@ -529,15 +522,29 @@ public class MainActivity extends LifecycleLoggingActivity {
     }
 
     /**
+     * @return flag indicating if calculations are currently running.
+     */
+    private boolean isRunning() {
+        return mRetainedState.mIsRunning;
+    }
+
+    /**
+     * Sets flag to indicate calculation running state.
+     */
+    private void setRunning(boolean running) {
+        mRetainedState.mIsRunning = running;
+    }
+
+    /**
      * State that must be preserved across runtime configuration
      * changes.
      */
-    static class RetainedState {
+    private static class RetainedState {
         /**
          * Debugging tag used by the Android logger.
          */
         private final String TAG =
-            getClass().getSimpleName();
+                getClass().getSimpleName();
 
         /**
          * This object manages a thread pool.
@@ -558,11 +565,17 @@ public class MainActivity extends LifecycleLoggingActivity {
         /**
          * Keeps track of the number of primes found.
          */
-        int mPrimeFactors = 0;
+        int mPrimeFactors;
+
         /**
          * Keeps track of the number of prime candidates processed so far.
          */
-        int mProcessed = 0;
+        int mProcessed;
+
+        /**
+         * Flag indicating if calculations are ongoing.
+         */
+        boolean mIsRunning;
 
         /**
          * Constructor initializes the ExecutorService thread pool.
@@ -570,8 +583,8 @@ public class MainActivity extends LifecycleLoggingActivity {
         RetainedState() {
             // Create a thread pool that matches the number of cores.
             mExecutorService =
-                Executors.newFixedThreadPool(Runtime.getRuntime()
-                                             .availableProcessors());
+                    Executors.newFixedThreadPool(Runtime.getRuntime()
+                            .availableProcessors());
         }
 
         /**
@@ -579,7 +592,7 @@ public class MainActivity extends LifecycleLoggingActivity {
          */
         void shutdown() {
             Log.d(TAG,
-                  "The retained state is being shutdown");
+                    "The retained state is being shutdown");
 
             // Shutdown the ExecutorService.
             if (mExecutorService != null) {
@@ -600,7 +613,7 @@ public class MainActivity extends LifecycleLoggingActivity {
      * all the futures.
      */
     static private class FutureRunnable
-        implements Runnable {
+            implements Runnable {
         /**
          * List of futures to the results of the PrimeCallable computations.
          */
@@ -609,7 +622,7 @@ public class MainActivity extends LifecycleLoggingActivity {
          * Debugging tag used by the Android logger.
          */
         private final String TAG =
-            getClass().getSimpleName();
+                getClass().getSimpleName();
         /**
          * Reference back to the enclosing activity.
          */
@@ -639,21 +652,21 @@ public class MainActivity extends LifecycleLoggingActivity {
         public void run() {
             try {
                 mFutures
-                    // Iterate through all the futures to get the results.
-                    .forEach(future -> {
+                        // Iterate through all the futures to get the results.
+                        .forEach(future -> {
                             // The call to future::get() will block
                             // until the future is triggered.
                             PrimeCallable.PrimeResult result =
-                                ExceptionUtils.rethrowSupplier(future::get).get();
+                                    ExceptionUtils.rethrowSupplier(future::get).get();
 
                             // Update the results on the GUI.
                             mActivity.updateResults(result.mPrimeCandidate,
-                                                    result.mSmallestFactor);
+                                    result.mSmallestFactor);
                         });
             } catch (Exception ex) {
                 Log.d(TAG,
-                      "Prime waiter thread interrupted "
-                      + Thread.currentThread());
+                        "Prime waiter thread interrupted "
+                                + Thread.currentThread());
             }
 
             // Finish up and reset the UI.
