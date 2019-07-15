@@ -14,8 +14,8 @@ public class PrimeCallable
     /**
      * Debugging tag used by the Android logger.
      */
-    private static final String TAG =
-        PrimeCallable.class.getSimpleName();
+    private final String TAG =
+        getClass().getSimpleName();
 
     /** 
      * Number to evaluate for "primality".
