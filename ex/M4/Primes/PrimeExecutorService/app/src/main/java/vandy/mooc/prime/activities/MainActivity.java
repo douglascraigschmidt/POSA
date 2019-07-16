@@ -92,6 +92,9 @@ public class MainActivity extends LifecycleLoggingActivity {
      */
     private RetainedState mRetainedState;
 
+    /**
+     * Hook method called when the activity is first launched.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Call up to the super class to perform initializations.
