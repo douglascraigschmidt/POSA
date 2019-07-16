@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -25,6 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import kotlin.Unit;
 import vandy.mooc.prime.R;
 import vandy.mooc.prime.utils.PrimeCheckers;
 import vandy.mooc.prime.utils.TextViewKt;
@@ -80,9 +82,9 @@ public class MainActivity extends LifecycleLoggingActivity {
      */
     private TextView mCandidatesTextView;
     /**
-     * Keeps track of whether the app is running or not.
+     * Start stop image view in tool bar.
      */
-    private boolean mIsRunning;
+    private ImageView mStartStopView;
     /**
      * Store all the state that must be preserved across runtime
      * configuration changes.
@@ -112,9 +114,7 @@ public class MainActivity extends LifecycleLoggingActivity {
             // Activity is being restored so reset reference to this
             // class in future runnable and update UI to reflect
             // currently running state.
-            mIsRunning = true;
             mRetainedState.mCompletionRunnable.setActivity(this);
-            mProgressBar.setVisibility(VISIBLE);
             updateToolbar();
         } else {
             // Allocate the state that's retained across runtime
@@ -176,14 +176,15 @@ public class MainActivity extends LifecycleLoggingActivity {
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
+        // Inflate the menu; this adds items to the action bar if it
+        // is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
     /**
-     * Called each time a menu is about to be displayed.
-     * Here we show and hide menu items based on the current app state.
+     * Called each time a menu is about to be displayed.  Here we show
+     * and hide menu items based on the current app state.
      *
      * @param menu menu to be displayed
      * @return true if this menu has been modified
@@ -194,12 +195,12 @@ public class MainActivity extends LifecycleLoggingActivity {
 
         item = menu.findItem(R.id.action_run);
         if (item != null) {
-            item.setVisible(!mIsRunning);
+            item.setVisible(!isRunning());
         }
 
         item = menu.findItem(R.id.action_cancel);
         if (item != null) {
-            item.setVisible(mIsRunning);
+            item.setVisible(isRunning());
         }
 
         item = menu.findItem(R.id.action_clear);
@@ -233,7 +234,8 @@ public class MainActivity extends LifecycleLoggingActivity {
     }
 
     /**
-     * Common helper method that handles both option and context menu commands.
+     * Common helper method that handles both option and context menu
+     * commands.
      *
      * @param item selected menu item
      * @return true if menu command is handled, false if not
@@ -262,9 +264,18 @@ public class MainActivity extends LifecycleLoggingActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // Setup user input EditText widget to support a clear icon on the right.
+        // Setup user input EditText widget to support a clear icon on
+        // the right.
         mCountEditText = findViewById(R.id.input_view);
-        TextViewKt.makeClearEditText(mCountEditText, null, null);
+        TextViewKt.makeClearEditText(mCountEditText,
+                () -> {
+                    findViewById(R.id.searchStopView).setVisibility(VISIBLE);
+                    return Unit.INSTANCE;
+                },
+                () -> {
+                    findViewById(R.id.searchStopView).setVisibility(INVISIBLE);
+                    return Unit.INSTANCE;
+                });
 
         // Store references to layout views.
         mProgressBar = findViewById(R.id.progress);
@@ -279,8 +290,8 @@ public class MainActivity extends LifecycleLoggingActivity {
         registerForContextMenu(mLogTextView);
 
         // Register a listener to help display "start playing" FAB
-        // when the user hits enter. This listener also sets a
-        // default count value if the user enters no value.
+        // when the user hits enter. This listener also sets a default
+        // count value if the user enters no value.
         mCountEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH ||
                     event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
@@ -296,12 +307,23 @@ public class MainActivity extends LifecycleLoggingActivity {
                 return false;
             }
         });
+
+        // Get reference to start stop view and set it's click handler.
+        mStartStopView = findViewById(R.id.searchStopView);
+        mStartStopView.setOnClickListener(view -> startStopComputations());
+    }
+
+    public void startStopComputations() {
+        if (isRunning()) {
+            interruptComputations();
+        } else {
+            startComputations();
+        }
     }
 
     /**
-     * Helper that extracts the user entered count value from the
-     * edit text widget and calls startComputations to find prime
-     * factors.
+     * Helper that extracts the user entered count value from the edit
+     * text widget and calls startComputations to find prime factors.
      */
     public void startComputations() {
         // Start running the primality computations.
@@ -327,6 +349,7 @@ public class MainActivity extends LifecycleLoggingActivity {
         }
 
         mCountEditText.setText(String.valueOf(count));
+        mStartStopView.setImageResource(R.drawable.ic_stop_white_24dp);
         startComputations(count);
     }
 
@@ -345,7 +368,7 @@ public class MainActivity extends LifecycleLoggingActivity {
             UiUtils.showToast(this,
                     "Please specify a count value that's > 0");
         } else {
-            mIsRunning = true;
+            setRunning(true);
 
             // Shutdown the memoizer if it already exists.
             if (mRetainedState.mTimedMemoizer != null)
@@ -362,8 +385,7 @@ public class MainActivity extends LifecycleLoggingActivity {
             // Submit "count" PrimeCallable objects that concurrently
             // check the primality of "count" random numbers.
             new Random()
-                    // Generate "count" random between (sMAX_VALUE -
-                    // count) and sMAX_VALUE.
+                    // Generate "count" random between the min and max values.
                     .longs(count, MAX_VALUE - count, MAX_VALUE)
 
                     // Convert each random number into a PrimeCallable.
@@ -445,12 +467,15 @@ public class MainActivity extends LifecycleLoggingActivity {
         // Build command to run on the UI thread.
         Runnable command = () -> {
             // Indicate the app is not longer running.
-            mIsRunning = false;
+            setRunning(false);
 
             // Append the stringToPrint and terminate it with a
             // newline.
             println("Finished computations ("
                     + mRetainedState.mPrimeFactors + " found)\n");
+
+            // Update the toolbar widgets.
+            updateToolbar();
         };
 
         // Run the command on the UI thread.  This all is optimized
@@ -464,8 +489,19 @@ public class MainActivity extends LifecycleLoggingActivity {
     private void updateToolbar() {
         mPrimesTextView.setText(String.valueOf(mRetainedState.mPrimeFactors));
         mCandidatesTextView.setText(String.valueOf(mRetainedState.mProcessed));
-        if (mIsRunning != (mProgressBar.getVisibility() == VISIBLE)) {
-            mProgressBar.setVisibility(mIsRunning ? VISIBLE : INVISIBLE);
+        if (isRunning() != (mProgressBar.getVisibility() == VISIBLE)) {
+            mProgressBar.setVisibility(isRunning() ? VISIBLE : INVISIBLE);
+        }
+
+        if (isRunning()) {
+            mStartStopView.setImageResource(R.drawable.ic_stop_white_24dp);
+        } else {
+            mStartStopView.setImageResource(R.drawable.ic_search_white_24dp);
+            if (TextUtils.isEmpty(mCountEditText.getText().toString().trim())) {
+                mStartStopView.setVisibility(INVISIBLE);
+            } else {
+                mStartStopView.setVisibility(VISIBLE);
+            }
         }
     }
 
@@ -473,16 +509,31 @@ public class MainActivity extends LifecycleLoggingActivity {
      * Output string to log view.
      */
     public void println(String string) {
-        // In case this was originally called from an AsyncTask or some other off-UI thread,
-        // make sure the update occurs within the UI thread.
+        // In case this was originally called from an AsyncTask or
+        // some other off-UI thread, make sure the update occurs
+        // within the UI thread.
         runOnUiThread(new Thread(() -> mLogTextView.append(string + "\n")));
+    }
+
+    /**
+     * @return flag indicating if calculations are currently running.
+     */
+    private boolean isRunning() {
+        return mRetainedState.mIsRunning;
+    }
+
+    /**
+     * Sets flag to indicate calculation running state.
+     */
+    private void setRunning(boolean running) {
+        mRetainedState.mIsRunning = running;
     }
 
     /**
      * State that must be preserved across runtime configuration
      * changes.
      */
-    static class RetainedState {
+    private static class RetainedState {
         /**
          * This object runs the prime computations.
          */
@@ -518,12 +569,17 @@ public class MainActivity extends LifecycleLoggingActivity {
         /**
          * Keeps track of the number of primes found.
          */
-        int mPrimeFactors = 0;
+        int mPrimeFactors;
 
         /**
          * Keeps track of the number of prime candidates processed so far.
          */
-        int mProcessed = 0;
+        int mProcessed;
+
+        /**
+         * Flag indicating if calculations are ongoing.
+         */
+        boolean mIsRunning;
 
         /**
          * Constructor initializes the ExecutorService thread pool.
