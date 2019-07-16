@@ -115,6 +115,9 @@ public class MainActivity extends AppCompatActivity {
      */
     int mProcessed = 0;
 
+    /**
+     * Hook method called when the activity is first launched.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Call up to the super class to perform initializations.
@@ -139,10 +142,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        // Check if the activity was restarted from a configuration
+        // Check if the activity requires restarting from a configuration
         // change.
         if (mRestart) {
-            // Clear logging view and restart the computations.
+            // NOTE: This strategy is NOT RECOMMENDED and is is highly inefficient.
+            // It will result in the previously running threads to hold on to a
+            // reference to the old activity (memory leak) and also to continue
+            // to perform computations even though their results will never be
+            // used or seen by the user.
+
             mLogTextView.setText(null);
             startComputations();
         }
@@ -203,6 +211,10 @@ public class MainActivity extends AppCompatActivity {
                     return false;
                 }
             });
+
+
+        // Get reference to start view and set it's click handler.
+        findViewById(R.id.searchView).setOnClickListener(view -> startComputations());
     }
 
     /**
@@ -341,7 +353,17 @@ public class MainActivity extends AppCompatActivity {
      * @param count Number of prime computations to perform.
      */
     public void startComputations(int count) {
-        // Make sure there's a non-0 count.
+        // Since this implementation doesn't support cancelling the
+        // calculation, warn the user and do not start a new computation
+        // while and existing one is ongoing.
+        if (mRunningTasks.get() > 0) {
+            UiUtils.showToast(this,
+                    "The current computations must complete " +
+                            "before starting new computations.");
+            return;
+        }
+
+        // Clear status bar stats counters.
         mPrimeFactors = 0;
         mProcessed = 0;
 

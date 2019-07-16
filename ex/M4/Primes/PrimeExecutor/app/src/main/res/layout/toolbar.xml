@@ -28,25 +28,24 @@
                 android:id="@+id/appCompatTextView2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginStart="160dp"
                 android:background="@android:color/transparent"
                 android:text="Candidates: "
-                android:textColor="#ffffff"
-                app:layout_constraintStart_toEndOf="@+id/input_view"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:textColor="@color/lightTextColor"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/input_view" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/candidates"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
                 android:background="@android:color/transparent"
                 android:text="0"
-                android:textColor="#ffffff"
+                android:textColor="@color/lightTextColor"
                 app:layout_constraintBottom_toBottomOf="@+id/appCompatTextView2"
                 app:layout_constraintStart_toEndOf="@+id/appCompatTextView2"
-                app:layout_constraintTop_toTopOf="@+id/appCompatTextView2" />
+                app:layout_constraintTop_toTopOf="@+id/appCompatTextView2"
+                app:layout_constraintVertical_bias="0.0" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/appCompatTextView"
@@ -54,7 +53,7 @@
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:text="Primes: "
-                android:textColor="#ffffff"
+                android:textColor="@color/lightTextColor"
                 app:layout_constraintStart_toStartOf="@+id/appCompatTextView2"
                 app:layout_constraintTop_toBottomOf="@+id/appCompatTextView2" />
 
@@ -64,17 +63,17 @@
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:text="0"
-                android:textColor="#ffffff"
+                android:textColor="@color/lightTextColor"
                 app:layout_constraintBottom_toBottomOf="@+id/appCompatTextView"
                 app:layout_constraintStart_toStartOf="@+id/candidates"
-                app:layout_constraintTop_toTopOf="@+id/appCompatTextView" />
+                app:layout_constraintTop_toTopOf="@+id/appCompatTextView"
+                app:layout_constraintVertical_bias="0.0" />
 
             <androidx.appcompat.widget.AppCompatEditText
                 android:id="@+id/input_view"
-                android:layout_width="140dp"
-                android:layout_height="0dp"
+                android:layout_width="110dp"
+                android:layout_height="36dp"
                 android:layout_marginTop="12dp"
-                android:layout_marginEnd="8dp"
                 android:layout_marginBottom="12dp"
                 android:layout_weight="1"
                 android:background="#FFFFFF"
@@ -83,17 +82,29 @@
                 android:hint="@string/enter_count"
                 android:imeOptions="actionSearch"
                 android:inputType="number"
+                android:maxLength="4"
                 android:maxLines="1"
                 android:paddingStart="4dp"
                 android:paddingEnd="2dp"
                 android:singleLine="true"
-                android:textColor="#000000"
-                android:textColorHint="#33000000"
+                android:textColor="@color/darkTextColor"
+                android:textColorHint="@color/darkHintTextColor"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/appCompatTextView2"
                 app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/searchView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/input_view"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.0" />
+                app:srcCompat="@drawable/ic_search_white_24dp" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.appcompat.widget.LinearLayoutCompat>
 </androidx.appcompat.widget.Toolbar>
