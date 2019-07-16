@@ -27,7 +27,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import kotlin.Unit;
 import vandy.mooc.prime.R;
 import vandy.mooc.prime.utils.ExceptionUtils;
 import vandy.mooc.prime.utils.TextViewKt;
@@ -115,7 +114,9 @@ public class MainActivity extends LifecycleLoggingActivity {
             // Activity is being restored so reset reference to this
             // class in future runnable and update UI to reflect
             // currently running state.
-            mRetainedState.mFutureRunnable.setActivity(this);
+            if (mRetainedState.mFutureRunnable != null) {
+                mRetainedState.mFutureRunnable.setActivity(this);
+            }
             updateToolbar();
         } else {
             // Allocate the state that's retained across runtime
@@ -269,15 +270,7 @@ public class MainActivity extends LifecycleLoggingActivity {
         // Setup user input EditText widget to support a clear icon on
         // the right.
         mCountEditText = findViewById(R.id.input_view);
-        TextViewKt.makeClearEditText(mCountEditText,
-                () -> {
-                    findViewById(R.id.searchStopView).setVisibility(VISIBLE);
-                    return Unit.INSTANCE;
-                },
-                () -> {
-                    findViewById(R.id.searchStopView).setVisibility(INVISIBLE);
-                    return Unit.INSTANCE;
-                });
+        TextViewKt.makeClearEditText(mCountEditText, null, null);
 
         // Store references to layout views.
         mProgressBar = findViewById(R.id.progress);
@@ -506,11 +499,6 @@ public class MainActivity extends LifecycleLoggingActivity {
             mStartStopView.setImageResource(R.drawable.ic_stop_white_24dp);
         } else {
             mStartStopView.setImageResource(R.drawable.ic_search_white_24dp);
-            if (TextUtils.isEmpty(mCountEditText.getText().toString().trim())) {
-                mStartStopView.setVisibility(INVISIBLE);
-            } else {
-                mStartStopView.setVisibility(VISIBLE);
-            }
         }
     }
 

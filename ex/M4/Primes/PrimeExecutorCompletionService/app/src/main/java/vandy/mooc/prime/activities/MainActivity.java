@@ -27,7 +27,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import kotlin.Unit;
 import vandy.mooc.prime.R;
 import vandy.mooc.prime.utils.Memoizer;
 import vandy.mooc.prime.utils.PrimeCheckers;
@@ -51,12 +50,10 @@ public class MainActivity extends LifecycleLoggingActivity {
      * otherwise.
      */
     private final static int DEFAULT_COUNT = 100;
-
     /**
      * Maximum random number value.
      */
     private static long MAX_VALUE = 1000000000L;
-
     /**
      * Maximum range of random numbers where range is
      * [MAX_VALUE - MAX_COUNT .. MAX_VALUE].
@@ -112,7 +109,9 @@ public class MainActivity extends LifecycleLoggingActivity {
             // Activity is being restored so reset reference to this
             // class in future runnable and update UI to reflect
             // currently running state.
-            mRetainedState.mCompletionRunnable.setActivity(this);
+            if (mRetainedState.mCompletionRunnable != null) {
+                mRetainedState.mCompletionRunnable.setActivity(this);
+            }
             updateToolbar();
         } else {
             // Allocate the state that's retained across runtime
@@ -266,15 +265,7 @@ public class MainActivity extends LifecycleLoggingActivity {
         // Setup user input EditText widget to support a clear icon on
         // the right.
         mCountEditText = findViewById(R.id.input_view);
-        TextViewKt.makeClearEditText(mCountEditText,
-                () -> {
-                    findViewById(R.id.searchStopView).setVisibility(VISIBLE);
-                    return Unit.INSTANCE;
-                },
-                () -> {
-                    findViewById(R.id.searchStopView).setVisibility(INVISIBLE);
-                    return Unit.INSTANCE;
-                });
+        TextViewKt.makeClearEditText(mCountEditText, null, null);
 
         // Store references to layout views.
         mProgressBar = findViewById(R.id.progress);
@@ -423,9 +414,6 @@ public class MainActivity extends LifecycleLoggingActivity {
 
         // Trigger a reset of the retained state on cancellation.
         mRetainedState = new RetainedState();
-
-        // Finish up and reset the UI.
-        done();
     }
 
     /**
@@ -493,11 +481,6 @@ public class MainActivity extends LifecycleLoggingActivity {
             mStartStopView.setImageResource(R.drawable.ic_stop_white_24dp);
         } else {
             mStartStopView.setImageResource(R.drawable.ic_search_white_24dp);
-            if (TextUtils.isEmpty(mCountEditText.getText().toString().trim())) {
-                mStartStopView.setVisibility(INVISIBLE);
-            } else {
-                mStartStopView.setVisibility(VISIBLE);
-            }
         }
     }
 
@@ -574,7 +557,7 @@ public class MainActivity extends LifecycleLoggingActivity {
         int mProcessed;
 
         /**
-         * Flag indicating if calcuations are ongoing.
+         * Flag indicating if calculations are ongoing.
          */
         boolean mIsRunning;
 

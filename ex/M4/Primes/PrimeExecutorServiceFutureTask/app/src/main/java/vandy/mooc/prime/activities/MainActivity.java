@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -83,15 +84,18 @@ public class MainActivity extends LifecycleLoggingActivity {
      */
     private TextView mCandidatesTextView;
     /**
-     * Keeps track of whether the app is running or not.
+     * Start stop image view in tool bar.
      */
-    private boolean mIsRunning;
+    private ImageView mStartStopView;
     /**
      * Store all the state that must be preserved across runtime
      * configuration changes.
      */
     private RetainedState mRetainedState;
 
+    /**
+     * Hook method called when the activity is first launched.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Call up to the super class to perform initializations.
@@ -112,9 +116,9 @@ public class MainActivity extends LifecycleLoggingActivity {
             // Activity is being restored so reset reference to this
             // class in future runnable and update UI to reflect
             // currently running state.
-            mIsRunning = true;
-            mRetainedState.mFutureRunnable.setActivity(this);
-            mProgressBar.setVisibility(VISIBLE);
+            if (mRetainedState.mFutureRunnable != null) {
+                mRetainedState.mFutureRunnable.setActivity(this);
+            }
             updateToolbar();
         } else {
             // Allocate the state that's retained across runtime
@@ -176,14 +180,15 @@ public class MainActivity extends LifecycleLoggingActivity {
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
+        // Inflate the menu; this adds items to the action bar if it
+        // is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
     /**
-     * Called each time a menu is about to be displayed.
-     * Here we show and hide menu items based on the current app state.
+     * Called each time a menu is about to be displayed.  Here we show
+     * and hide menu items based on the current app state.
      *
      * @param menu menu to be displayed
      * @return true if this menu has been modified
@@ -194,12 +199,12 @@ public class MainActivity extends LifecycleLoggingActivity {
 
         item = menu.findItem(R.id.action_run);
         if (item != null) {
-            item.setVisible(!mIsRunning);
+            item.setVisible(!isRunning());
         }
 
         item = menu.findItem(R.id.action_cancel);
         if (item != null) {
-            item.setVisible(mIsRunning);
+            item.setVisible(isRunning());
         }
 
         item = menu.findItem(R.id.action_clear);
@@ -233,7 +238,8 @@ public class MainActivity extends LifecycleLoggingActivity {
     }
 
     /**
-     * Common helper method that handles both option and context menu commands.
+     * Common helper method that handles both option and context menu
+     * commands.
      *
      * @param item selected menu item
      * @return true if menu command is handled, false if not
@@ -262,7 +268,8 @@ public class MainActivity extends LifecycleLoggingActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // Setup user input EditText widget to support a clear icon on the right.
+        // Setup user input EditText widget to support a clear icon on
+        // the right.
         mCountEditText = findViewById(R.id.input_view);
         TextViewKt.makeClearEditText(mCountEditText, null, null);
 
@@ -279,8 +286,8 @@ public class MainActivity extends LifecycleLoggingActivity {
         registerForContextMenu(mLogTextView);
 
         // Register a listener to help display "start playing" FAB
-        // when the user hits enter. This listener also sets a
-        // default count value if the user enters no value.
+        // when the user hits enter. This listener also sets a default
+        // count value if the user enters no value.
         mCountEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH ||
                     event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
@@ -296,12 +303,23 @@ public class MainActivity extends LifecycleLoggingActivity {
                 return false;
             }
         });
+
+        // Get reference to start stop view and set it's click handler.
+        mStartStopView = findViewById(R.id.searchStopView);
+        mStartStopView.setOnClickListener(view -> startStopComputations());
+    }
+
+    public void startStopComputations() {
+        if (isRunning()) {
+            interruptComputations();
+        } else {
+            startComputations();
+        }
     }
 
     /**
-     * Helper that extracts the user entered count value from the
-     * edit text widget and calls startComputations to find prime
-     * factors.
+     * Helper that extracts the user entered count value from the edit
+     * text widget and calls startComputations to find prime factors.
      */
     public void startComputations() {
         // Start running the primality computations.
@@ -327,6 +345,7 @@ public class MainActivity extends LifecycleLoggingActivity {
         }
 
         mCountEditText.setText(String.valueOf(count));
+        mStartStopView.setImageResource(R.drawable.ic_stop_white_24dp);
         startComputations(count);
     }
 
@@ -345,7 +364,7 @@ public class MainActivity extends LifecycleLoggingActivity {
             UiUtils.showToast(this,
                     "Please specify a count value that's > 0");
         } else {
-            mIsRunning = true;
+            setRunning(true);
 
             // Create the cache used to generate, store, and retrieve
             // the results of prime checking computations.
@@ -356,8 +375,7 @@ public class MainActivity extends LifecycleLoggingActivity {
             // of concurrently checking the primality of "count"
             // random numbers.
             final List<Future<PrimeCallable.PrimeResult>> futures = new Random()
-                    // Generate "count" random between sMAX_VALUE - count
-                    // and sMAX_VALUE.
+                    // Generate "count" random between the min and max values.
                     .longs(count, MAX_VALUE - count, MAX_VALUE)
 
                     // Convert each random number into a PrimeCallable.
@@ -406,9 +424,6 @@ public class MainActivity extends LifecycleLoggingActivity {
         // Trigger a reset of the retained state on cancellation.
         mRetainedState = new RetainedState();
 
-        // Finish up and reset the UI.
-        done();
-
         try {
             // Wait a half-second for threads in the executor service
             // thread pool to terminate.
@@ -424,7 +439,8 @@ public class MainActivity extends LifecycleLoggingActivity {
     }
 
     /**
-     * Called from each PrimeRunnable instance when their calculations complete.
+     * Called from each PrimeRunnable instance when their calculations
+     * complete.
      *
      * @param primeCandidate the prime candidate being investigated
      * @param smallestFactor the smallest factor of the candidate or 0 if prime.
@@ -458,12 +474,15 @@ public class MainActivity extends LifecycleLoggingActivity {
         // Build command to run on the UI thread.
         Runnable command = () -> {
             // Indicate the app is not longer running.
-            mIsRunning = false;
+            setRunning(false);
 
             // Append the stringToPrint and terminate it with a
             // newline.
             println("Finished computations ("
                     + mRetainedState.mPrimeFactors + " found)\n");
+
+            // Update the toolbar widgets.
+            updateToolbar();
         };
 
         // Run the command on the UI thread.  This all is optimized
@@ -477,8 +496,14 @@ public class MainActivity extends LifecycleLoggingActivity {
     private void updateToolbar() {
         mPrimesTextView.setText(String.valueOf(mRetainedState.mPrimeFactors));
         mCandidatesTextView.setText(String.valueOf(mRetainedState.mProcessed));
-        if (mIsRunning != (mProgressBar.getVisibility() == VISIBLE)) {
-            mProgressBar.setVisibility(mIsRunning ? VISIBLE : INVISIBLE);
+        if (isRunning() != (mProgressBar.getVisibility() == VISIBLE)) {
+            mProgressBar.setVisibility(isRunning() ? VISIBLE : INVISIBLE);
+        }
+
+        if (isRunning()) {
+            mStartStopView.setImageResource(R.drawable.ic_stop_white_24dp);
+        } else {
+            mStartStopView.setImageResource(R.drawable.ic_search_white_24dp);
         }
     }
 
@@ -486,16 +511,31 @@ public class MainActivity extends LifecycleLoggingActivity {
      * Output string to log view.
      */
     public void println(String string) {
-        // In case this was originally called from an AsyncTask or some other off-UI thread,
-        // make sure the update occurs within the UI thread.
+        // In case this was originally called from an AsyncTask or
+        // some other off-UI thread, make sure the update occurs
+        // within the UI thread.
         runOnUiThread(new Thread(() -> mLogTextView.append(string + "\n")));
+    }
+
+    /**
+     * @return flag indicating if calculations are currently running.
+     */
+    private boolean isRunning() {
+        return mRetainedState.mIsRunning;
+    }
+
+    /**
+     * Sets flag to indicate calculation running state.
+     */
+    private void setRunning(boolean running) {
+        mRetainedState.mIsRunning = running;
     }
 
     /**
      * State that must be preserved across runtime configuration
      * changes.
      */
-    static class RetainedState {
+    private static class RetainedState {
         /**
          * Debugging tag used by the Android logger.
          */
@@ -527,11 +567,17 @@ public class MainActivity extends LifecycleLoggingActivity {
         /**
          * Keeps track of the number of primes found.
          */
-        int mPrimeFactors = 0;
+        int mPrimeFactors;
+
         /**
          * Keeps track of the number of prime candidates processed so far.
          */
-        int mProcessed = 0;
+        int mProcessed;
+
+        /**
+         * Flag indicating if calculations are ongoing.
+         */
+        boolean mIsRunning;
 
         /**
          * Constructor initializes the ExecutorService thread pool.
@@ -610,10 +656,12 @@ public class MainActivity extends LifecycleLoggingActivity {
                 mFutures
                         // Iterate through all the futures to get the results.
                         .forEach(future -> {
-                            // This call will block until the future is
-                            // triggered.
+                            // The call to future::get() will block
+                            // until the future is triggered.
                             PrimeCallable.PrimeResult result =
                                     ExceptionUtils.rethrowSupplier(future::get).get();
+
+                            // Update the results on the GUI.
                             mActivity.updateResults(
                                     result.mPrimeCandidate, result.mSmallestFactor);
                         });
