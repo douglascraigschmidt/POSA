@@ -6,8 +6,8 @@ android {
 
     defaultConfig {
         applicationId "gcd.concurrent"
-        minSdkVersion 25
-        targetSdkVersion 25
+        minSdkVersion 28
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
     }
