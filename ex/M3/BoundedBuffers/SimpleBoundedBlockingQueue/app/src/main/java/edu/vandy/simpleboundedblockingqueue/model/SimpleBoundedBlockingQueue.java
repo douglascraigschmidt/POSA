@@ -12,7 +12,7 @@ public class SimpleBoundedBlockingQueue<E>
     /**
      * The queue consists of a LinkedList of E's.
      */
-    final private LinkedList<E> mList;
+    final private List<E> mList;
 
     /**
      * The maximum capacity of the queue or Integer.MAX_VALUE if none.
