@@ -50,10 +50,12 @@ public class MainActivity extends LifecycleLoggingActivity {
      * otherwise.
      */
     private final static int DEFAULT_COUNT = 100;
+
     /**
      * Maximum random number value.
      */
     private static long MAX_VALUE = 1000000000L;
+
     /**
      * Maximum range of random numbers where range is
      * [MAX_VALUE - MAX_COUNT .. MAX_VALUE].
