@@ -19,10 +19,6 @@ import edu.vandy.visfwk.utils.ProgressReporter;
  */
 public class GCDCountDownLatchTest
        implements ProgressReporter {
-    /**
-     * Number of iterations to run the tests.
-     */
-    private static int sITERATIONS = 1000;
 
     /**
      * This factory method returns a list containing tuples, where
@@ -60,6 +56,9 @@ public class GCDCountDownLatchTest
     public void testGCDCountDownLatchTester()
         throws InterruptedException {
         // Initialize the input arrays.
+        // Number of iterations to run the tests.
+        int sITERATIONS = 1000;
+
         GCDCountDownLatchWorker.initializeInputs(sITERATIONS);
 
         // Make the list of GCD tuples.

@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 30
     buildToolsVersion "25.0.0"
     defaultConfig {
         applicationId "edu.vandy.gcdtesttask.countdownlatch"
-        minSdkVersion 25
-        targetSdkVersion 28
+        minSdkVersion 29
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -29,9 +29,11 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
+    //noinspection GradleCompatible
     compile 'com.android.support:appcompat-v7:28.0.0'
-    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha9'
+    compile 'com.android.support.constraint:constraint-layout:2.0.4'
+    //noinspection GradleCompatible
     compile 'com.android.support:design:28.0.0'
-    testCompile 'junit:junit:4.12'
+    testCompile 'junit:junit:4.13.1'
     compile project(':visfwk')
 }

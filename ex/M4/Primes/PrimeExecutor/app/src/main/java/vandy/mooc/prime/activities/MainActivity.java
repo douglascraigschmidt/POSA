@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import vandy.mooc.prime.R;
@@ -90,19 +91,38 @@ public class MainActivity extends AppCompatActivity {
     private TextView mCandidatesTextView;
 
     /**
+     * Create a new ThreadFactory object that sets the
+     * "UncaughtExceptionHandler" each time its newThread()
+     * factory method is called.
+     */
+     private final ThreadFactory mThreadFactory = runnable -> {
+         Thread thread = new Thread(runnable);
+
+         // Set a handler for any uncaught exception.
+         thread.setUncaughtExceptionHandler((thr, ex) -> {
+                 Log.d(TAG, "MainActivity encountered an exception:"
+                       + ex
+                       + " for thread "
+                       + thread);
+             });
+         return thread;
+     };
+
+    /**
      * Reference to the Executor that runs the prime computations.
      * Only allocate as many threads as there are processor cores
      * since determining primes is a CPU-bound computation.
      */
-    private Executor mExecutor =
+    private final Executor mExecutor =
         Executors.newFixedThreadPool(Runtime
                                      .getRuntime()
-                                     .availableProcessors());
+                                     .availableProcessors(),
+                                     mThreadFactory);
 
     /**
      * Keeps track of the number of running tasks.
      */
-    private AtomicInteger mRunningTasks =
+    private final AtomicInteger mRunningTasks =
         new AtomicInteger(0);
 
     /**

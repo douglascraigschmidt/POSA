@@ -15,6 +15,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import static java.util.stream.Collectors.toList;
 
@@ -73,8 +74,25 @@ public class GCDCountDownLatchTestTask
         // Set the number of times to run the tests.
         mIterations = iterations;
 
+        // Create a new ThreadFactory object that sets the
+        // "UncaughtExceptionHandler" each time its newThread()
+        // factory method is called.
+        final ThreadFactory threadFactory =
+            runnable -> {
+            Thread thread = new Thread(runnable);
+
+            // Set a handler for any uncaught exception.
+            thread.setUncaughtExceptionHandler((thr, ex) -> {
+                    Log.d(TAG, "GCDCountDownLatchTestTask encountered an exception:"
+                          + ex
+                          + " for thread "
+                          + thread);
+                });
+            return thread;
+        };
+
         // Create a new cached thread pool executor.
-        mExecutor = Executors.newCachedThreadPool();
+        mExecutor = Executors.newCachedThreadPool(threadFactory);
     }
 
     /**
