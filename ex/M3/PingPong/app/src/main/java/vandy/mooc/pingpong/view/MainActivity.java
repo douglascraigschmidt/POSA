@@ -2,7 +2,7 @@ package vandy.mooc.pingpong.view;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
