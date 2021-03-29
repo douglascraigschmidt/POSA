@@ -36,7 +36,7 @@ public class MainActivity
      * Number of times to iterate if the user doesn't specify
      * otherwise.
      */
-    private final static int sDEFAULT_COUNT = 100000000;
+    private final static int sDEFAULT_COUNT = 100_000_000;
 
     /**
      * Keeps track of whether the edit text is visible for the user to
@@ -199,7 +199,7 @@ public class MainActivity
             interruptComputations();
         else 
             // Start running the computations.
-            startComputations(Integer.valueOf(mCountEditText.getText().toString()));
+            startComputations(Integer.parseInt(mCountEditText.getText().toString()));
     }
 
     /**

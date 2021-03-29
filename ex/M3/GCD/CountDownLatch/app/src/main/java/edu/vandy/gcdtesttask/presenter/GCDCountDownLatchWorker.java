@@ -55,7 +55,7 @@ public class GCDCountDownLatchWorker
     /**
      * A reference to the ProgressReporter.
      */
-    private ProgressReporter mProgressReporter;
+    private final ProgressReporter mProgressReporter;
 
     /**
      * Constructor initializes the fields.
@@ -148,12 +148,12 @@ public class GCDCountDownLatchWorker
                   + result);
                 */
                 // Convert to a percentage of 100.
-                Double percentage =
+                double percentage =
                     ((double) (i + 1) / (double) iterations) * 100.00;
 
                 // Publish mProgressStatus as a percentage of total
                 // completion.
-                mProgressReporter.updateProgress(makeReport(percentage.intValue()));
+                mProgressReporter.updateProgress(makeReport((int) percentage));
             }
         }
 

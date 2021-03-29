@@ -15,12 +15,12 @@ public class GCDCountDownLatchTesterAndroidAdapter
     /**
      * Interface for interacting with View layer.
      */
-    private ViewInterface<GCDInterface> mViewInterface;
+    private final ViewInterface<GCDInterface> mViewInterface;
 
     /**
      * Unique ID of this Tester
      */
-    private int mUniqueID;
+    private final int mUniqueID;
 
     /**
      * Constructor initializes the fields and displays the initial

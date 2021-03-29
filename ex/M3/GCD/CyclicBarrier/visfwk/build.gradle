@@ -1,8 +1,8 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "25.0.2"
+    compileSdkVersion 30
+    buildToolsVersion "25.0.3"
 
     defaultConfig {
         minSdkVersion 29
@@ -35,5 +35,5 @@ dependencies {
     compile 'com.android.support.constraint:constraint-layout:2.0.4'
     //noinspection GradleCompatible
     compile 'com.android.support:design:25.3.1'
-    testCompile 'junit:junit:4.13.1'
+    testCompile 'junit:junit:4.13.2'
 }
