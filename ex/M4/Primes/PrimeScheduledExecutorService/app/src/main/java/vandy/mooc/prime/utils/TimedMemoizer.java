@@ -2,11 +2,12 @@ package vandy.mooc.prime.utils;
 
 import android.util.Log;
 
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
@@ -35,7 +36,7 @@ public class TimedMemoizer<K, V>
      * A RefCountedValue is used to keep track of how many times a
      * key/value pair is accessed during mTimeoutInMillisecs period.
      */
-    private final ConcurrentMap<K, RefCountedValue> mCache =
+    private final Map<K, RefCountedValue> mCache =
         new ConcurrentHashMap<>();
 
     /**
@@ -191,7 +192,7 @@ public class TimedMemoizer<K, V>
 
         // Create a ScheduledThreadPoolExecutor with one thread.
         mScheduledExecutorService = 
-            new ScheduledThreadPoolExecutor(1);
+            Executors.newScheduledThreadPool(1);
 
         // Get an object to set policies that clean everything up on
         // shutdown.

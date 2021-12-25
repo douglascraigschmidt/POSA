@@ -1,5 +1,7 @@
 package vandy.mooc.gcd.activities;
 
+import static utils.ExceptionUtils.rethrowConsumer;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -88,7 +90,7 @@ public class MainActivity
      */
     public void runThreadAndRunnable(View v) {
         // Create a list of thread.
-        final List<Thread> threadList = new ArrayList<>();
+        List<Thread> threadList = new ArrayList<>();
 
         // Create and add the GCDThread using the "fluent" interface
         // style.
@@ -102,21 +104,15 @@ public class MainActivity
         // Create and add a new thread that's will run the GCDRunnable.
         threadList.add(new Thread(new GCDRunnable(this)));
 
-        // Use Java 8 forEach() to start each thread.
+        // Use Java forEach() to start each thread.
         threadList.forEach(Thread::start);
 
         // Create and start a thread to wait for the other threads to
         // finish.
         new Thread(() -> { 
-                // Use Java 8 forEach() to wait for all threads in the
+                // Use Java forEach() to wait for all threads in the
                 // list to finish.
-                threadList.forEach(thread -> {
-                        try {
-                            thread.join();
-                        } catch (InterruptedException e) {
-                            Log.d(TAG, "thread interrupted");
-                        }
-                    });
+                threadList.forEach(rethrowConsumer(Thread::join));
 
                 // Print a diagnostic message.
                 println("All threads are joined by thread "
@@ -125,7 +121,7 @@ public class MainActivity
     }
 
     /**
-     * Append @a stringToPrint to the scrolling text view.
+     * Append {@code stringToPrint} to the scrolling text view.
      */
     public void println(String stringToPrint) {
         // Create a command to print the results.
